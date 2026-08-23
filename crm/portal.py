@@ -2,17 +2,27 @@
 Separate auth realm from staff CRM users. A portal user is always tied to a contact
 record, and every query is hard-scoped to that contact's account.
 """
-import os, json, hmac, base64, hashlib, datetime
+import os, datetime, math, secrets
 from typing import Optional
-from fastapi import APIRouter, HTTPException, Depends, Header
+from fastapi import APIRouter, HTTPException, Depends, Header, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 import db as D
 import mailer as M
-import datetime
+from authz import record_or_404
+from security import (
+    LoginThrottle, client_ip, configured_secret, hash_password, make_token as sign_token,
+    parse_token as parse_signed_token, password_error, verify_password,
+)
 
-PSECRET = "arena-crm-portal-secret"
+LEGACY_PSECRET = "arena-crm-portal-secret"
+PSECRET = configured_secret("CRM_PORTAL_SECRET", LEGACY_PSECRET, "NebrasCRM customer portal authentication")
+try:
+    PORTAL_TOKEN_TTL = max(300, int(os.environ.get("CRM_PORTAL_TOKEN_TTL_SECONDS", "28800")))
+except ValueError:
+    PORTAL_TOKEN_TTL = 28800
+PORTAL_LOGIN_THROTTLE = LoginThrottle()
 portal = APIRouter()
 HERE = os.path.dirname(__file__)
 con = None  # injected from main
@@ -30,22 +40,19 @@ def init_tables(c):
 
 
 def phash(pw: str) -> str:
-    return hashlib.sha256((pw + PSECRET).encode()).hexdigest()
+    return hash_password(pw)
+
+
+def _verify_password(pw: str, stored: str):
+    return verify_password(pw, stored, legacy_secrets=(PSECRET, LEGACY_PSECRET))
 
 
 def ptoken(pid: int) -> str:
-    p = base64.urlsafe_b64encode(json.dumps({"pid": pid}).encode()).decode()
-    return f'{p}.{hmac.new(PSECRET.encode(), p.encode(), hashlib.sha256).hexdigest()[:32]}'
+    return sign_token(pid, PSECRET, PORTAL_TOKEN_TTL)
 
 
 def parse_ptoken(tok: str):
-    try:
-        p, s = tok.split(".")
-        if not hmac.compare_digest(s, hmac.new(PSECRET.encode(), p.encode(), hashlib.sha256).hexdigest()[:32]):
-            return None
-        return json.loads(base64.urlsafe_b64decode(p)).get("pid")
-    except Exception:
-        return None
+    return parse_signed_token(tok, PSECRET)
 
 
 def portal_user(authorization: Optional[str] = Header(None)):
@@ -70,11 +77,24 @@ class PLogin(BaseModel):
 
 
 @portal.post("/portal/api/login")
-def plogin(b: PLogin):
-    r = con.execute("SELECT * FROM portal_users WHERE lower(email)=lower(?) AND active=1", (b.email,)).fetchone()
-    if not r or r["password"] != phash(b.password):
+def plogin(b: PLogin, request: Request):
+    email = b.email.strip().lower()
+    if not email or len(email) > 320:
+        raise HTTPException(400, "Invalid email")
+    key = f"{client_ip(request)}|{email}"
+    wait = PORTAL_LOGIN_THROTTLE.wait_minutes(key)
+    if wait:
+        raise HTTPException(429, f"Too many failed attempts. Try again in {wait} minutes.")
+    r = con.execute("SELECT * FROM portal_users WHERE lower(email)=lower(?) AND active=1", (email,)).fetchone()
+    valid, upgrade = _verify_password(b.password, r["password"] if r else "")
+    if not r or not valid:
+        PORTAL_LOGIN_THROTTLE.fail(key)
         raise HTTPException(401, "Invalid credentials")
-    con.execute("UPDATE portal_users SET last_login=? WHERE id=?", (D.now(), r["id"])); con.commit()
+    if upgrade:
+        con.execute("UPDATE portal_users SET password=? WHERE id=?", (phash(b.password), r["id"]))
+    PORTAL_LOGIN_THROTTLE.clear(key)
+    con.execute("UPDATE portal_users SET last_login=? WHERE id=?", (D.now(), r["id"]))
+    con.commit()
     c = con.execute("SELECT name, account_id FROM contacts WHERE id=?", (r["contact_id"],)).fetchone()
     return {"token": ptoken(r["id"]), "user": {"email": r["email"], "name": c["name"] if c else r["email"]}}
 
@@ -218,8 +238,8 @@ def pquote_decision(qid: int, b: QuoteAct, u=Depends(portal_user)):
     r = con.execute(f"SELECT * FROM quotes WHERE id=? AND deleted=0 AND {w}", [qid] + p).fetchone()
     if not r:
         raise HTTPException(404, "Not found")
-    if r["status"] in ("Accepted", "Rejected"):
-        raise HTTPException(400, "Already decided")
+    if r["status"] not in ("Draft", "Sent"):
+        raise HTTPException(400, "This quote can no longer be decided")
     con.execute("UPDATE quotes SET status=?, updated_at=? WHERE id=?", (b.decision, D.now(), qid))
     D.log(con, "quotes", qid, "portal_" + b.decision.lower(), {"by": u["email"]}, None)
     if r["owner_id"]:
@@ -236,11 +256,14 @@ class PChangePw(BaseModel):
 
 @portal.post("/portal/api/password")
 def pchange(b: PChangePw, u=Depends(portal_user)):
-    if u["password"] != phash(b.current):
+    valid, _upgrade = _verify_password(b.current, u["password"])
+    if not valid:
         raise HTTPException(400, "Current password is incorrect")
-    if len(b.new) < 6:
-        raise HTTPException(400, "Password too short (min 6)")
-    con.execute("UPDATE portal_users SET password=? WHERE id=?", (phash(b.new), u["id"])); con.commit()
+    error = password_error(b.new)
+    if error:
+        raise HTTPException(400, error)
+    con.execute("UPDATE portal_users SET password=? WHERE id=?", (phash(b.new), u["id"]))
+    con.commit()
     return {"ok": True}
 
 
@@ -274,7 +297,7 @@ class OrderLine(BaseModel):
 
 
 class NewOrder(BaseModel):
-    items: list
+    items: list[OrderLine]
     note: str = ""
 
 
@@ -283,48 +306,64 @@ def pnew_order(b: NewOrder, u=Depends(portal_user)):
     """Customer places an order -> creates a Draft quote for staff to confirm."""
     if not b.items:
         raise HTTPException(400, "Your cart is empty")
-    acc = con.execute("SELECT owner_id, list_tag FROM accounts WHERE id=CAST(? AS INTEGER)",
-                      (u["account_id"],)).fetchone()
-    if acc and acc["list_tag"] == "Blacklist":
+    if len(b.items) > 100:
+        raise HTTPException(400, "Your cart contains too many items")
+    try:
+        account_id = int(u["account_id"])
+    except (TypeError, ValueError):
+        raise HTTPException(400, "Your portal account is not linked to a customer account")
+    acc = con.execute("SELECT owner_id, list_tag FROM accounts WHERE id=? AND deleted=0", (account_id,)).fetchone()
+    if not acc:
+        raise HTTPException(400, "Your portal account is not linked to an active customer account")
+    if acc["list_tag"] == "Blacklist":
         raise HTTPException(403, "Ordering is disabled for this account. Please contact us.")
+    if len(b.note) > 5_000:
+        raise HTTPException(400, "Order note is too long")
+
     import loyalty as LOY
-    _r, pts = LOY.compute("customer", int(u["account_id"] or 0))
+    _r, pts = LOY.compute("customer", account_id)
     disc = LOY.tier_for(pts)["discount"]
-    ts = D.now()
-    qid = con.execute("""INSERT INTO quotes(created_at,updated_at,created_by,owner_id,deleted,
-        subject,account_id,status,valid_until,amount,terms)
-        VALUES(?,?,NULL,?,0,?,?,'Draft',?,0,?)""",
-        (ts, ts, acc["owner_id"] if acc else None,
-         f'طلب من البوابة — {u["cname"]}', u["account_id"],
-         (datetime.date.today() + datetime.timedelta(days=14)).isoformat(),
-         b.note or "طلب مقدَّم عبر بوابة العملاء")).lastrowid
-    total = 0.0
-    for it in b.items:
-        pr = con.execute("SELECT * FROM products WHERE id=? AND deleted=0",
-                         (int(it.get("product_id", 0)),)).fetchone()
+    prepared, total = [], 0.0
+    for item in b.items:
+        qty = float(item.qty)
+        if not math.isfinite(qty) or qty <= 0 or qty > 100_000:
+            raise HTTPException(400, "Each quantity must be greater than zero")
+        pr = con.execute("SELECT * FROM products WHERE id=? AND deleted=0 AND active='Yes'",
+                         (item.product_id,)).fetchone()
         if not pr:
-            continue
-        qty = max(1.0, float(it.get("qty", 1)))
+            raise HTTPException(400, f"Product {item.product_id} is unavailable")
         price = float(pr["unit_price"] or 0)
         tax = float(pr["tax_rate"] or 0)
         line = qty * price * (1 - disc / 100) * (1 + tax / 100)
         total += line
+        prepared.append((pr, qty, price, tax))
+    if not prepared or not math.isfinite(total) or total <= 0:
+        raise HTTPException(400, "Your cart has no orderable products")
+
+    ts = D.now()
+    qid = con.execute("""INSERT INTO quotes(created_at,updated_at,created_by,owner_id,deleted,
+        subject,account_id,status,valid_until,amount,terms)
+        VALUES(?,?,NULL,?,0,?,?,'Draft',?,0,?)""",
+        (ts, ts, acc["owner_id"], f'طلب من البوابة — {u["cname"]}', account_id,
+         (datetime.date.today() + datetime.timedelta(days=14)).isoformat(),
+         b.note or "طلب مقدَّم عبر بوابة العملاء")).lastrowid
+    for pr, qty, price, tax in prepared:
         con.execute("""INSERT INTO line_items(module,record_id,product_id,name,qty,price,discount,tax)
                        VALUES('quotes',?,?,?,?,?,?,?)""",
                     (qid, pr["id"], pr["name"], qty, price, disc, tax))
-    con.execute("UPDATE quotes SET amount=? WHERE id=?", (round(total, 2), qid))
-    D.log(con, "quotes", qid, "portal_order", {"by": u["email"], "total": round(total, 2)}, None)
-    if acc and acc["owner_id"]:
+    total = round(total, 2)
+    con.execute("UPDATE quotes SET amount=? WHERE id=?", (total, qid))
+    D.log(con, "quotes", qid, "portal_order", {"by": u["email"], "total": total}, None)
+    if acc["owner_id"]:
         con.execute("INSERT INTO notifications(user_id,title,body,read,created_at) VALUES(?,?,?,0,?)",
-                    (acc["owner_id"], "🛒 طلب جديد من البوابة",
-                     f'{u["cname"]} — {total:,.0f}', ts))
+                    (acc["owner_id"], "🛒 طلب جديد من البوابة", f'{u["cname"]} — {total:,.0f}', ts))
         ow = con.execute("SELECT email FROM users WHERE id=?", (acc["owner_id"],)).fetchone()
         if ow and ow["email"]:
             M.send(ow["email"], f"[Portal Order] {u['cname']}",
                    f'طلب جديد بقيمة {total:,.2f} من {u["cname"]} ({u["aname"]}).',
                    module="quotes", record_id=qid)
     con.commit()
-    return {"id": qid, "total": round(total, 2), "discount": disc}
+    return {"id": qid, "total": total, "discount": disc}
 
 
 @portal.get("/portal/api/orders")
@@ -443,7 +482,7 @@ def pprofile(b: ProfileUpd, u=Depends(portal_user)):
     if sets:
         con.execute(f"UPDATE contacts SET {','.join(sets)}, updated_at=? WHERE id=?",
                     vals + [D.now(), u["contact_id"]])
-        D.log(con, "contacts", u["contact_id"], "portal_profile", b.dict(), None)
+        D.log(con, "contacts", u["contact_id"], "portal_profile", b.model_dump(), None)
         con.commit()
     return {"ok": True}
 
@@ -452,6 +491,7 @@ def pprofile(b: ProfileUpd, u=Depends(portal_user)):
 def register_admin(app, current_user, require):
     @app.get("/api/portal-access")
     def list_access(user=Depends(current_user)):
+        require(user, "admin", "manager")
         return [dict(r) for r in con.execute("""
             SELECT p.id,p.contact_id,p.email,p.active,p.last_login,p.created_at,
                    c.name cname, a.name aname
@@ -468,7 +508,10 @@ def register_admin(app, current_user, require):
         email = (body.get("email") or c["email"] or "").strip()
         if not email:
             raise HTTPException(400, "Contact has no email")
-        pw = body.get("password") or "portal123"
+        pw = body.get("password") or secrets.token_urlsafe(12)
+        error = password_error(pw)
+        if error:
+            raise HTTPException(400, error)
         if con.execute("SELECT 1 FROM portal_users WHERE contact_id=? OR lower(email)=lower(?)", (cid, email)).fetchone():
             raise HTTPException(400, "Portal access already exists for this contact/email")
         con.execute("INSERT INTO portal_users(contact_id,email,password,active,created_at) VALUES(?,?,?,1,?)",
@@ -488,6 +531,9 @@ def register_admin(app, current_user, require):
         if "active" in body:
             con.execute("UPDATE portal_users SET active=? WHERE id=?", (int(body["active"]), pid))
         if body.get("password"):
+            error = password_error(body["password"])
+            if error:
+                raise HTTPException(400, error)
             con.execute("UPDATE portal_users SET password=? WHERE id=?", (phash(body["password"]), pid))
         con.commit()
         return {"ok": True}
@@ -500,6 +546,7 @@ def register_admin(app, current_user, require):
 
     @app.get("/api/tickets/{tid}/portal-thread")
     def thread(tid: int, user=Depends(current_user)):
+        record_or_404(con, "tickets", tid, user)
         return [dict(r) for r in con.execute(
             "SELECT * FROM portal_messages WHERE ticket_id=? ORDER BY id", (tid,))]
 
@@ -507,8 +554,14 @@ def register_admin(app, current_user, require):
     def staff_reply(tid: int, body: dict, user=Depends(current_user)):
         if user["role"] == "readonly":
             raise HTTPException(403, "Read-only user")
+        record_or_404(con, "tickets", tid, user)
+        text = str((body or {}).get("body", "")).strip()
+        if not text:
+            raise HTTPException(400, "Reply body is required")
+        if len(text) > 20_000:
+            raise HTTPException(400, "Reply is too long")
         con.execute("INSERT INTO portal_messages(ticket_id,body,author,author_name,created_at) VALUES(?,?,?,?,?)",
-                    (tid, body.get("body", ""), "staff", user["name"], D.now()))
+                    (tid, text, "staff", user["name"], D.now()))
         con.execute("UPDATE tickets SET status='Waiting on Customer', updated_at=? WHERE id=? AND status!='Closed'",
                     (D.now(), tid))
         con.commit()
@@ -518,7 +571,7 @@ def register_admin(app, current_user, require):
         if tk and tk["email"]:
             M.send_template("ticket_reply", tk["email"],
                             {"name": tk["name"] or "", "subject": tk["subject"], "id": tid,
-                             "body": body.get("body", ""), "owner": user["name"]},
+                             "body": text, "owner": user["name"]},
                             to_name=tk["name"] or "", module="tickets", record_id=tid,
                             user_id=user["id"])
         return {"ok": True}

@@ -12,7 +12,7 @@ const TA = {
   sales:"مبيعاتي",pipeline:"قيد التفاوض",balance:"رصيدي المستحق",target:"الهدف",achievement:"الإنجاز",
   commMonth:"عمولة الشهر",myCustomers:"عملائي",openDeals:"صفقات مفتوحة",rank:"ترتيبي",of:"من",
   credit:"لي",debit:"عليّ",monthly:"المبيعات الشهرية",noData:"لا توجد بيانات",name:"الاسم",
-  phone:"الهاتف",revenue:"الإيراد",outstanding:"مستحقات",region:"المنطقة",segment:"الشريحة",
+  phone:"الهاتف",revenue:"الإيراد",outstanding:"مستحقات",country:"الدولة",region:"المنطقة / الولاية",segment:"الشريحة",
   amount:"القيمة",stage:"المرحلة",closing:"الإغلاق",nextStep:"الخطوة التالية",account:"الشركة",
   newLead:"عميل محتمل جديد",company:"الشركة",city:"المدينة",notes:"ملاحظات",estValue:"القيمة التقديرية",
   submit:"إرسال",cancel:"إلغاء",status:"الحالة",date:"التاريخ",kind:"النوع",running:"الرصيد",
@@ -31,7 +31,7 @@ const TA = {
   sales:"My Sales",pipeline:"Pipeline",balance:"My Balance",target:"Target",achievement:"Achievement",
   commMonth:"This month",myCustomers:"My customers",openDeals:"Open deals",rank:"My rank",of:"of",
   credit:"Credit",debit:"Debit",monthly:"Monthly sales",noData:"No data",name:"Name",
-  phone:"Phone",revenue:"Revenue",outstanding:"Outstanding",region:"Region",segment:"Segment",
+  phone:"Phone",revenue:"Revenue",outstanding:"Outstanding",country:"Country",region:"Region / State",segment:"Segment",
   amount:"Amount",stage:"Stage",closing:"Closing",nextStep:"Next step",account:"Account",
   newLead:"New lead",company:"Company",city:"City",notes:"Notes",estValue:"Estimated value",
   submit:"Submit",cancel:"Cancel",status:"Status",date:"Date",kind:"Kind",running:"Balance",
@@ -179,7 +179,7 @@ function shell(){
       <span class="mut" style="font-size:12px">${y("portal")}</span>
       <div style="flex:1"></div>
       <div style="text-align:end;line-height:1.3"><div style="font-weight:700;font-size:13px">${es(A.me.name)}</div>
-        <div class="mut" style="font-size:11px">${es(A.me.code||"")} · ${es(A.me.gov||"")}</div></div>
+        <div class="mut" style="font-size:11px">${es(A.me.code||"")} · ${es(A.me.country||A.me.gov||"")}</div></div>
       <button class="icbtn" id="th">${A.theme==="dark"?"☀️":"🌙"}</button>
       <button class="btn sm" id="lg">${A.lang==="ar"?"EN":"ع"}</button>
       <button class="btn sm" id="lo">${y("logout")}</button></div></div>
@@ -201,7 +201,7 @@ async function aHome(){
       <div class="row" style="flex-wrap:wrap;gap:16px">
         <div style="flex:1;min-width:200px">
           <div style="font-size:19px;font-weight:800">${y("welcome")}، ${es(A.me.name)} 👋</div>
-          <div class="mut">${es(A.me.type||"")} · ${es(A.me.gov||"")} ${A.me.district?"· "+es(A.me.district):""}</div>
+          <div class="mut">${es(A.me.type||"")} · ${es(A.me.country||A.me.gov||"")} ${(A.me.region||A.me.district)?"· "+es(A.me.region||A.me.district):""}</div>
           <div class="mut" style="font-size:12px;margin-top:4px">${y("rate")}: <b>${A.me.rate}${A.me.commission_model==="flat"?"":"%"}</b>
             ${s.rank?` · ${y("rank")}: <b>${s.rank}</b> ${y("of")} ${s.peer_count}`:""}</div></div>
         ${s.achievement!=null?`<div class="ring" style="--p:${Math.min(100,s.achievement)}">
@@ -229,7 +229,7 @@ async function aCust(){
     <th>${y("name")}</th><th>${y("region")}</th><th>${y("phone")}</th><th>${y("segment")}</th>
     <th>${y("revenue")}</th><th>${y("outstanding")}</th></tr></thead><tbody>
     ${cs.map(c=>`<tr><td><b>${es(c.name)}</b><div class="mut" style="font-size:11px">${es(c.industry||"")}</div></td>
-      <td class="mut">${es(c.gov_ar||"—")}${c.dis_ar?" · "+es(c.dis_ar):""}</td>
+      <td class="mut">${es(c.country_ar||c.gov_ar||"—")}${(c.region_ar||c.dis_ar)?" · "+es(c.region_ar||c.dis_ar):""}</td>
       <td class="mut">${es(c.phone||"—")}</td><td>${bg(c.segment)}</td>
       <td><b>${mny(c.revenue)}</b></td>
       <td style="color:${c.outstanding>0?"var(--danger)":"var(--mut)"}">${mny(c.outstanding)}</td></tr>`).join("")
@@ -369,13 +369,13 @@ async function aProf(){
   const ts=await aa("/territories");
   ac.innerHTML=`<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
     <div class="card">${[[y("name"),A.me.name],[y("code"),A.me.code],[y("type"),A.me.type],
-      [y("email"),A.me.email],[y("phone"),A.me.phone],[y("region"),A.me.gov],
-      [y("rate"),A.me.rate+(A.me.commission_model==="flat"?"":"%")],[y("joined"),A.me.joined_at]]
+      [y("email"),A.me.email],[y("phone"),A.me.phone],[y("country"),A.me.country||A.me.gov],
+      [y("region"),A.me.region||A.me.district],[y("rate"),A.me.rate+(A.me.commission_model==="flat"?"":"%")],[y("joined"),A.me.joined_at]]
       .map(([l,v])=>`<div style="padding:9px 0;border-bottom:1px solid var(--line)">
         <div class="mut" style="font-size:11.5px">${l}</div><div>${es(v||"—")}</div></div>`).join("")}</div>
     <div class="card"><b>🗺️ ${y("territories")}</b><div style="height:8px"></div>
       ${ts.length?ts.map(t=>`<div class="row" style="padding:7px 0;border-bottom:1px solid var(--line)">
-        <span style="flex:1">${es(t.gov_ar||"")}${t.dis_ar?" / "+es(t.dis_ar):""}</span>
+        <span style="flex:1">${es(t.country_ar||t.gov_ar||"")}${(t.region_ar||t.dis_ar)?" / "+es(t.region_ar||t.dis_ar):""}</span>
         ${t.exclusive?`<span class="badge" style="color:var(--ok);background:var(--ok)22">⭐ ${y("exclusive")}</span>`:""}
         </div>`).join(""):`<div class="mut" style="font-size:12.5px">${y("noData")}</div>`}</div>
     <div class="card"><b>🔒 ${y("changePw")}</b><div style="height:10px"></div>

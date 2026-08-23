@@ -9,6 +9,8 @@ import datetime
 from fastapi import Depends, HTTPException
 from pydantic import BaseModel
 
+from authz import record_or_404
+
 con = None
 
 SEGMENTS = {
@@ -119,6 +121,7 @@ def register(app, current_user, require):
 
     @app.get("/api/segments/scores")
     def scores(user=Depends(current_user)):
+        require(user, "admin", "manager")
         data = score_accounts()
         dist = {}
         for d in data:
@@ -142,28 +145,30 @@ def register(app, current_user, require):
         for d in score_accounts():
             if d["segment"] != d["suggested"]:
                 con.execute("UPDATE accounts SET segment=?, updated_at=? WHERE id=?",
-                            (d["suggested"], datetime.datetime.utcnow().isoformat(timespec="seconds"), d["id"]))
+                            (d["suggested"], datetime.datetime.now(datetime.UTC).replace(tzinfo=None).isoformat(timespec="seconds"), d["id"]))
                 n += 1
         con.commit()
         return {"ok": True, "updated": n}
 
     class TagBody(BaseModel):
-        account_ids: list
+        account_ids: list[int]
         list_tag: str
         reason: str = ""
 
     @app.post("/api/segments/tag")
     def tag(b: TagBody, user=Depends(current_user)):
-        if user["role"] == "readonly":
-            raise HTTPException(403, "Read-only user")
+        require(user, "admin", "manager")
+        if len(b.account_ids) > 200:
+            raise HTTPException(400, "At most 200 accounts can be tagged at once")
         if b.list_tag and b.list_tag not in LISTS:
             raise HTTPException(400, "Unknown list")
         if b.list_tag == "Blacklist":
             require(user, "admin", "manager")
             if not b.reason.strip():
                 raise HTTPException(400, "A reason is required to blacklist a customer")
-        ts = datetime.datetime.utcnow().isoformat(timespec="seconds")
+        ts = datetime.datetime.now(datetime.UTC).replace(tzinfo=None).isoformat(timespec="seconds")
         for aid in b.account_ids:
+            record_or_404(con, "accounts", int(aid), user)
             con.execute("UPDATE accounts SET list_tag=?, blacklist_reason=?, updated_at=? WHERE id=?",
                         (b.list_tag or None, b.reason if b.list_tag == "Blacklist" else None, ts, aid))
             import db as D
@@ -173,6 +178,7 @@ def register(app, current_user, require):
 
     @app.get("/api/segments/list/{name}")
     def list_members(name: str, user=Depends(current_user)):
+        require(user, "admin", "manager")
         if name not in LISTS:
             raise HTTPException(404, "Unknown list")
         rows = [dict(r) for r in con.execute("""
@@ -184,10 +190,7 @@ def register(app, current_user, require):
 
     @app.get("/api/segments/blacklist-check/{account_id}")
     def blacklist_check(account_id: int, user=Depends(current_user)):
-        r = con.execute("SELECT name,list_tag,blacklist_reason FROM accounts WHERE id=?",
-                        (account_id,)).fetchone()
-        if not r:
-            raise HTTPException(404, "Not found")
+        r = record_or_404(con, "accounts", account_id, user)
         return {"blocked": r["list_tag"] == "Blacklist", "name": r["name"],
                 "reason": r["blacklist_reason"], "list": r["list_tag"]}
 
@@ -195,6 +198,8 @@ def register(app, current_user, require):
     @app.get("/api/reports/stagnant-products")
     def stagnant_products(days: int = 90, user=Depends(current_user)):
         """Dead stock: never sold, or not sold within N days, plus capital tied up."""
+        require(user, "admin", "manager")
+        days = min(3650, max(1, days))
         cutoff = (today() - datetime.timedelta(days=days)).isoformat()
         rows = []
         for p in con.execute("SELECT * FROM products WHERE deleted=0"):
@@ -238,6 +243,8 @@ def register(app, current_user, require):
     @app.get("/api/reports/stagnant-customers")
     def stagnant_customers(days: int = 180, user=Depends(current_user)):
         """Customers who stopped buying — with revenue at risk."""
+        require(user, "admin", "manager")
+        days = min(3650, max(1, days))
         data = score_accounts()
         rows = []
         for d in data:
@@ -263,6 +270,7 @@ def register(app, current_user, require):
     # ---------------- opportunity pipeline ----------------
     @app.get("/api/opportunities/analytics")
     def opp_analytics(user=Depends(current_user)):
+        require(user, "admin", "manager")
         g = lambda s: con.execute(s).fetchone()[0] or 0
         by_stage = [dict(r) for r in con.execute("""
             SELECT stage k, COUNT(*) n, SUM(value) v FROM opportunities
@@ -302,9 +310,7 @@ def register(app, current_user, require):
         """Won opportunity -> real deal."""
         if user["role"] == "readonly":
             raise HTTPException(403, "Read-only user")
-        o = con.execute("SELECT * FROM opportunities WHERE id=? AND deleted=0", (oid,)).fetchone()
-        if not o:
-            raise HTTPException(404, "Not found")
+        o = record_or_404(con, "opportunities", oid, user)
         if o["deal_id"]:
             raise HTTPException(400, "Already converted")
         chk = con.execute("SELECT list_tag FROM accounts WHERE id=CAST(? AS INTEGER)",

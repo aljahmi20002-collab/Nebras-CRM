@@ -1,7 +1,11 @@
 import sqlite3, json, os, datetime
 from schema import MODULES
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "crm.db")
+# Allow deployments and tests to place the SQLite file outside the source tree.
+# Existing installations continue to use crm/crm.db when CRM_DB_PATH is omitted.
+DB_PATH = os.path.abspath(os.path.expanduser(
+    os.environ.get("CRM_DB_PATH") or os.path.join(os.path.dirname(__file__), "crm.db")
+))
 
 BASE_COLS = """
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -15,8 +19,14 @@ TYPE_SQL = {"number": "REAL", "currency": "REAL"}
 
 
 def connect():
-    con = sqlite3.connect(DB_PATH, check_same_thread=False)
+    parent = os.path.dirname(DB_PATH)
+    if parent:
+        os.makedirs(parent, exist_ok=True)
+    # A small busy timeout prevents normal concurrent web requests from failing
+    # immediately while another request is committing a SQLite transaction.
+    con = sqlite3.connect(DB_PATH, check_same_thread=False, timeout=10)
     con.row_factory = sqlite3.Row
+    con.execute("PRAGMA busy_timeout=10000")
     con.execute("PRAGMA journal_mode=WAL")
     con.execute("PRAGMA foreign_keys=ON")
     return con
@@ -66,7 +76,9 @@ def init():
 
 
 def now():
-    return datetime.datetime.utcnow().isoformat(timespec="seconds")
+    # Keep the existing UTC-naive storage format for SQLite compatibility while
+    # avoiding the deprecated datetime.utcnow() API on modern Python.
+    return datetime.datetime.now(datetime.UTC).replace(tzinfo=None).isoformat(timespec="seconds")
 
 
 def log(con, module, rid, action, changes, uid):

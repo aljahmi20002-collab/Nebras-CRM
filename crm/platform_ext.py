@@ -1,10 +1,12 @@
 """Platform layer: 360° view, omnichannel timeline, custom fields (no-code),
 saved dashboards, API keys, integrations catalogue and WhatsApp/social capture.
 """
-import os, json, secrets, hmac, hashlib, datetime
+import os, json, secrets, hmac, hashlib, datetime, math
 from typing import Optional
 from fastapi import Depends, HTTPException, Request
 from pydantic import BaseModel
+
+from authz import record_or_404, scope_clause
 
 con = None
 
@@ -126,8 +128,7 @@ def register(app, current_user, require):
         """Everything about a customer on one screen."""
         if module not in ("accounts", "contacts", "leads"):
             raise HTTPException(400, "Unsupported module")
-        rec = con.execute(f'SELECT * FROM "{module}" WHERE id=? AND deleted=0', (rid,)).fetchone()
-        if not rec: raise HTTPException(404, "Not found")
+        rec = record_or_404(con, module, rid, user)
         rec = dict(rec)
         aid = rid if module == "accounts" else rec.get("account_id")
         try: aid = int(aid)
@@ -219,16 +220,29 @@ def register(app, current_user, require):
 
     @app.post("/api/interactions")
     def add_interaction(b: Interaction, user=Depends(current_user)):
-        if user["role"] == "readonly": raise HTTPException(403, "Read-only user")
-        if b.channel not in CHANNELS: raise HTTPException(400, "Unknown channel")
+        if user["role"] == "readonly":
+            raise HTTPException(403, "Read-only user")
+        from schema import MODULES
+        if b.module not in MODULES:
+            raise HTTPException(400, "Unknown module")
+        if b.channel not in CHANNELS or b.direction not in {"in", "out", "internal"}:
+            raise HTTPException(400, "Unknown channel or direction")
+        if len(b.subject) > 500 or len(b.body) > 20_000:
+            raise HTTPException(400, "Interaction is too long")
+        record_or_404(con, b.module, b.record_id, user)
         aid = b.account_id
-        if not aid and b.module == "accounts": aid = b.record_id
+        if not aid and b.module == "accounts":
+            aid = b.record_id
+        if aid:
+            record_or_404(con, "accounts", int(aid), user)
         log_interaction(b.module, b.record_id, b.channel, b.subject, b.body,
                         b.direction, aid, actor=user["name"])
         return {"ok": True}
 
     @app.get("/api/interactions/stats")
     def interaction_stats(user=Depends(current_user)):
+        if user["role"] == "agent":
+            raise HTTPException(403, "Manager permissions required")
         rows = [dict(r) for r in con.execute("""
             SELECT channel k, COUNT(*) n, SUM(CASE WHEN direction='in' THEN 1 ELSE 0 END) inbound
             FROM interactions GROUP BY channel ORDER BY n DESC""")]
@@ -296,10 +310,15 @@ def register(app, current_user, require):
 
     @app.post("/api/dashboards")
     def save_dash(b: Dash, user=Depends(current_user)):
-        if user["role"] == "readonly": raise HTTPException(403, "Read-only user")
+        if user["role"] == "readonly":
+            raise HTTPException(403, "Read-only user")
+        if not b.name.strip() or len(b.name) > 200 or len(b.layout) > 50:
+            raise HTTPException(400, "Invalid dashboard")
+        if b.shared and user["role"] not in ("admin", "manager"):
+            raise HTTPException(403, "Only managers can share dashboards")
         import db as D
         did = con.execute("""INSERT INTO dashboards(name,owner_id,shared,layout,created_at)
-            VALUES(?,?,?,?,?)""", (b.name, user["id"], 1 if b.shared else 0,
+            VALUES(?,?,?,?,?)""", (b.name.strip(), user["id"], 1 if b.shared else 0,
             json.dumps(b.layout, ensure_ascii=False), D.now())).lastrowid
         con.commit(); return {"id": did}
 
@@ -320,7 +339,8 @@ def register(app, current_user, require):
         if module not in MODULES: raise HTTPException(400, "Unknown module")
         cols = [f["name"] for f in MODULES[module]["fields"]] + \
                [r["name"] for r in con.execute("SELECT name FROM custom_fields WHERE module=?", (module,))]
-        w, p = ["deleted=0"], []
+        scoped, scope_params = scope_clause(user, module)
+        w, p = ["deleted=0", scoped], list(scope_params)
         if filter_field and filter_field in cols and filter_value:
             w.append(f'"{filter_field}"=?'); p.append(filter_value)
         agg = {"count": "COUNT(*)", "sum": f'SUM("{field}")', "avg": f'AVG("{field}")',
@@ -349,12 +369,18 @@ def register(app, current_user, require):
     @app.post("/api/keys")
     def create_key(b: KeyBody, user=Depends(current_user)):
         require(user, "admin")
+        scopes = {scope.strip() for scope in (b.scopes or "").split(",") if scope.strip()}
+        if not scopes or not scopes <= {"read", "write"}:
+            raise HTTPException(400, "Scopes must be read, write, or read,write")
+        name = b.name.strip()
+        if not name or len(name) > 200:
+            raise HTTPException(400, "API key name is required")
         import db as D
         raw = "nx_" + secrets.token_urlsafe(30)
         pref = raw[:11]
         con.execute("""INSERT INTO api_keys(name,prefix,hash,scopes,active,created_by,created_at)
-            VALUES(?,?,?,?,1,?,?)""", (b.name, pref,
-            hashlib.sha256(raw.encode()).hexdigest(), b.scopes, user["id"], D.now()))
+            VALUES(?,?,?,?,1,?,?)""", (name, pref,
+            hashlib.sha256(raw.encode()).hexdigest(), ",".join(sorted(scopes)), user["id"], D.now()))
         con.commit()
         return {"key": raw, "prefix": pref,
                 "note": "احفظ المفتاح الآن — لن يُعرض مرة أخرى"}
@@ -370,7 +396,8 @@ def register(app, current_user, require):
         h = hashlib.sha256(key.encode()).hexdigest()
         r = con.execute("SELECT * FROM api_keys WHERE hash=? AND active=1", (h,)).fetchone()
         if not r: raise HTTPException(401, "Invalid API key")
-        if need_write and "write" not in (r["scopes"] or ""):
+        scopes = {scope.strip() for scope in (r["scopes"] or "").split(",") if scope.strip()}
+        if need_write and "write" not in scopes:
             raise HTTPException(403, "Key lacks write scope")
         import db as D
         con.execute("UPDATE api_keys SET last_used=?, calls=calls+1 WHERE id=?", (D.now(), r["id"]))
@@ -381,9 +408,12 @@ def register(app, current_user, require):
     def public_list(module: str, request: Request, limit: int = 50, offset: int = 0):
         from schema import MODULES
         check_api_key(request.headers.get("X-API-Key", ""))
-        if module not in MODULES: raise HTTPException(404, "Unknown module")
+        if module not in MODULES:
+            raise HTTPException(404, "Unknown module")
+        if not 1 <= limit <= 200 or offset < 0:
+            raise HTTPException(400, "limit must be 1-200 and offset cannot be negative")
         rows = con.execute(f'SELECT * FROM "{module}" WHERE deleted=0 LIMIT ? OFFSET ?',
-                           (min(200, limit), offset)).fetchall()
+                           (limit, offset)).fetchall()
         total = con.execute(f'SELECT COUNT(*) n FROM "{module}" WHERE deleted=0').fetchone()["n"]
         return {"data": [dict(r) for r in rows], "total": total, "limit": limit, "offset": offset}
 
@@ -427,6 +457,10 @@ def register(app, current_user, require):
     @app.put("/api/integrations/{code}")
     def toggle_int(code: str, body: dict, user=Depends(current_user)):
         require(user, "admin")
+        if code not in {item["code"] for item in INTEGRATIONS}:
+            raise HTTPException(404, "Unknown integration")
+        if not isinstance(body, dict) or not isinstance(body.get("config", {}), dict):
+            raise HTTPException(400, "Invalid integration configuration")
         import db as D
         con.execute("""INSERT INTO integrations(code,enabled,config,updated_at) VALUES(?,?,?,?)
             ON CONFLICT(code) DO UPDATE SET enabled=excluded.enabled,
@@ -448,21 +482,34 @@ def register(app, current_user, require):
     async def hook_whatsapp(request: Request):
         """Inbound WhatsApp Business message -> logged on the customer timeline."""
         check_api_key(request.headers.get("X-API-Key", ""), need_write=True)
-        b = await request.json()
-        phone = b.get("from") or b.get("phone") or ""
-        text = b.get("text") or b.get("body") or ""
+        try:
+            b = await request.json()
+        except (TypeError, ValueError, json.JSONDecodeError):
+            raise HTTPException(400, "Invalid JSON payload")
+        if not isinstance(b, dict):
+            raise HTTPException(400, "Invalid JSON payload")
+        phone = str(b.get("from") or b.get("phone") or "").strip()
+        text = str(b.get("text") or b.get("body") or "").strip()
+        external_id = str(b.get("message_id") or "").strip()[:200]
+        if not phone or not text or len(text) > 20_000:
+            raise HTTPException(400, "phone and text are required")
+        if external_id:
+            existing = con.execute("SELECT module,record_id FROM interactions WHERE channel='whatsapp' AND external_id=?",
+                                   (external_id,)).fetchone()
+            if existing:
+                return {"ok": True, "duplicate": True, "module": existing["module"],
+                        "record_id": existing["record_id"]}
         cid, aid = _find_by_phone(phone)
         module, rid = ("contacts", cid) if cid else ("leads", 0)
         if not cid:
             import db as D
+            name = str(b.get("name") or phone).strip()[:200]
             rid = con.execute("""INSERT INTO leads(created_at,updated_at,deleted,name,phone,
                 status,source,rating,description) VALUES(?,?,0,?,?,'New','Web','Warm',?)""",
-                (D.now(), D.now(), b.get("name") or phone, phone,
-                 "أول رسالة واتساب: " + text[:200])).lastrowid
+                (D.now(), D.now(), name, phone[:100], "أول رسالة واتساب: " + text[:200])).lastrowid
             con.commit()
         log_interaction(module, rid or 0, "whatsapp", "رسالة واتساب", text, "in",
-                        int(aid) if aid else None, cid, actor=phone,
-                        external_id=b.get("message_id"))
+                        int(aid) if aid else None, cid, actor=phone[:100], external_id=external_id or None)
         return {"ok": True, "module": module, "record_id": rid, "matched": bool(cid)}
 
     @app.post("/api/hooks/leadform")
@@ -470,14 +517,22 @@ def register(app, current_user, require):
         """Website / Facebook lead form -> new lead + AI score."""
         check_api_key(request.headers.get("X-API-Key", ""), need_write=True)
         import db as D, ai as AI
-        b = await request.json()
-        if not b.get("name") and not b.get("email"):
+        try:
+            b = await request.json()
+        except (TypeError, ValueError, json.JSONDecodeError):
+            raise HTTPException(400, "Invalid JSON payload")
+        if not isinstance(b, dict):
+            raise HTTPException(400, "Invalid JSON payload")
+        name, email = str(b.get("name") or "").strip(), str(b.get("email") or "").strip()
+        if not name and not email:
             raise HTTPException(400, "name or email required")
+        if len(name) > 200 or len(email) > 320 or (email and "@" not in email):
+            raise HTTPException(400, "Invalid lead data")
         rid = con.execute("""INSERT INTO leads(created_at,updated_at,deleted,name,company,email,
             phone,city,status,source,rating,description) VALUES(?,?,0,?,?,?,?,?,'New',?,'Warm',?)""",
-            (D.now(), D.now(), b.get("name") or b.get("email"), b.get("company", ""),
-             b.get("email", ""), b.get("phone", ""), b.get("city", ""),
-             b.get("source", "Web"), b.get("message", ""))).lastrowid
+            (D.now(), D.now(), (name or email)[:200], str(b.get("company", ""))[:200],
+             email, str(b.get("phone", ""))[:100], str(b.get("city", ""))[:200],
+             str(b.get("source", "Web"))[:100], str(b.get("message", ""))[:20_000])).lastrowid
         con.commit()
         log_interaction("leads", rid, b.get("channel", "web"), "نموذج ويب",
                         b.get("message", ""), "in", actor=b.get("email", ""))
@@ -495,9 +550,22 @@ def register(app, current_user, require):
         """E-commerce order -> account + invoice."""
         check_api_key(request.headers.get("X-API-Key", ""), need_write=True)
         import db as D
-        b = await request.json()
-        email = b.get("email", ""); name = b.get("customer") or email
-        total = _f(b.get("total"))
+        try:
+            b = await request.json()
+        except (TypeError, ValueError, json.JSONDecodeError):
+            raise HTTPException(400, "Invalid JSON payload")
+        if not isinstance(b, dict):
+            raise HTTPException(400, "Invalid JSON payload")
+        email = str(b.get("email", "")).strip()
+        name = str(b.get("customer") or email).strip()
+        try:
+            total = float(b.get("total"))
+        except (TypeError, ValueError):
+            raise HTTPException(400, "A valid order total is required")
+        if not math.isfinite(total) or total <= 0 or not name or len(name) > 200:
+            raise HTTPException(400, "A valid order total and customer are required")
+        if email and (len(email) > 320 or "@" not in email):
+            raise HTTPException(400, "Invalid customer email")
         c = con.execute("SELECT id,account_id FROM contacts WHERE deleted=0 AND lower(email)=lower(?)",
                         (email,)).fetchone()
         if c and c["account_id"]:

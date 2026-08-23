@@ -171,15 +171,15 @@ REPORTS = {
                  ("v", "الإيراد", "Revenue", "money")],
     },
     "geo_performance": {
-        "ar": "الأداء حسب المحافظة", "en": "Performance by Governorate", "group": "customers", "icon": "🗺️",
-        "desc_ar": "العملاء والإيراد موزّعين جغرافياً",
+        "ar": "الأداء حسب الدولة", "en": "Performance by Country", "group": "customers", "icon": "🗺️",
+        "desc_ar": "العملاء والإيراد موزّعون حسب الدولة",
         "sql": """SELECT g.name_ar k, COUNT(a.id) n,
                     COALESCE(SUM((SELECT SUM(d.amount) FROM deals d WHERE d.deleted=0
                       AND d.stage='Closed Won' AND CAST(d.account_id AS INTEGER)=a.id)),0) v
                   FROM geo_governorates g
                   LEFT JOIN accounts a ON CAST(a.gov_id AS INTEGER)=g.id AND a.deleted=0
                   GROUP BY g.id HAVING n>0 ORDER BY v DESC""",
-        "cols": [("k", "المحافظة", "Governorate", "text"), ("n", "العملاء", "Customers", "int"),
+        "cols": [("k", "الدولة", "Country", "text"), ("n", "العملاء", "Customers", "int"),
                  ("v", "الإيراد", "Revenue", "money")],
     },
 
@@ -330,6 +330,7 @@ def register(app, current_user, require):
 
     @app.get("/api/reports/catalogue")
     def catalogue(user=Depends(current_user)):
+        require(user, "admin", "manager")
         out = []
         for code, r in REPORTS.items():
             if r.get("admin_only") and user["role"] != "admin":
@@ -343,6 +344,7 @@ def register(app, current_user, require):
 
     @app.get("/api/reports/run/{code}")
     def run(code: str, date_from: str = "", date_to: str = "", user=Depends(current_user)):
+        require(user, "admin", "manager")
         rep = REPORTS.get(code)
         if rep and rep.get("admin_only") and user["role"] != "admin":
             raise HTTPException(403, "Admins only")
@@ -350,19 +352,13 @@ def register(app, current_user, require):
 
     @app.get("/api/reports/export/{code}.{fmt}")
     def export(code: str, fmt: str, date_from: str = "", date_to: str = "",
-               lang: str = "ar", token: str = "", user=None):
-        """CSV / Excel-compatible export. Token in query so it works from a link."""
-        import main as M
-        uid = M.parse_token(token)
-        if not uid:
-            raise HTTPException(401, "Auth required")
-        u = con.execute("SELECT role FROM users WHERE id=? AND active=1", (uid,)).fetchone()
-        if not u:
-            raise HTTPException(401, "Auth required")
+               lang: str = "ar", user=Depends(current_user)):
+        """CSV / Excel-compatible export authenticated with the bearer header."""
+        require(user, "admin", "manager")
         rep = REPORTS.get(code)
         if not rep:
             raise HTTPException(404, "Unknown report")
-        if rep.get("admin_only") and u["role"] != "admin":
+        if rep.get("admin_only") and user["role"] != "admin":
             raise HTTPException(403, "Admins only")
         data = run_report(code, date_from, date_to)
         cols = rep["cols"]

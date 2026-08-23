@@ -91,7 +91,7 @@ def diagram_architecture():
         ("schema.py", "15 وحدة بيانات"), ("ai.py", "7 محركات ذكاء"),
         ("reports.py", "17 تقريراً"), ("payments.py", "36 قناة دفع"),
         ("loyalty.py", "الولاء"), ("segments.py", "RFM والرواكد"),
-        ("partners.py", "الوكلاء والعمولات"), ("geo.py", "44 ألف موقع"),
+        ("partners.py", "الوكلاء والعمولات"), ("geo.py", "خريطة عالمية"),
         ("intel.py", "ذكاء السوق"), ("mailer.py", "البريد والقوالب"),
         ("platform_ext.py", "360° وتكاملات"), ("portal.py", "البوابات"),
     ]

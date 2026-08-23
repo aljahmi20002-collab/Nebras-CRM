@@ -11,6 +11,8 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 
 import db as D
+from authz import record_or_404
+from schema import MODULES
 
 mail = APIRouter()
 con = None  # injected
@@ -75,29 +77,36 @@ def render(text: str, ctx: dict) -> str:
 
 
 def _smtp_send(to_email, subject, body, eid):
-    host = cfg("smtp_host")
-    if not host:
-        con.execute("UPDATE emails SET status='sandbox', sent_at=? WHERE id=?", (D.now(), eid))
-        con.commit()
-        return
+    """Deliver using an independent SQLite connection (safe for the worker thread)."""
+    worker = D.connect()
+    def worker_cfg(key, default=""):
+        row = worker.execute("SELECT value FROM settings WHERE key=?", (key,)).fetchone()
+        return (row["value"] if row else default) or default
     try:
+        host = worker_cfg("smtp_host")
+        if not host:
+            worker.execute("UPDATE emails SET status='sandbox', sent_at=? WHERE id=?", (D.now(), eid))
+            worker.commit()
+            return
         msg = MIMEMultipart()
-        msg["From"] = cfg("smtp_from", "no-reply@nebrascrm.io")
+        msg["From"] = worker_cfg("smtp_from", "no-reply@nebrascrm.io")
         msg["To"] = to_email
         msg["Subject"] = subject
         msg.attach(MIMEText(body, "plain", "utf-8"))
-        s = smtplib.SMTP(host, int(cfg("smtp_port", "587") or 587), timeout=15)
-        if cfg("smtp_tls", "1") == "1":
-            s.starttls()
-        if cfg("smtp_user"):
-            s.login(cfg("smtp_user"), cfg("smtp_pass"))
-        s.sendmail(msg["From"], [to_email], msg.as_string())
-        s.quit()
-        con.execute("UPDATE emails SET status='sent', sent_at=? WHERE id=?", (D.now(), eid))
-    except Exception as e:
-        con.execute("UPDATE emails SET status='failed', error=?, sent_at=? WHERE id=?",
-                    (str(e)[:300], D.now(), eid))
-    con.commit()
+        smtp = smtplib.SMTP(host, int(worker_cfg("smtp_port", "587") or 587), timeout=15)
+        if worker_cfg("smtp_tls", "1") == "1":
+            smtp.starttls()
+        if worker_cfg("smtp_user"):
+            smtp.login(worker_cfg("smtp_user"), worker_cfg("smtp_pass"))
+        smtp.sendmail(msg["From"], [to_email], msg.as_string())
+        smtp.quit()
+        worker.execute("UPDATE emails SET status='sent', sent_at=? WHERE id=?", (D.now(), eid))
+    except Exception as exc:
+        worker.execute("UPDATE emails SET status='failed', error=?, sent_at=? WHERE id=?",
+                       (str(exc)[:300], D.now(), eid))
+    finally:
+        worker.commit()
+        worker.close()
 
 
 def send(to_email, subject, body, to_name="", module=None, record_id=None,
@@ -137,6 +146,9 @@ def register(app, current_user, require):
 
     @app.get("/api/email/outbox")
     def outbox(q: str = "", status: str = "", user=Depends(current_user)):
+        require(user, "admin", "manager")
+        if len(q) > 250:
+            raise HTTPException(400, "Search query is too long")
         w, p = ["1=1"], []
         if q:
             w.append("(to_email LIKE ? OR subject LIKE ?)"); p += [f"%{q}%"] * 2
@@ -147,6 +159,9 @@ def register(app, current_user, require):
 
     @app.get("/api/email/thread/{module}/{rid}")
     def thread(module: str, rid: int, user=Depends(current_user)):
+        if module not in MODULES:
+            raise HTTPException(404, "Unknown module")
+        record_or_404(con, module, rid, user)
         return [dict(r) for r in con.execute(
             "SELECT * FROM emails WHERE module=? AND record_id=? ORDER BY id DESC", (module, rid))]
 
@@ -162,8 +177,17 @@ def register(app, current_user, require):
     def compose(b: Compose, user=Depends(current_user)):
         if user["role"] == "readonly":
             raise HTTPException(403, "Read-only user")
+        email = b.to_email.strip()
+        if len(email) > 320 or "@" not in email or "\n" in email or "\r" in email:
+            raise HTTPException(400, "Invalid recipient email")
+        if len(b.subject) > 500 or len(b.body) > 20_000 or len(b.to_name) > 200:
+            raise HTTPException(400, "Email content is too long")
+        if b.module or b.record_id:
+            if not b.module or b.record_id is None or b.module not in MODULES:
+                raise HTTPException(400, "A valid related record is required")
+            record_or_404(con, b.module, b.record_id, user)
         ctx = {"owner": user["name"], "company": cfg("company_name", "NebrasCRM"), "name": b.to_name}
-        eid = send(b.to_email, render(b.subject, ctx), render(b.body, ctx), to_name=b.to_name,
+        eid = send(email, render(b.subject, ctx), render(b.body, ctx), to_name=b.to_name,
                    module=b.module, record_id=b.record_id, user_id=user["id"])
         r = con.execute("SELECT status FROM emails WHERE id=?", (eid,)).fetchone()
         return {"id": eid, "status": r["status"] if r else "queued"}

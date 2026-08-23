@@ -77,7 +77,7 @@ chmod +x dist/NebrasCRM-1.0.0-x86_64.AppImage
 sudo dpkg -i dist/NebrasCRM-1.0.0-amd64.deb
 ```
 
-عند أول تشغيل: القائمة **ملف ← الإعدادات** لضبط عنوان الخادم (افتراضياً `http://localhost:8000`).
+عند أول تشغيل: القائمة **ملف ← الإعدادات** لضبط عنوان الخادم (افتراضياً `http://localhost:8008`).
 
 ---
 
@@ -150,11 +150,18 @@ keytool -genkeypair -v -keystore my-release.keystore \
   -alias mykey -keyalg RSA -keysize 2048 -validity 10000
 ```
 
-ثم عدّل `mobile/android/app/build.gradle` ليشير إليه، ومرّر كلمات المرور
-عبر متغيرات البيئة `NEBRAS_STORE_PASS` و`NEBRAS_KEY_PASS`.
+عند أول `./build-mobile.sh release` ينشئ السكربت مفتاح تجربة وكلمات مرور عشوائية،
+ويحفظها محلياً في `mobile/android/nebras-release.properties` (مستثنى من Git).
+للمفتاح الإنتاجي استخدم مفتاحك الخاص ثم مرّر القيم في CI أو جلسة البناء:
 
-> **⚠️ احفظ المفتاح في مكان آمن خارج المستودع.**
-> فقدانه يعني **استحالة تحديث التطبيق على Google Play إلى الأبد** — لا يوجد استرجاع.
+```bash
+export NEBRAS_STORE_PASS='...'
+export NEBRAS_KEY_PASS='...'
+export NEBRAS_KEY_ALIAS='mykey'   # اختياري؛ الافتراضي nebras
+```
+
+> **⚠️ احفظ المفتاح وملف كلمات المرور في مكان آمن خارج المستودع.**
+> فقدان مفتاح الإنتاج يعني **استحالة تحديث التطبيق على Google Play إلى الأبد** — لا يوجد استرجاع.
 
 ---
 
@@ -181,7 +188,7 @@ keytool -genkeypair -v -keystore my-release.keystore \
 | `Android SDK غير موجود` | اتبع خطوات التثبيت أعلاه أو اضبط `ANDROID_HOME` |
 | `libnss3.so` عند تشغيل Electron | `sudo apt install libnss3 libgtk-3-0 libasound2` |
 | التطبيق لا يتصل بالخادم | تأكد أن الخادم يعمل على `0.0.0.0` لا `127.0.0.1`، واضبط العنوان في الإعدادات |
-| الجوال لا يرى الخادم المحلي | استخدم `10.0.2.2:8000` للمحاكي، أو عنوان IP للشبكة للجهاز الحقيقي |
+| الجوال لا يرى الخادم المحلي | استخدم `10.0.2.2:8008` للمحاكي، أو عنوان IP للشبكة للجهاز الحقيقي |
 | البناء بطيء أول مرة | طبيعي — Electron ~106MB واعتماديات Gradle؛ المرات التالية أسرع |
 
 ---

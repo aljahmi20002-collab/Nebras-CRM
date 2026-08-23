@@ -53,8 +53,7 @@
           ]
         }
       ],
-      "icon": "build/icon.ico",
-      "artifactName": "NebrasCRM-Setup-${version}-${arch}.${ext}"
+      "icon": "build/icon.ico"
     },
     "nsis": {
       "oneClick": false,

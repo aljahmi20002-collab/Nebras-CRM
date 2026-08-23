@@ -271,6 +271,9 @@ def register(app, current_user, require):
 
     @app.get("/api/loyalty/members")
     def members(member_type: str = "customer", user=Depends(current_user)):
+        require(user, "admin", "manager")
+        if member_type not in ("customer", "partner"):
+            raise HTTPException(400, "Unknown member type")
         if member_type == "customer":
             src = [dict(r) for r in con.execute(
                 "SELECT id, name FROM accounts WHERE deleted=0")]
@@ -298,6 +301,12 @@ def register(app, current_user, require):
 
     @app.get("/api/loyalty/member/{member_type}/{mid}")
     def member(member_type: str, mid: int, user=Depends(current_user)):
+        require(user, "admin", "manager")
+        if member_type not in ("customer", "partner"):
+            raise HTTPException(400, "Unknown member type")
+        table = "accounts" if member_type == "customer" else "agents"
+        if not con.execute(f"SELECT 1 FROM {table} WHERE id=? AND deleted=0", (mid,)).fetchone():
+            raise HTTPException(404, "Member not found")
         rows, total = compute(member_type, mid)
         t = tier_for(total)
         nxt = None
@@ -319,6 +328,8 @@ def register(app, current_user, require):
     @app.post("/api/loyalty/recompute")
     def recompute(member_type: str = "customer", user=Depends(current_user)):
         require(user, "admin", "manager")
+        if member_type not in ("customer", "partner"):
+            raise HTTPException(400, "Unknown member type")
         import db as D
         n = 0
         src = con.execute(
@@ -356,7 +367,14 @@ def register(app, current_user, require):
 
     @app.post("/api/loyalty/redeem")
     def redeem(b: Redeem, user=Depends(current_user)):
-        if user["role"] == "readonly": raise HTTPException(403, "Read-only user")
+        require(user, "admin", "manager")
+        if b.member_type not in ("customer", "partner"):
+            raise HTTPException(400, "Unknown member type")
+        table = "accounts" if b.member_type == "customer" else "agents"
+        if not con.execute(f"SELECT 1 FROM {table} WHERE id=? AND deleted=0", (b.member_id,)).fetchone():
+            raise HTTPException(404, "Member not found")
+        if not b.reward.strip() or len(b.reward) > 500 or b.value < 0:
+            raise HTTPException(400, "Invalid redemption")
         rows, total = compute(b.member_type, b.member_id)
         spent = _f(con.execute("""SELECT SUM(points) FROM loyalty_redemptions
             WHERE member_type=? AND member_id=? AND status='approved'""",
@@ -375,6 +393,7 @@ def register(app, current_user, require):
 
     @app.get("/api/loyalty/summary")
     def summary(user=Depends(current_user)):
+        require(user, "admin", "manager")
         out = {}
         for mt in ("customer", "partner"):
             data = members(mt, user)

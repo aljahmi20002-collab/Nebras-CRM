@@ -196,14 +196,14 @@
 
 **تصدير:** `/api/reports/export/customer_segments.csv` · `.xls` · `.json`
 
-### 🗺️ الأداء حسب المحافظة
-`geo_performance` · *Performance by Governorate*
+### 🗺️ الأداء حسب الدولة
+`geo_performance` · *Performance by Country*
 
-> العملاء والإيراد موزّعين جغرافياً
+> العملاء والإيراد موزّعون حسب الدولة
 
 | العمود | Column | النوع |
 |---|---|---|
-| المحافظة | Governorate | نص |
+| الدولة | Country | نص |
 | العملاء | Customers | عدد |
 | الإيراد | Revenue | مبلغ |
 

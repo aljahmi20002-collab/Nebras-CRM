@@ -4,17 +4,27 @@ A third, independent auth realm (separate from staff CRM and customer portal).
 A partner user is bound to one `agents` row and every query is hard-scoped to it,
 so a partner can never see another partner's customers, commissions or balances.
 """
-import os, json, hmac, base64, hashlib, datetime, secrets
+import os, datetime, secrets
 from typing import Optional
-from fastapi import APIRouter, HTTPException, Depends, Header
+from fastapi import APIRouter, HTTPException, Depends, Header, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 import db as D
 import mailer as M
 import partners as PT
+from security import (
+    LoginThrottle, client_ip, configured_secret, hash_password, make_token as sign_token,
+    parse_token as parse_signed_token, password_error, verify_password,
+)
 
-ASECRET = "arena-crm-agent-portal-secret"
+LEGACY_ASECRET = "arena-crm-agent-portal-secret"
+ASECRET = configured_secret("CRM_AGENT_PORTAL_SECRET", LEGACY_ASECRET, "NebrasCRM partner portal authentication")
+try:
+    AGENT_TOKEN_TTL = max(300, int(os.environ.get("CRM_AGENT_TOKEN_TTL_SECONDS", "28800")))
+except ValueError:
+    AGENT_TOKEN_TTL = 28800
+AGENT_LOGIN_THROTTLE = LoginThrottle()
 aportal = APIRouter()
 HERE = os.path.dirname(os.path.abspath(__file__))
 con = None
@@ -33,22 +43,19 @@ def init_tables(c):
 
 
 def ahash(pw: str) -> str:
-    return hashlib.sha256((pw + ASECRET).encode()).hexdigest()
+    return hash_password(pw)
+
+
+def _verify_password(pw: str, stored: str):
+    return verify_password(pw, stored, legacy_secrets=(ASECRET, LEGACY_ASECRET))
 
 
 def atoken(uid: int) -> str:
-    p = base64.urlsafe_b64encode(json.dumps({"aid": uid}).encode()).decode()
-    return f'{p}.{hmac.new(ASECRET.encode(), p.encode(), hashlib.sha256).hexdigest()[:32]}'
+    return sign_token(uid, ASECRET, AGENT_TOKEN_TTL)
 
 
 def parse_atoken(tok: str):
-    try:
-        p, s = tok.split(".")
-        if not hmac.compare_digest(s, hmac.new(ASECRET.encode(), p.encode(), hashlib.sha256).hexdigest()[:32]):
-            return None
-        return json.loads(base64.urlsafe_b64decode(p)).get("aid")
-    except Exception:
-        return None
+    return parse_signed_token(tok, ASECRET)
 
 
 def agent_user(authorization: Optional[str] = Header(None)):
@@ -60,7 +67,10 @@ def agent_user(authorization: Optional[str] = Header(None)):
     r = con.execute("""SELECT au.*, a.name aname, a.code, a.type, a.commission_model,
                               a.commission_rate, a.tiers, a.target, a.credit_limit, a.status,
                               a.phone, a.joined_at, a.gov_id, a.district_id,
-                              g.name_ar gov_ar, d.name_ar dis_ar
+                              g.name_ar gov_ar, d.name_ar dis_ar,
+               g.name_ar country_ar, d.name_ar region_ar,
+                              g.name_ar country_ar, g.name_en country_en,
+                              d.name_ar region_ar, d.name_en region_en
                        FROM agent_users au JOIN agents a ON a.id=au.agent_id
                        LEFT JOIN geo_governorates g ON g.id=a.gov_id
                        LEFT JOIN geo_districts d ON d.id=a.district_id
@@ -79,12 +89,25 @@ class ALogin(BaseModel):
 
 
 @aportal.post("/agent/api/login")
-def alogin(b: ALogin):
+def alogin(b: ALogin, request: Request):
+    email = b.email.strip().lower()
+    if not email or len(email) > 320:
+        raise HTTPException(400, "Invalid email")
+    key = f"{client_ip(request)}|{email}"
+    wait = AGENT_LOGIN_THROTTLE.wait_minutes(key)
+    if wait:
+        raise HTTPException(429, f"Too many failed attempts. Try again in {wait} minutes.")
     r = con.execute("SELECT * FROM agent_users WHERE lower(email)=lower(?) AND active=1",
-                    (b.email,)).fetchone()
-    if not r or r["password"] != ahash(b.password):
+                    (email,)).fetchone()
+    valid, upgrade = _verify_password(b.password, r["password"] if r else "")
+    if not r or not valid:
+        AGENT_LOGIN_THROTTLE.fail(key)
         raise HTTPException(401, "Invalid credentials")
-    con.execute("UPDATE agent_users SET last_login=? WHERE id=?", (D.now(), r["id"])); con.commit()
+    if upgrade:
+        con.execute("UPDATE agent_users SET password=? WHERE id=?", (ahash(b.password), r["id"]))
+    AGENT_LOGIN_THROTTLE.clear(key)
+    con.execute("UPDATE agent_users SET last_login=? WHERE id=?", (D.now(), r["id"]))
+    con.commit()
     a = con.execute("SELECT name,type FROM agents WHERE id=?", (r["agent_id"],)).fetchone()
     return {"token": atoken(r["id"]),
             "user": {"email": r["email"], "name": a["name"] if a else r["email"],
@@ -97,7 +120,9 @@ def ame(u=Depends(agent_user)):
     sales = PT._f(con.execute("""SELECT SUM(amount) FROM deals WHERE deleted=0
         AND stage='Closed Won' AND CAST(agent_id AS INTEGER)=?""", (aid,)).fetchone()[0])
     return {"email": u["email"], "name": u["aname"], "code": u["code"], "type": u["type"],
-            "phone": u["phone"], "gov": u["gov_ar"], "district": u["dis_ar"],
+            "phone": u["phone"], "country": u["country_ar"], "region": u["region_ar"],
+            # Deprecated aliases retained for older portal clients.
+            "gov": u["country_ar"], "district": u["region_ar"],
             "target": u["target"], "sales": sales, "joined_at": u["joined_at"],
             "commission_model": u["commission_model"],
             "rate": PT.tier_rate(u, sales) if u["commission_model"] == "tiered" else u["commission_rate"]}
@@ -151,6 +176,7 @@ def acustomers(u=Depends(agent_user)):
     return [dict(r) for r in con.execute("""
         SELECT a.id,a.name,a.industry,a.phone,a.segment,a.list_tag,
                g.name_ar gov_ar, d.name_ar dis_ar,
+               g.name_ar country_ar, d.name_ar region_ar,
                (SELECT COALESCE(SUM(dl.amount),0) FROM deals dl WHERE dl.deleted=0
                  AND dl.stage='Closed Won' AND CAST(dl.account_id AS INTEGER)=a.id) revenue,
                (SELECT COALESCE(SUM(COALESCE(i.amount,0)-COALESCE(i.paid_amount,0)),0)
@@ -237,7 +263,8 @@ def astock(u=Depends(agent_user)):
 @aportal.get("/agent/api/territories")
 def aterritories(u=Depends(agent_user)):
     return [dict(r) for r in con.execute("""
-        SELECT t.*, g.name_ar gov_ar, g.name_en gov_en, d.name_ar dis_ar
+        SELECT t.*, g.name_ar gov_ar, g.name_en gov_en, d.name_ar dis_ar,
+               g.name_ar country_ar, g.name_en country_en, d.name_ar region_ar, d.name_en region_en
         FROM territories t
         LEFT JOIN geo_governorates g ON g.id=t.gov_id
         LEFT JOIN geo_districts d ON d.id=t.district_id
@@ -309,10 +336,12 @@ class APw(BaseModel):
 
 @aportal.post("/agent/api/password")
 def apassword(b: APw, u=Depends(agent_user)):
-    if u["password"] != ahash(b.current):
+    valid, _upgrade = _verify_password(b.current, u["password"])
+    if not valid:
         raise HTTPException(400, "Current password is incorrect")
-    if len(b.new) < 6:
-        raise HTTPException(400, "Password too short (min 6)")
+    error = password_error(b.new)
+    if error:
+        raise HTTPException(400, error)
     con.execute("UPDATE agent_users SET password=? WHERE id=?", (ahash(b.new), u["id"]))
     con.commit()
     return {"ok": True}
@@ -323,6 +352,7 @@ def register_admin(app, current_user, require):
 
     @app.get("/api/agent-access")
     def list_access(user=Depends(current_user)):
+        require(user, "admin", "manager")
         return [dict(r) for r in con.execute("""
             SELECT au.id,au.agent_id,au.email,au.active,au.last_login,au.created_at,
                    a.name aname, a.type FROM agent_users au
@@ -338,7 +368,10 @@ def register_admin(app, current_user, require):
         email = (body.get("email") or a["email"] or "").strip()
         if not email:
             raise HTTPException(400, "This partner has no email")
-        pw = body.get("password") or "agent123"
+        pw = body.get("password") or secrets.token_urlsafe(12)
+        error = password_error(pw)
+        if error:
+            raise HTTPException(400, error)
         if con.execute("SELECT 1 FROM agent_users WHERE agent_id=? OR lower(email)=lower(?)",
                        (aid, email)).fetchone():
             raise HTTPException(400, "Portal access already exists for this partner/email")
@@ -359,6 +392,9 @@ def register_admin(app, current_user, require):
         if "active" in body:
             con.execute("UPDATE agent_users SET active=? WHERE id=?", (int(body["active"]), uid))
         if body.get("password"):
+            error = password_error(body["password"])
+            if error:
+                raise HTTPException(400, error)
             con.execute("UPDATE agent_users SET password=? WHERE id=?",
                         (ahash(body["password"]), uid))
         con.commit()
@@ -372,6 +408,7 @@ def register_admin(app, current_user, require):
 
     @app.get("/api/agent-requests")
     def staff_requests(status: str = "", user=Depends(current_user)):
+        require(user, "admin", "manager")
         w = "WHERE r.status=?" if status else ""
         p = [status] if status else []
         return [dict(r) for r in con.execute(f"""

@@ -33,20 +33,24 @@
 | `PUT` | `/api/email/templates/{tid}` | `upd_tpl` | mailer.py |
 | `POST` | `/api/email/test` | `test_mail` | mailer.py |
 | `GET` | `/api/email/thread/{module}/{rid}` | `thread` | mailer.py |
-| `GET` | `/api/geo/districts` | `districts` | geo.py |
-| `GET` | `/api/geo/governorates` | `governorates` | geo.py |
+| `GET` | `/api/geo/status` | `status` | geo.py |
+| `GET` | `/api/geo/countries` | `countries` | geo.py |
+| `GET` | `/api/geo/regions` | `regions` | geo.py |
+| `GET` | `/api/geo/cities` | `cities` | geo.py |
+| `GET` | `/api/geo/cities/{city_id}` | `city` | geo.py |
 | `GET` | `/api/geo/levels` | `levels` | geo.py |
-| `GET` | `/api/geo/quarters` | `quarters` | geo.py |
-| `POST` | `/api/geo/quarters` | `add_quarter` | geo.py |
+| `GET` | `/api/geo/neighborhoods` | `neighborhoods` | geo.py |
+| `POST` | `/api/geo/neighborhoods` | `add_neighborhood` | geo.py |
 | `GET` | `/api/geo/search` | `geo_search` | geo.py |
 | `GET` | `/api/geo/stats` | `stats` | geo.py |
 | `GET` | `/api/geo/streets` | `streets` | geo.py |
 | `POST` | `/api/geo/streets` | `add_street` | geo.py |
-| `GET` | `/api/geo/territories` | `list_terr` | geo.py |
-| `POST` | `/api/geo/territories` | `add_terr` | geo.py |
-| `DELETE` | `/api/geo/territories/{tid}` | `del_terr` | geo.py |
-| `GET` | `/api/geo/uzlah` | `uzlah` | geo.py |
-| `GET` | `/api/geo/villages` | `villages` | geo.py |
+| `GET` | `/api/geo/territories` | `list_territories` | geo.py |
+| `POST` | `/api/geo/territories` | `add_territory` | geo.py |
+| `DELETE` | `/api/geo/territories/{territory_id}` | `delete_territory` | geo.py |
+| `POST` | `/api/geo/rebuild` | `rebuild` | geo.py |
+| `GET` | `/api/geo/governorates` | legacy alias for countries | geo.py |
+| `GET` | `/api/geo/districts` | legacy alias for regions | geo.py |
 | `GET` | `/api/intel/battlecard/{cid}` | `battlecard` | intel.py |
 | `GET` | `/api/intel/dashboard` | `intel_dashboard` | intel.py |
 | `GET` | `/api/intel/matrix` | `matrix` | intel.py |

@@ -11,7 +11,10 @@ That matters: a black-box score a rep cannot explain is a score a rep will not t
 import os, json, math, datetime, statistics, re, urllib.request
 from typing import Optional
 from fastapi import Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from authz import record_or_404, scope_clause
+from schema import MODULES
 
 con = None
 
@@ -322,12 +325,13 @@ def next_best_action(module, rid):
 
 
 # ---------------------------------------------------------------- forecasting
-def forecast(months=3):
+def forecast(months=3, user=None):
     """Blend of weighted pipeline + trend regression on closed-won history."""
-    hist = [dict(r) for r in con.execute("""
+    deal_scope, deal_params = scope_clause(user or {}, "deals")
+    hist = [dict(r) for r in con.execute(f"""
         SELECT substr(closing_date,1,7) k, SUM(amount) v, COUNT(*) n FROM deals
-        WHERE deleted=0 AND stage='Closed Won' AND closing_date IS NOT NULL
-        AND closing_date <= date('now') GROUP BY k ORDER BY k""")]
+        WHERE deleted=0 AND {deal_scope} AND stage='Closed Won' AND closing_date IS NOT NULL
+        AND closing_date <= date('now') GROUP BY k ORDER BY k""", deal_params)]
     vals = [_f(h["v"]) for h in hist][-12:]
     trend = None
     if len(vals) >= 3:
@@ -347,9 +351,9 @@ def forecast(months=3):
         som = mdate.isoformat()
         # weighted pipeline expected to close in that month
         wp = 0.0; cnt = 0
-        for d in con.execute("""SELECT * FROM deals WHERE deleted=0
+        for d in con.execute(f"""SELECT * FROM deals WHERE deleted=0 AND {deal_scope}
             AND stage NOT IN ('Closed Won','Closed Lost')
-            AND closing_date>=? AND closing_date<=?""", (som, eom)):
+            AND closing_date>=? AND closing_date<=?""", deal_params + [som, eom]):
             p = predict_deal(dict(d))
             wp += p["expected_value"]; cnt += 1
         tr = None
@@ -362,12 +366,13 @@ def forecast(months=3):
                     "trend": round(tr, 2) if tr is not None else None,
                     "forecast": round(blended, 2),
                     "low": round(blended * 0.7, 2), "high": round(blended * 1.3, 2)})
-    quota = _f(con.execute("SELECT SUM(target) FROM users WHERE active=1").fetchone()[0])
+    quota = (_f((user or {}).get("target")) if (user or {}).get("role") == "agent" else
+             _f(con.execute("SELECT SUM(target) FROM users WHERE active=1").fetchone()[0]))
+    committed = _f(con.execute(f"""SELECT SUM(amount) FROM deals WHERE deleted=0 AND {deal_scope}
+                AND stage='Negotiation'""", deal_params).fetchone()[0])
     return {"history": hist[-12:], "forecast": out, "trend": trend,
             "total_forecast": round(sum(o["forecast"] for o in out), 2),
-            "quota": quota,
-            "committed": _f(con.execute("""SELECT SUM(amount) FROM deals WHERE deleted=0
-                AND stage='Negotiation'""").fetchone()[0])}
+            "quota": quota, "committed": committed}
 
 
 # ---------------------------------------------------------------- content gen
@@ -476,15 +481,16 @@ def register(app, current_user, require):
 
     @app.get("/api/ai/lead-score/{lid}")
     def lead_score(lid: int, user=Depends(current_user)):
-        l = con.execute("SELECT * FROM leads WHERE id=? AND deleted=0", (lid,)).fetchone()
-        if not l: raise HTTPException(404, "Not found")
-        return score_lead(dict(l))
+        return score_lead(dict(record_or_404(con, "leads", lid, user)))
 
     @app.get("/api/ai/lead-scores")
     def lead_scores(limit: int = 100, user=Depends(current_user)):
+        if not 1 <= limit <= 200:
+            raise HTTPException(400, "limit must be between 1 and 200")
+        scoped, params = scope_clause(user, "leads")
         out = []
-        for l in con.execute("""SELECT * FROM leads WHERE deleted=0
-                                AND status!='Converted' LIMIT ?""", (limit,)):
+        for l in con.execute(f"""SELECT * FROM leads WHERE deleted=0 AND {scoped}
+                                AND status!='Converted' LIMIT ?""", params + [limit]):
             d = dict(l); s = score_lead(d)
             out.append({"id": d["id"], "name": d["name"], "company": d.get("company"),
                         "status": d.get("status"), "owner_id": d.get("owner_id"),
@@ -497,15 +503,14 @@ def register(app, current_user, require):
 
     @app.get("/api/ai/deal/{did}")
     def deal_ai(did: int, user=Depends(current_user)):
-        d = con.execute("SELECT * FROM deals WHERE id=? AND deleted=0", (did,)).fetchone()
-        if not d: raise HTTPException(404, "Not found")
-        return predict_deal(dict(d))
+        return predict_deal(dict(record_or_404(con, "deals", did, user)))
 
     @app.get("/api/ai/pipeline-health")
     def pipeline_health(user=Depends(current_user)):
+        scoped, params = scope_clause(user, "deals")
         rows, tot_w, at_risk = [], 0.0, []
-        for d in con.execute("""SELECT * FROM deals WHERE deleted=0
-                                AND stage NOT IN ('Closed Won','Closed Lost')"""):
+        for d in con.execute(f"""SELECT * FROM deals WHERE deleted=0 AND {scoped}
+                                AND stage NOT IN ('Closed Won','Closed Lost')""", params):
             dd = dict(d); p = predict_deal(dd)
             tot_w += p["expected_value"]
             item = {"id": dd["id"], "name": dd["name"], "amount": _f(dd["amount"]),
@@ -524,35 +529,44 @@ def register(app, current_user, require):
 
     @app.get("/api/ai/forecast")
     def get_forecast(months: int = 3, user=Depends(current_user)):
-        return forecast(min(6, max(1, months)))
+        return forecast(min(6, max(1, months)), user)
 
     @app.get("/api/ai/next-best-action/{module}/{rid}")
     def nba(module: str, rid: int, user=Depends(current_user)):
+        if module not in {"deals", "leads", "accounts"}:
+            raise HTTPException(400, "Unsupported module")
+        record_or_404(con, module, rid, user)
         return next_best_action(module, rid)
 
     class GenBody(BaseModel):
         kind: str = "followup"
         module: Optional[str] = None
         record_id: Optional[int] = None
-        extra: dict = {}
+        extra: dict = Field(default_factory=dict)
 
     @app.post("/api/ai/generate-email")
     def gen(b: GenBody, user=Depends(current_user)):
         import mailer as M
+        if b.kind not in {"intro", "followup", "proposal", "winback", "overdue", "thanks"}:
+            raise HTTPException(400, "Unsupported email type")
+        if not isinstance(b.extra, dict) or len(json.dumps(b.extra, ensure_ascii=False)) > 20_000:
+            raise HTTPException(400, "Invalid email context")
         ctx = {"owner": user["name"], "company": M.cfg("company_name", "NebrasCRM")}
-        ctx.update(b.extra or {})
-        if b.module and b.record_id:
-            r = con.execute(f'SELECT * FROM "{b.module}" WHERE id=?', (b.record_id,)).fetchone()
-            if r:
-                d = dict(r)
-                ctx.setdefault("name", d.get("name") or d.get("subject") or "")
-                ctx.setdefault("subject", d.get("subject") or d.get("name") or "")
-                for k in ("amount", "due_date", "valid_until"):
-                    if d.get(k) is not None: ctx.setdefault(k, d[k])
-                if d.get("account_id"):
-                    a = con.execute("SELECT name FROM accounts WHERE id=CAST(? AS INTEGER)",
-                                    (d["account_id"],)).fetchone()
-                    if a: ctx.setdefault("account", a["name"])
+        ctx.update(b.extra)
+        if b.module or b.record_id:
+            if not b.module or not b.record_id or b.module not in MODULES:
+                raise HTTPException(400, "A valid module and record are required")
+            d = dict(record_or_404(con, b.module, b.record_id, user))
+            ctx.setdefault("name", d.get("name") or d.get("subject") or "")
+            ctx.setdefault("subject", d.get("subject") or d.get("name") or "")
+            for k in ("amount", "due_date", "valid_until"):
+                if d.get(k) is not None:
+                    ctx.setdefault(k, d[k])
+            if d.get("account_id"):
+                a = con.execute("SELECT name FROM accounts WHERE id=CAST(? AS INTEGER) AND deleted=0",
+                                (d["account_id"],)).fetchone()
+                if a:
+                    ctx.setdefault("account", a["name"])
         return gen_email(b.kind, ctx)
 
     class SumBody(BaseModel):
@@ -564,8 +578,14 @@ def register(app, current_user, require):
 
     @app.post("/api/ai/summarize")
     def do_sum(b: SumBody, user=Depends(current_user)):
-        r = summarize(b.text, b.bullets)
-        if b.save_note and b.module and b.record_id and user["role"] != "readonly":
+        if not b.text.strip() or len(b.text) > 20_000:
+            raise HTTPException(400, "Text must be between 1 and 20000 characters")
+        bullets = min(10, max(1, b.bullets))
+        r = summarize(b.text, bullets)
+        if b.save_note:
+            if user["role"] == "readonly" or not b.module or not b.record_id or b.module not in MODULES:
+                raise HTTPException(400, "A writable valid record is required to save a note")
+            record_or_404(con, b.module, b.record_id, user)
             import db as D
             con.execute("INSERT INTO notes(module,record_id,body,user_id,created_at) VALUES(?,?,?,?,?)",
                         (b.module, b.record_id, "🤖 ملخص:\n" + r["summary"], user["id"], D.now()))
@@ -574,8 +594,9 @@ def register(app, current_user, require):
 
     @app.get("/api/ai/churn-risk")
     def churn(user=Depends(current_user)):
+        scoped, params = scope_clause(user, "accounts")
         out = []
-        for a in con.execute("SELECT * FROM accounts WHERE deleted=0"):
+        for a in con.execute(f"SELECT * FROM accounts WHERE deleted=0 AND {scoped}", params):
             d = dict(a); risk, why = 0, []
             last = con.execute("""SELECT MAX(closing_date) d FROM deals WHERE deleted=0
                 AND stage='Closed Won' AND CAST(account_id AS INTEGER)=?""", (d["id"],)).fetchone()["d"]
@@ -608,15 +629,13 @@ def register(app, current_user, require):
     @app.get("/api/ai/digest")
     def digest(user=Depends(current_user)):
         """The 'what should I do today' briefing."""
-        uid = user["id"]
-        mine = "" if user["role"] in ("admin", "manager") else f" AND owner_id={uid}"
+        activity_scope, activity_params = scope_clause(user, "activities")
         overdue_tasks = [dict(r) for r in con.execute(f"""
-            SELECT id,subject,due_date,priority FROM activities WHERE deleted=0
-            AND status!='Completed' AND due_date<date('now'){mine}
-            ORDER BY due_date LIMIT 10""")]
+            SELECT id,subject,due_date,priority FROM activities WHERE deleted=0 AND {activity_scope}
+            AND status!='Completed' AND due_date<date('now') ORDER BY due_date LIMIT 10""", activity_params)]
         today_tasks = [dict(r) for r in con.execute(f"""
-            SELECT id,subject,due_date,priority FROM activities WHERE deleted=0
-            AND status!='Completed' AND due_date=date('now'){mine} LIMIT 10""")]
+            SELECT id,subject,due_date,priority FROM activities WHERE deleted=0 AND {activity_scope}
+            AND status!='Completed' AND due_date=date('now') LIMIT 10""", activity_params)]
         hot = lead_scores(60, user)["leads"][:5]
         ph = pipeline_health(user)
         closing = [d for d in ph["deals"] if d["band"] == "High"][:5]
@@ -626,4 +645,4 @@ def register(app, current_user, require):
                 "hot_leads": hot, "closing_soon": closing, "deals_at_risk": risk,
                 "churn_risk": ch,
                 "weighted_pipeline": ph["weighted_total"],
-                "forecast_month": forecast(1)["forecast"][0] if True else None}
+                "forecast_month": forecast(1, user)["forecast"][0]}

@@ -1,12 +1,29 @@
+import java.util.Properties
+
 apply plugin: 'com.android.application'
+
+// Release credentials are never hard-coded. The build script creates the ignored
+// nebras-release.properties file for a local test key, while CI can use env vars.
+def releasePropsFile = rootProject.file("nebras-release.properties")
+def releaseProps = new Properties()
+if (releasePropsFile.exists()) {
+    releasePropsFile.withInputStream { releaseProps.load(it) }
+}
+def releaseKeystore = rootProject.file("nebras-release.keystore")
+def releaseStorePass = System.getenv("NEBRAS_STORE_PASS") ?: releaseProps.getProperty("storePassword")
+def releaseKeyPass = System.getenv("NEBRAS_KEY_PASS") ?: releaseProps.getProperty("keyPassword")
+def releaseKeyAlias = System.getenv("NEBRAS_KEY_ALIAS") ?: releaseProps.getProperty("keyAlias", "nebras")
+def hasReleaseSigning = releaseKeystore.exists() && releaseStorePass && releaseKeyPass
 
 android {
     signingConfigs {
         release {
-            storeFile file("../nebras-release.keystore")
-            storePassword System.getenv("NEBRAS_STORE_PASS") ?: "nebras2026"
-            keyAlias "nebras"
-            keyPassword System.getenv("NEBRAS_KEY_PASS") ?: "nebras2026"
+            if (hasReleaseSigning) {
+                storeFile releaseKeystore
+                storePassword releaseStorePass
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPass
+            }
         }
     }
     namespace "io.nebrascrm.app"
@@ -26,7 +43,9 @@ android {
     }
     buildTypes {
         release {
-            signingConfig signingConfigs.release
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

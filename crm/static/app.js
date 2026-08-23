@@ -23,7 +23,7 @@ const T = {
     reportBuilder:"منشئ التقارير",groupBy:"تجميع حسب",metric:"المقياس",run:"تشغيل",count:"عدد",sum:"مجموع",avg:"متوسط",
     notifications:"الإشعارات",noNotifs:"لا توجد إشعارات",converted:"تم التحويل بنجاح",saved:"تم الحفظ",deleted:"تم الحذف",
     confirmDel:"هل أنت متأكد من الحذف؟",addItem:"إضافة بند",qty:"الكمية",price:"السعر",disc:"خصم %",tax:"ضريبة %",
-    product:"المنتج",lineTotal:"إجمالي البند",saveItems:"حفظ البنود",globalNoRes:"لا نتائج",portal:"بوابة العملاء",grantAccess:"منح صلاحية دخول",contact:"جهة الاتصال",lastLogin:"آخر دخول",revoke:"إلغاء الوصول",resetPw:"إعادة تعيين كلمة المرور",openPortal:"فتح البوابة",portalThread:"محادثة البوابة",replyCustomer:"الرد على العميل",credsMsg:"بيانات الدخول",email_m:"البريد الإلكتروني",outbox:"الصادر",templates:"القوالب",smtp:"إعدادات SMTP",compose:"رسالة جديدة",to:"إلى",subj:"الموضوع",body:"النص",sendMail:"إرسال",testMail:"إرسال رسالة اختبار",sandboxMode:"وضع الاختبار (لا يتم إرسال فعلي)",smtpMode:"مفعّل عبر SMTP",payments:"المدفوعات",collected:"المحصّل",pendingP:"قيد الانتظار",refunded:"مسترجع",outstandingP:"مستحقات",overdueP:"متأخرة",payLink:"رابط دفع",manualPay:"تسجيل دفعة",refund:"استرجاع",method:"الطريقة",ref:"المرجع",copy:"نسخ",copied:"تم النسخ",sendWithEmail:"إرسال الرابط بالبريد",emails:"رسائل البريد",invoice:"الفاتورة",payEvents:"سجل العملية",variables:"المتغيرات المتاحة",preview:"معاينة",intel:"ذكاء السوق",battlecard:"بطاقة المواجهة",matrix:"مصفوفة المقارنة",overview:"نظرة عامة",competitorsK:"المنافسون",primaryThreats:"تهديدات رئيسية",trackedProducts:"منتجات مرصودة",studiesK:"الدراسات",tam:"حجم السوق",avgGrowth:"متوسط النمو",ourShare:"حصتنا",contested:"صفقات متنازع عليها",lostTo:"خسائر للمنافسين",winLoss:"الفوز والخسارة حسب المنافس",lossReasons:"أسباب الخسارة",priceGap:"فجوة التسعير",positioningK:"الموقع التنافسي",marketShare:"الحصص السوقية",tamBySeg:"حجم السوق حسب الشريحة",threat:"التهديد",wonK:"فوز",lostK:"خسارة",openK:"مفتوحة",winRateK:"نسبة الفوز",vsUs:"مقابلنا",cheaper:"أرخص",pricier:"أغلى",strengths:"نقاط القوة",weaknesses:"نقاط الضعف",counterStrategy:"استراتيجيتنا",theirProducts:"منتجاتهم",recentDeals:"صفقات حديثة",ourPrice:"سعرنا",theirPrice:"سعرهم",gap:"الفرق",basis:"الأساس: لكل مستخدم/سنة",marketRange:"نطاق السوق",noRivals:"لا منافسين مرصودين",openBattlecard:"عرض بطاقة المواجهة",findings:"أهم النتائج",recommendations:"التوصيات",opps:"الفرص",oppPotential:"فرص محتملة",oppWon:"فرص محققة",oppLost:"فرص ضائعة",weighted:"القيمة المرجّحة",winReasons:"أسباب الفوز",convertOpp:"تحويل إلى صفقة",segmentsM:"تصنيف العملاء",lists:"القوائم",recompute:"إعادة احتساب التصنيف",applySeg:"تطبيق التصنيف",score:"النقاط",suggested:"المقترح",current:"الحالي",lastActivity:"آخر نشاط",daysIdle:"أيام الركود",tagAs:"تصنيف كـ",reason:"السبب",members:"الأعضاء",stagnant:"الرواكد",deadStock:"المنتجات الراكدة",idleCustomers:"العملاء الراكدون",tiedCapital:"رأس مال محتجز",neverSold:"لم يُبع أبداً",revenueAtRisk:"إيرادات معرضة للخطر",risk:"الخطورة",inStock:"بالمخزون",lastSold:"آخر بيع",channels:"وسائل الدفع",fees:"الرسوم",netAmt:"الصافي",awaitingS:"بانتظار التسوية",settle:"تأكيد الاستلام",blocked:"محظور",blacklistWarn:"هذا العميل في القائمة السوداء",geo:"الخريطة الإدارية",governorate:"محافظة",district:"مديرية",uzlah:"عزلة",village:"قرية",quarter:"حارة",street:"شارع",partners:"الوكلاء والموزعون",partnerT:"وكيل",distributorT:"موزع",repT:"مندوب",brokerT:"وسيط",commission:"العمولة",commModel:"نموذج العمولة",rate:"النسبة",owedTo:"له",owedBy:"عليه",netBal:"الرصيد",statement:"كشف حساب",addTxn:"حركة جديدة",accrue:"احتساب العمولات",payout:"صرف",territoriesT:"المناطق",coverage:"التغطية",achievement:"نسبة الإنجاز",targetT:"الهدف",loyalty:"الولاء",tier:"الفئة",points:"النقاط",available:"المتاح",breakdown:"تفصيل النقاط",nextTier:"الفئة التالية",redeem:"استبدال",reward:"المكافأة",principles:"مبادئ البرنامج",programRules:"قواعد البرنامج",recomputeL:"إعادة الاحتساب",perks:"المزايا",discount:"الخصم",consigned:"بضاعة أمانة",sold:"مباع",addPartner:"وكيل جديد",locations:"المواقع",searchGeo:"ابحث عن محافظة أو مديرية أو قرية...",members:"الأعضاء",penaltiesL:"الخصومات",agentPortal:"بوابة الشركاء",agentReqs:"طلبات الشركاء",grantAgent:"منح دخول للشريك",approve:"موافقة",reject:"رفض",pendingR:"قيد المراجعة",replyR:"الرد",requestKind:"نوع الطلب",openAgent:"فتح بوابة الشركاء",ai:"المساعد الذكي",copilot:"مساعدي",digest:"موجز اليوم",forecast:"التنبؤ بالمبيعات",leadScoring:"ترتيب العملاء المحتملين",pipelineHealth:"صحة المسار",churnRisk:"مخاطر فقد العملاء",nba:"الخطوة القادمة الأفضل",whyThis:"لماذا؟",genEmail:"توليد رسالة",summarize:"تلخيص",view360:"العرض الشامل",timeline:"السجل الزمني",channelsL:"القنوات",winProb:"احتمالية الفوز",expected:"القيمة المتوقعة",atRisk:"معرّضة للخطر",factors:"العوامل",readiness:"الجاهزية",integrations:"التكاملات",apiKeys:"مفاتيح API",customFields:"الحقول المخصصة",builder:"منشئ اللوحات",addWidget:"إضافة عنصر",saveDash:"حفظ اللوحة",overdueTasks:"مهام متأخرة",todayTasks:"مهام اليوم",hotLeads:"الأكثر جاهزية",closingSoon:"قرب الإغلاق",enable:"تفعيل",disable:"تعطيل",newKey:"مفتاح جديد",scopes:"الصلاحيات",webhookUrl:"رابط الويب هوك",addField:"حقل جديد",fieldLabel:"التسمية",fieldType:"النوع",showInList:"إظهار بالقائمة",quota:"الحصة",committed:"مؤكدة",low:"متحفظ",high:"متفائل",generate:"توليد",meetingNotes:"ملاحظات الاجتماع",actionItems:"مهام مستخرجة",insert:"إدراج",aiOff:"يعمل محلياً بدون مفتاح",aiOn:"مدعوم بنموذج لغوي",reportCentre:"مركز التقارير",settingsSys:"إعدادات النظام",printR:"طباعة",exportCsv:"تصدير CSV",exportXls:"تصدير Excel",dateFrom:"من تاريخ",dateTo:"إلى تاريخ",runReport:"تشغيل",totalRow:"الإجمالي",records2:"سجل",generatedAt:"تاريخ الإصدار",noRows:"لا توجد بيانات لهذه الفترة",backToList:"رجوع للقائمة",saveSettings:"حفظ الإعدادات",thisMonth:"هذا الشهر",lastMonth:"الشهر الماضي",thisYear:"هذه السنة",allTime:"كل الفترات",quickRange:"فترة سريعة"},
+    product:"المنتج",lineTotal:"إجمالي البند",saveItems:"حفظ البنود",globalNoRes:"لا نتائج",portal:"بوابة العملاء",grantAccess:"منح صلاحية دخول",contact:"جهة الاتصال",lastLogin:"آخر دخول",revoke:"إلغاء الوصول",resetPw:"إعادة تعيين كلمة المرور",openPortal:"فتح البوابة",portalThread:"محادثة البوابة",replyCustomer:"الرد على العميل",credsMsg:"بيانات الدخول",email_m:"البريد الإلكتروني",outbox:"الصادر",templates:"القوالب",smtp:"إعدادات SMTP",compose:"رسالة جديدة",to:"إلى",subj:"الموضوع",body:"النص",sendMail:"إرسال",testMail:"إرسال رسالة اختبار",sandboxMode:"وضع الاختبار (لا يتم إرسال فعلي)",smtpMode:"مفعّل عبر SMTP",payments:"المدفوعات",collected:"المحصّل",pendingP:"قيد الانتظار",refunded:"مسترجع",outstandingP:"مستحقات",overdueP:"متأخرة",payLink:"رابط دفع",manualPay:"تسجيل دفعة",refund:"استرجاع",method:"الطريقة",ref:"المرجع",copy:"نسخ",copied:"تم النسخ",sendWithEmail:"إرسال الرابط بالبريد",emails:"رسائل البريد",invoice:"الفاتورة",payEvents:"سجل العملية",variables:"المتغيرات المتاحة",preview:"معاينة",intel:"ذكاء السوق",battlecard:"بطاقة المواجهة",matrix:"مصفوفة المقارنة",overview:"نظرة عامة",competitorsK:"المنافسون",primaryThreats:"تهديدات رئيسية",trackedProducts:"منتجات مرصودة",studiesK:"الدراسات",tam:"حجم السوق",avgGrowth:"متوسط النمو",ourShare:"حصتنا",contested:"صفقات متنازع عليها",lostTo:"خسائر للمنافسين",winLoss:"الفوز والخسارة حسب المنافس",lossReasons:"أسباب الخسارة",priceGap:"فجوة التسعير",positioningK:"الموقع التنافسي",marketShare:"الحصص السوقية",tamBySeg:"حجم السوق حسب الشريحة",threat:"التهديد",wonK:"فوز",lostK:"خسارة",openK:"مفتوحة",winRateK:"نسبة الفوز",vsUs:"مقابلنا",cheaper:"أرخص",pricier:"أغلى",strengths:"نقاط القوة",weaknesses:"نقاط الضعف",counterStrategy:"استراتيجيتنا",theirProducts:"منتجاتهم",recentDeals:"صفقات حديثة",ourPrice:"سعرنا",theirPrice:"سعرهم",gap:"الفرق",basis:"الأساس: لكل مستخدم/سنة",marketRange:"نطاق السوق",noRivals:"لا منافسين مرصودين",openBattlecard:"عرض بطاقة المواجهة",findings:"أهم النتائج",recommendations:"التوصيات",opps:"الفرص",oppPotential:"فرص محتملة",oppWon:"فرص محققة",oppLost:"فرص ضائعة",weighted:"القيمة المرجّحة",winReasons:"أسباب الفوز",convertOpp:"تحويل إلى صفقة",segmentsM:"تصنيف العملاء",lists:"القوائم",recompute:"إعادة احتساب التصنيف",applySeg:"تطبيق التصنيف",score:"النقاط",suggested:"المقترح",current:"الحالي",lastActivity:"آخر نشاط",daysIdle:"أيام الركود",tagAs:"تصنيف كـ",reason:"السبب",members:"الأعضاء",stagnant:"الرواكد",deadStock:"المنتجات الراكدة",idleCustomers:"العملاء الراكدون",tiedCapital:"رأس مال محتجز",neverSold:"لم يُبع أبداً",revenueAtRisk:"إيرادات معرضة للخطر",risk:"الخطورة",inStock:"بالمخزون",lastSold:"آخر بيع",channels:"وسائل الدفع",fees:"الرسوم",netAmt:"الصافي",awaitingS:"بانتظار التسوية",settle:"تأكيد الاستلام",blocked:"محظور",blacklistWarn:"هذا العميل في القائمة السوداء",geo:"الخريطة الإدارية العالمية",country:"دولة",region:"منطقة / ولاية",city:"مدينة",neighborhood:"حي",street:"شارع",governorate:"دولة",district:"منطقة",uzlah:"مدينة",village:"مدينة",quarter:"حي",partners:"الوكلاء والموزعون",partnerT:"وكيل",distributorT:"موزع",repT:"مندوب",brokerT:"وسيط",commission:"العمولة",commModel:"نموذج العمولة",rate:"النسبة",owedTo:"له",owedBy:"عليه",netBal:"الرصيد",statement:"كشف حساب",addTxn:"حركة جديدة",accrue:"احتساب العمولات",payout:"صرف",territoriesT:"المناطق",coverage:"التغطية",achievement:"نسبة الإنجاز",targetT:"الهدف",loyalty:"الولاء",tier:"الفئة",points:"النقاط",available:"المتاح",breakdown:"تفصيل النقاط",nextTier:"الفئة التالية",redeem:"استبدال",reward:"المكافأة",principles:"مبادئ البرنامج",programRules:"قواعد البرنامج",recomputeL:"إعادة الاحتساب",perks:"المزايا",discount:"الخصم",consigned:"بضاعة أمانة",sold:"مباع",addPartner:"وكيل جديد",locations:"المواقع",searchGeo:"ابحث عن دولة أو منطقة أو مدينة...",members:"الأعضاء",penaltiesL:"الخصومات",agentPortal:"بوابة الشركاء",agentReqs:"طلبات الشركاء",grantAgent:"منح دخول للشريك",approve:"موافقة",reject:"رفض",pendingR:"قيد المراجعة",replyR:"الرد",requestKind:"نوع الطلب",openAgent:"فتح بوابة الشركاء",ai:"المساعد الذكي",copilot:"مساعدي",digest:"موجز اليوم",forecast:"التنبؤ بالمبيعات",leadScoring:"ترتيب العملاء المحتملين",pipelineHealth:"صحة المسار",churnRisk:"مخاطر فقد العملاء",nba:"الخطوة القادمة الأفضل",whyThis:"لماذا؟",genEmail:"توليد رسالة",summarize:"تلخيص",view360:"العرض الشامل",timeline:"السجل الزمني",channelsL:"القنوات",winProb:"احتمالية الفوز",expected:"القيمة المتوقعة",atRisk:"معرّضة للخطر",factors:"العوامل",readiness:"الجاهزية",integrations:"التكاملات",apiKeys:"مفاتيح API",customFields:"الحقول المخصصة",builder:"منشئ اللوحات",addWidget:"إضافة عنصر",saveDash:"حفظ اللوحة",overdueTasks:"مهام متأخرة",todayTasks:"مهام اليوم",hotLeads:"الأكثر جاهزية",closingSoon:"قرب الإغلاق",enable:"تفعيل",disable:"تعطيل",newKey:"مفتاح جديد",scopes:"الصلاحيات",webhookUrl:"رابط الويب هوك",addField:"حقل جديد",fieldLabel:"التسمية",fieldType:"النوع",showInList:"إظهار بالقائمة",quota:"الحصة",committed:"مؤكدة",low:"متحفظ",high:"متفائل",generate:"توليد",meetingNotes:"ملاحظات الاجتماع",actionItems:"مهام مستخرجة",insert:"إدراج",aiOff:"يعمل محلياً بدون مفتاح",aiOn:"مدعوم بنموذج لغوي",reportCentre:"مركز التقارير",settingsSys:"إعدادات النظام",printR:"طباعة",exportCsv:"تصدير CSV",exportXls:"تصدير Excel",dateFrom:"من تاريخ",dateTo:"إلى تاريخ",runReport:"تشغيل",totalRow:"الإجمالي",records2:"سجل",generatedAt:"تاريخ الإصدار",noRows:"لا توجد بيانات لهذه الفترة",backToList:"رجوع للقائمة",saveSettings:"حفظ الإعدادات",thisMonth:"هذا الشهر",lastMonth:"الشهر الماضي",thisYear:"هذه السنة",allTime:"كل الفترات",quickRange:"فترة سريعة"},
   en: {dashboard:"Dashboard",reports:"Reports",settings:"Settings",users:"Users",workflows:"Automation",
     search:"Global search...",new:"New",edit:"Edit",delete:"Delete",save:"Save",cancel:"Cancel",close:"Close",
     export:"Export CSV",import:"Import",convert:"Convert",records:"records",of:"of",page:"Page",noData:"No data",
@@ -40,7 +40,7 @@ const T = {
     reportBuilder:"Report Builder",groupBy:"Group by",metric:"Metric",run:"Run",count:"Count",sum:"Sum",avg:"Average",
     notifications:"Notifications",noNotifs:"No notifications",converted:"Converted successfully",saved:"Saved",deleted:"Deleted",
     confirmDel:"Delete this record?",addItem:"Add item",qty:"Qty",price:"Price",disc:"Disc %",tax:"Tax %",
-    product:"Product",lineTotal:"Line total",saveItems:"Save items",globalNoRes:"No results",portal:"Customer Portal",grantAccess:"Grant Access",contact:"Contact",lastLogin:"Last login",revoke:"Revoke",resetPw:"Reset password",openPortal:"Open portal",portalThread:"Portal Thread",replyCustomer:"Reply to customer",credsMsg:"Login credentials",email_m:"Email",outbox:"Outbox",templates:"Templates",smtp:"SMTP Settings",compose:"Compose",to:"To",subj:"Subject",body:"Body",sendMail:"Send",testMail:"Send test email",sandboxMode:"Sandbox mode (nothing is actually delivered)",smtpMode:"Live via SMTP",payments:"Payments",collected:"Collected",pendingP:"Pending",refunded:"Refunded",outstandingP:"Outstanding",overdueP:"Overdue",payLink:"Payment link",manualPay:"Record payment",refund:"Refund",method:"Method",ref:"Reference",copy:"Copy",copied:"Copied",sendWithEmail:"Email the link",emails:"Emails",invoice:"Invoice",payEvents:"Event log",variables:"Available variables",preview:"Preview",intel:"Market Intelligence",battlecard:"Battlecard",matrix:"Comparison Matrix",overview:"Overview",competitorsK:"Competitors",primaryThreats:"Primary Threats",trackedProducts:"Tracked Products",studiesK:"Studies",tam:"Total Market (TAM)",avgGrowth:"Avg Growth",ourShare:"Our Share",contested:"Contested Pipeline",lostTo:"Lost to Competitors",winLoss:"Win/Loss by Competitor",lossReasons:"Why We Lose",priceGap:"Price Gap",positioningK:"Positioning",marketShare:"Market Share",tamBySeg:"Market Size by Segment",threat:"Threat",wonK:"Won",lostK:"Lost",openK:"Open",winRateK:"Win Rate",vsUs:"vs Us",cheaper:"cheaper",pricier:"pricier",strengths:"Strengths",weaknesses:"Weaknesses",counterStrategy:"Our Counter-Strategy",theirProducts:"Their Products",recentDeals:"Recent Deals",ourPrice:"Our Price",theirPrice:"Their Price",gap:"Gap",basis:"Basis: per user / year",marketRange:"Market Range",noRivals:"No rivals tracked",openBattlecard:"Open battlecard",findings:"Key Findings",recommendations:"Recommendations",opps:"Opportunities",oppPotential:"Potential",oppWon:"Won",oppLost:"Lost",weighted:"Weighted Value",winReasons:"Win Reasons",convertOpp:"Convert to Deal",segmentsM:"Customer Segments",lists:"Lists",recompute:"Recompute",applySeg:"Apply segments",score:"Score",suggested:"Suggested",current:"Current",lastActivity:"Last activity",daysIdle:"Days idle",tagAs:"Tag as",reason:"Reason",members:"Members",stagnant:"Stagnation",deadStock:"Dead Stock",idleCustomers:"Inactive Customers",tiedCapital:"Tied Capital",neverSold:"Never sold",revenueAtRisk:"Revenue at risk",risk:"Risk",inStock:"In stock",lastSold:"Last sold",channels:"Payment Channels",fees:"Fees",netAmt:"Net",awaitingS:"Awaiting settlement",settle:"Confirm receipt",blocked:"Blocked",blacklistWarn:"This account is blacklisted",geo:"Administrative Map",governorate:"Governorate",district:"District",uzlah:"Uzlah",village:"Village",quarter:"Quarter",street:"Street",partners:"Agents & Distributors",partnerT:"Agent",distributorT:"Distributor",repT:"Sales Rep",brokerT:"Broker",commission:"Commission",commModel:"Commission model",rate:"Rate",owedTo:"Credit",owedBy:"Debit",netBal:"Balance",statement:"Statement",addTxn:"New transaction",accrue:"Accrue commissions",payout:"Payout",territoriesT:"Territories",coverage:"Coverage",achievement:"Achievement",targetT:"Target",loyalty:"Loyalty",tier:"Tier",points:"Points",available:"Available",breakdown:"Points breakdown",nextTier:"Next tier",redeem:"Redeem",reward:"Reward",principles:"Program principles",programRules:"Program rules",recomputeL:"Recompute",perks:"Perks",discount:"Discount",consigned:"Consigned",sold:"Sold",addPartner:"New partner",locations:"Locations",searchGeo:"Search governorate, district or village...",members:"Members",penaltiesL:"Penalties",agentPortal:"Partner Portal",agentReqs:"Partner Requests",grantAgent:"Grant partner access",approve:"Approve",reject:"Reject",pendingR:"Pending",replyR:"Reply",requestKind:"Request type",openAgent:"Open partner portal",ai:"AI Assistant",copilot:"Copilot",digest:"Today\u2019s brief",forecast:"Sales Forecast",leadScoring:"Lead Scoring",pipelineHealth:"Pipeline Health",churnRisk:"Churn Risk",nba:"Next Best Action",whyThis:"Why?",genEmail:"Generate email",summarize:"Summarize",view360:"360° View",timeline:"Timeline",channelsL:"Channels",winProb:"Win probability",expected:"Expected value",atRisk:"At risk",factors:"Factors",readiness:"Readiness",integrations:"Integrations",apiKeys:"API Keys",customFields:"Custom Fields",builder:"Dashboard Builder",addWidget:"Add widget",saveDash:"Save dashboard",overdueTasks:"Overdue tasks",todayTasks:"Today",hotLeads:"Hottest leads",closingSoon:"Closing soon",enable:"Enable",disable:"Disable",newKey:"New key",scopes:"Scopes",webhookUrl:"Webhook URL",addField:"New field",fieldLabel:"Label",fieldType:"Type",showInList:"Show in list",quota:"Quota",committed:"Committed",low:"Low",high:"High",generate:"Generate",meetingNotes:"Meeting notes",actionItems:"Action items",insert:"Insert",aiOff:"Runs locally, no key",aiOn:"LLM-powered",reportCentre:"Report Centre",settingsSys:"System Settings",printR:"Print",exportCsv:"Export CSV",exportXls:"Export Excel",dateFrom:"From",dateTo:"To",runReport:"Run",totalRow:"TOTAL",records2:"rows",generatedAt:"Generated",noRows:"No data for this period",backToList:"Back to list",saveSettings:"Save settings",thisMonth:"This month",lastMonth:"Last month",thisYear:"This year",allTime:"All time",quickRange:"Quick range"},
+    product:"Product",lineTotal:"Line total",saveItems:"Save items",globalNoRes:"No results",portal:"Customer Portal",grantAccess:"Grant Access",contact:"Contact",lastLogin:"Last login",revoke:"Revoke",resetPw:"Reset password",openPortal:"Open portal",portalThread:"Portal Thread",replyCustomer:"Reply to customer",credsMsg:"Login credentials",email_m:"Email",outbox:"Outbox",templates:"Templates",smtp:"SMTP Settings",compose:"Compose",to:"To",subj:"Subject",body:"Body",sendMail:"Send",testMail:"Send test email",sandboxMode:"Sandbox mode (nothing is actually delivered)",smtpMode:"Live via SMTP",payments:"Payments",collected:"Collected",pendingP:"Pending",refunded:"Refunded",outstandingP:"Outstanding",overdueP:"Overdue",payLink:"Payment link",manualPay:"Record payment",refund:"Refund",method:"Method",ref:"Reference",copy:"Copy",copied:"Copied",sendWithEmail:"Email the link",emails:"Emails",invoice:"Invoice",payEvents:"Event log",variables:"Available variables",preview:"Preview",intel:"Market Intelligence",battlecard:"Battlecard",matrix:"Comparison Matrix",overview:"Overview",competitorsK:"Competitors",primaryThreats:"Primary Threats",trackedProducts:"Tracked Products",studiesK:"Studies",tam:"Total Market (TAM)",avgGrowth:"Avg Growth",ourShare:"Our Share",contested:"Contested Pipeline",lostTo:"Lost to Competitors",winLoss:"Win/Loss by Competitor",lossReasons:"Why We Lose",priceGap:"Price Gap",positioningK:"Positioning",marketShare:"Market Share",tamBySeg:"Market Size by Segment",threat:"Threat",wonK:"Won",lostK:"Lost",openK:"Open",winRateK:"Win Rate",vsUs:"vs Us",cheaper:"cheaper",pricier:"pricier",strengths:"Strengths",weaknesses:"Weaknesses",counterStrategy:"Our Counter-Strategy",theirProducts:"Their Products",recentDeals:"Recent Deals",ourPrice:"Our Price",theirPrice:"Their Price",gap:"Gap",basis:"Basis: per user / year",marketRange:"Market Range",noRivals:"No rivals tracked",openBattlecard:"Open battlecard",findings:"Key Findings",recommendations:"Recommendations",opps:"Opportunities",oppPotential:"Potential",oppWon:"Won",oppLost:"Lost",weighted:"Weighted Value",winReasons:"Win Reasons",convertOpp:"Convert to Deal",segmentsM:"Customer Segments",lists:"Lists",recompute:"Recompute",applySeg:"Apply segments",score:"Score",suggested:"Suggested",current:"Current",lastActivity:"Last activity",daysIdle:"Days idle",tagAs:"Tag as",reason:"Reason",members:"Members",stagnant:"Stagnation",deadStock:"Dead Stock",idleCustomers:"Inactive Customers",tiedCapital:"Tied Capital",neverSold:"Never sold",revenueAtRisk:"Revenue at risk",risk:"Risk",inStock:"In stock",lastSold:"Last sold",channels:"Payment Channels",fees:"Fees",netAmt:"Net",awaitingS:"Awaiting settlement",settle:"Confirm receipt",blocked:"Blocked",blacklistWarn:"This account is blacklisted",geo:"Global Administrative Map",country:"Country",region:"Region / State",city:"City",neighborhood:"Neighborhood",street:"Street",governorate:"Country",district:"Region",uzlah:"City",village:"City",quarter:"Neighborhood",partners:"Agents & Distributors",partnerT:"Agent",distributorT:"Distributor",repT:"Sales Rep",brokerT:"Broker",commission:"Commission",commModel:"Commission model",rate:"Rate",owedTo:"Credit",owedBy:"Debit",netBal:"Balance",statement:"Statement",addTxn:"New transaction",accrue:"Accrue commissions",payout:"Payout",territoriesT:"Territories",coverage:"Coverage",achievement:"Achievement",targetT:"Target",loyalty:"Loyalty",tier:"Tier",points:"Points",available:"Available",breakdown:"Points breakdown",nextTier:"Next tier",redeem:"Redeem",reward:"Reward",principles:"Program principles",programRules:"Program rules",recomputeL:"Recompute",perks:"Perks",discount:"Discount",consigned:"Consigned",sold:"Sold",addPartner:"New partner",locations:"Locations",searchGeo:"Search country, region or city...",members:"Members",penaltiesL:"Penalties",agentPortal:"Partner Portal",agentReqs:"Partner Requests",grantAgent:"Grant partner access",approve:"Approve",reject:"Reject",pendingR:"Pending",replyR:"Reply",requestKind:"Request type",openAgent:"Open partner portal",ai:"AI Assistant",copilot:"Copilot",digest:"Today\u2019s brief",forecast:"Sales Forecast",leadScoring:"Lead Scoring",pipelineHealth:"Pipeline Health",churnRisk:"Churn Risk",nba:"Next Best Action",whyThis:"Why?",genEmail:"Generate email",summarize:"Summarize",view360:"360° View",timeline:"Timeline",channelsL:"Channels",winProb:"Win probability",expected:"Expected value",atRisk:"At risk",factors:"Factors",readiness:"Readiness",integrations:"Integrations",apiKeys:"API Keys",customFields:"Custom Fields",builder:"Dashboard Builder",addWidget:"Add widget",saveDash:"Save dashboard",overdueTasks:"Overdue tasks",todayTasks:"Today",hotLeads:"Hottest leads",closingSoon:"Closing soon",enable:"Enable",disable:"Disable",newKey:"New key",scopes:"Scopes",webhookUrl:"Webhook URL",addField:"New field",fieldLabel:"Label",fieldType:"Type",showInList:"Show in list",quota:"Quota",committed:"Committed",low:"Low",high:"High",generate:"Generate",meetingNotes:"Meeting notes",actionItems:"Action items",insert:"Insert",aiOff:"Runs locally, no key",aiOn:"LLM-powered",reportCentre:"Report Centre",settingsSys:"System Settings",printR:"Print",exportCsv:"Export CSV",exportXls:"Export Excel",dateFrom:"From",dateTo:"To",runReport:"Run",totalRow:"TOTAL",records2:"rows",generatedAt:"Generated",noRows:"No data for this period",backToList:"Back to list",saveSettings:"Save settings",thisMonth:"This month",lastMonth:"Last month",thisYear:"This year",allTime:"All time",quickRange:"Quick range"},
 };
 const t = k => (T[S.lang][k] || k);
 const L = o => S.lang === "ar" ? (o.label_ar || o.ar || o.label_en) : (o.label_en || o.en);
@@ -71,6 +71,15 @@ async function api(path, opts = {}) {
   if (r.status === 401) { logout(); throw new Error("auth"); }
   if (!r.ok) { const e = await r.json().catch(()=>({detail:"Error"})); toast(e.detail || "Error"); throw new Error(e.detail); }
   return r.json();
+}
+async function downloadApi(path, fallbackName){
+  const r=await fetch("/api"+path,{headers:{...(S.token?{Authorization:"Bearer "+S.token}:{})}});
+  if(r.status===401){logout();throw new Error("auth");}
+  if(!r.ok){const e=await r.json().catch(()=>({detail:"Error"}));toast(e.detail||"Error");throw new Error(e.detail);}
+  const blob=await r.blob(), cd=r.headers.get("Content-Disposition")||"";
+  const match=/filename="?([^";]+)"?/i.exec(cd), a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);a.download=(match&&match[1])||fallbackName||"download";
+  document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),0);
 }
 function toast(msg){const d=document.createElement("div");d.className="toast";d.textContent=msg;document.body.append(d);setTimeout(()=>d.remove(),2600);}
 function logout(){localStorage.removeItem("tok");S.token="";S.user=null;render();}
@@ -122,7 +131,7 @@ function renderLogin(){
     f:[["15 وحدة عمل مترابطة","من العملاء المحتملين حتى الفواتير والمخزون"],
        ["7 محركات ذكاء اصطناعي","تنبؤ بالمبيعات وتسجيل العملاء — مع شرح كل نقطة"],
        ["36 قناة دفع","محافظ الجوال والحوالات المحلية والبوابات الدولية"],
-       ["خريطة اليمن الإدارية","44 ألف موقع رسمي من المحافظة حتى القرية"]],
+       ["خريطة إدارية عالمية","252 دولة و3,865 منطقة وأكثر من 235 ألف مدينة حول العالم"]],
     badges:["عربي RTL أصلي","استضافة ذاتية","3 بوابات","بلا كود"],
     welcome:"أهلاً بعودتك 👋", sub:"سجّل الدخول للمتابعة إلى لوحة التحكم",
     demo:"حسابات تجريبية — اضغط للدخول مباشرة", signing:"جارٍ الدخول...",
@@ -134,7 +143,7 @@ function renderLogin(){
     f:[["15 connected modules","From leads all the way to invoices and stock"],
        ["7 AI engines","Forecasting and lead scoring — every point explained"],
        ["36 payment channels","Mobile wallets, remittance networks, global gateways"],
-       ["Yemen administrative map","44,000 official places, governorate to village"]],
+       ["Global administrative map","252 countries, 3,865 regions and 235,000+ cities worldwide"]],
     badges:["Native RTL","Self-hosted","3 portals","No-code"],
     welcome:"Welcome back 👋", sub:"Sign in to continue to your dashboard",
     demo:"Demo accounts — click to sign in instantly", signing:"Signing in...",
@@ -217,6 +226,7 @@ function renderApp(){
   // change state without changing anything on screen.
   applyShell();
   const groups = {};
+  const management = ["admin","manager"].includes(S.user.role);
   Object.entries(S.meta.modules).forEach(([k,m])=>{(groups[m.group]=groups[m.group]||[]).push([k,m]);});
   document.body.innerHTML = `<div class="app">
     <aside class="side" id="side">
@@ -225,21 +235,21 @@ function renderApp(){
         <a data-v="dashboard" class="${S.view==="dashboard"?"on":""}"><span class="ic">📊</span>${t("dashboard")}</a>
         <a data-v="ai" class="${S.view==="ai"?"on":""}"><span class="ic">🤖</span>${t("ai")}</a>
         <a data-v="reports" class="${S.view==="reports"?"on":""}"><span class="ic">📈</span>${t("reports")}</a>
-        <a data-v="repcentre" class="${S.view==="repcentre"?"on":""}"><span class="ic">📑</span>${t("reportCentre")}</a>
+        ${management?`<a data-v="repcentre" class="${S.view==="repcentre"?"on":""}"><span class="ic">📑</span>${t("reportCentre")}</a>`:""}
         <a data-v="builder" class="${S.view==="builder"?"on":""}"><span class="ic">🧱</span>${t("builder")}</a>
-        <a data-v="emails" class="${S.view==="emails"?"on":""}"><span class="ic">✉️</span>${t("email_m")}</a>
+        ${management?`<a data-v="emails" class="${S.view==="emails"?"on":""}"><span class="ic">✉️</span>${t("email_m")}</a>`:""}
         <a data-v="payments" class="${S.view==="payments"?"on":""}"><span class="ic">💳</span>${t("payments")}</a>
         <a data-v="intel" class="${S.view==="intel"?"on":""}"><span class="ic">🎯</span>${t("intel")}</a>
-        <a data-v="segments" class="${S.view==="segments"?"on":""}"><span class="ic">🏅</span>${t("segmentsM")}</a>
-        <a data-v="stagnant" class="${S.view==="stagnant"?"on":""}"><span class="ic">🧊</span>${t("stagnant")}</a>
-        <a data-v="loyalty" class="${S.view==="loyalty"?"on":""}"><span class="ic">🏆</span>${t("loyalty")}</a>
+        ${management?`<a data-v="segments" class="${S.view==="segments"?"on":""}"><span class="ic">🏅</span>${t("segmentsM")}</a>`:""}
+        ${management?`<a data-v="stagnant" class="${S.view==="stagnant"?"on":""}"><span class="ic">🧊</span>${t("stagnant")}</a>`:""}
+        ${management?`<a data-v="loyalty" class="${S.view==="loyalty"?"on":""}"><span class="ic">🏆</span>${t("loyalty")}</a>`:""}
         <div class="grp">${S.lang==="ar"?"الشبكة والجغرافيا":"Network & Geography"}</div>
-        <a data-v="partners" class="${S.view==="partners"?"on":""}"><span class="ic">🤝</span>${t("partners")}</a>
+        ${management?`<a data-v="partners" class="${S.view==="partners"?"on":""}"><span class="ic">🤝</span>${t("partners")}</a>`:""}
         <a data-v="geo" class="${S.view==="geo"?"on":""}"><span class="ic">🗺️</span>${t("geo")}</a>
         ${Object.entries(groups).map(([g,mods])=>`<div class="grp">${L(S.meta.groups[g])}</div>`+
           mods.map(([k,m])=>`<a data-m="${k}" class="${S.view==="module"&&S.module===k?"on":""}"><span class="ic">${m.icon}</span>${L(m)}</a>`).join("")).join("")}
         ${S.user.role==="admin"||S.user.role==="manager"?`<div class="grp">${t("settings")}</div>
-          <a data-v="users" class="${S.view==="users"?"on":""}"><span class="ic">👥</span>${t("users")}</a>
+          ${S.user.role==="admin"?`<a data-v="users" class="${S.view==="users"?"on":""}"><span class="ic">👥</span>${t("users")}</a>`:""}
           <a data-v="workflows" class="${S.view==="workflows"?"on":""}"><span class="ic">⚡</span>${t("workflows")}</a>
           <a data-v="portal" class="${S.view==="portal"?"on":""}"><span class="ic">🌐</span>${t("portal")}</a>
           <a data-v="aportal" class="${S.view==="aportal"?"on":""}"><span class="ic">🔑</span>${t("agentPortal")}</a>
@@ -384,7 +394,7 @@ async function viewModule(){
   mine.onchange=()=>{S.mine=mine.checked?1:0;S.page=1;loadList();};
   if(canKanban){vl.onclick=()=>{S.viewMode="list";viewModule();};vk.onclick=()=>{S.viewMode="kanban";viewModule();};}
   flt.onclick=filterDialog;
-  exp.onclick=()=>window.open(`/api/${S.module}/export/csv?token=${encodeURIComponent(S.token)}`);
+  exp.onclick=()=>downloadApi(`/${S.module}/export/csv`,`${S.module}.csv`).catch(()=>{});
   imp.onchange=async e=>{const fd=new FormData();fd.append("file",e.target.files[0]);
     const r=await fetch(`/api/${S.module}/import`,{method:"POST",headers:{Authorization:"Bearer "+S.token},body:fd});
     const j=await r.json();toast(`${j.imported||0} ✓`);loadList();};
@@ -1357,63 +1367,71 @@ async function oppAnalytics(){
     <div class="card"><b>${t("bySource")}</b><div style="height:8px"></div>${bb(d.sources,fmtMoney,"v")}</div>`,[]);
 }
 
-/* ---------- geography ---------- */
-let geoSel={gov:null,dis:null,uz:null};
+/* ---------- global geography ---------- */
+let geoSel={country:null,region:null,city:null};
 async function viewGeo(){
-  const st=await api("/geo/stats");
-  const c=st.counts;
+  const st=await api("/geo/stats"), c=st.counts;
   const kp=(l,v,col)=>`<div class="kpi" style="--pri:${col}"><div class="l">${l}</div><div class="v">${fmtNum(v)}</div></div>`;
-  main.innerHTML=`<div class="row" style="margin-bottom:14px"><div class="h1">🗺️ ${t("geo")}</div></div>
+  main.innerHTML=`<div class="row" style="margin-bottom:14px;flex-wrap:wrap"><div class="h1">🌍 ${t("geo")}</div>
+    <div class="spacer"></div><span class="mut" style="font-size:12px">${fmtNum(c.countries)} ${t("country")} · ${fmtNum(c.regions)} ${t("region")} · ${fmtNum(c.cities)} ${t("city")}</span></div>
     <div class="kpis" style="margin-bottom:14px">
-      ${kp(t("governorate"),c.governorates,"var(--pri)")}
-      ${kp(t("district"),c.districts,"var(--info)")}
-      ${kp(t("uzlah"),c.uzlah,"var(--purple)")}
-      ${kp(t("village"),c.villages,"var(--ok)")}
-      ${kp(t("quarter"),c.quarters,"var(--warn)")}
+      ${kp(t("country"),c.countries,"var(--pri)")}
+      ${kp(t("region"),c.regions,"var(--info)")}
+      ${kp(t("city"),c.cities,"var(--purple)")}
+      ${kp(t("neighborhood"),c.neighborhoods,"var(--warn)")}
       ${kp(t("street"),c.streets,"var(--danger)")}</div>
     <div class="card" style="margin-bottom:14px">
-      <input id="gq" placeholder="${t("searchGeo")}" style="width:100%;background:var(--bg2);
-        border:1px solid var(--line);border-radius:9px;padding:9px 12px"><div id="gres"></div></div>
-    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-bottom:14px">
-      <div class="card" style="padding:0"><div style="padding:10px 12px;border-bottom:1px solid var(--line)"><b>${t("governorate")}</b></div>
-        <div id="cgov" style="max-height:340px;overflow:auto"></div></div>
-      <div class="card" style="padding:0"><div style="padding:10px 12px;border-bottom:1px solid var(--line)"><b>${t("district")}</b></div>
-        <div id="cdis" style="max-height:340px;overflow:auto"><div class="empty" style="padding:20px">—</div></div></div>
-      <div class="card" style="padding:0"><div style="padding:10px 12px;border-bottom:1px solid var(--line)"><b>${t("uzlah")}</b></div>
-        <div id="cuz" style="max-height:340px;overflow:auto"><div class="empty" style="padding:20px">—</div></div></div>
-      <div class="card" style="padding:0"><div style="padding:10px 12px;border-bottom:1px solid var(--line)"><b>${t("village")}</b></div>
-        <div id="cvil" style="max-height:340px;overflow:auto"><div class="empty" style="padding:20px">—</div></div></div>
+      <input id="gq" placeholder="${t("searchGeo")}" style="width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:9px 12px"><div id="gres"></div></div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin-bottom:14px">
+      <div class="card" style="padding:0"><div style="padding:10px 12px;border-bottom:1px solid var(--line)"><b>🌐 ${t("country")}</b></div>
+        <div id="ccountry" style="max-height:360px;overflow:auto"></div></div>
+      <div class="card" style="padding:0"><div style="padding:10px 12px;border-bottom:1px solid var(--line)"><b>🗺️ ${t("region")}</b></div>
+        <div id="cregion" style="max-height:360px;overflow:auto"><div class="empty" style="padding:20px">—</div></div></div>
+      <div class="card" style="padding:0"><div style="padding:10px 12px;border-bottom:1px solid var(--line)"><b>🏙️ ${t("city")}</b></div>
+        <div id="ccity" style="max-height:360px;overflow:auto"><div class="empty" style="padding:20px">—</div></div></div>
     </div>
-    <div class="card"><b>${S.lang==="ar"?"الأداء حسب المحافظة":"Performance by governorate"}</b><div style="height:10px"></div>
-      <div class="wrap-scroll"><table class="tbl"><thead><tr><th>${t("governorate")}</th><th>${t("accounts")||"Accounts"}</th>
-      <th>${t("revenue")}</th><th>${t("partners")}</th></tr></thead><tbody>
-      ${st.by_governorate.filter(g=>g.n||g.v).map(g=>`<tr><td><b>${esc(g.k)}</b> <span class="mut" style="font-size:11px">${esc(g.k_en||"")}</span></td>
-        <td>${g.n}</td><td><b>${fmtMoney(g.v)}</b></td><td>${g.agents}</td></tr>`).join("")
-        ||`<tr><td colspan="4"><div class="empty">${t("noData")}</div></td></tr>`}</tbody></table></div></div>`;
-  let tm; gq.oninput=()=>{clearTimeout(tm);tm=setTimeout(async()=>{
-    const q=gq.value.trim(); if(q.length<2){gres.innerHTML="";return;}
-    const r=await api("/geo/search?q="+encodeURIComponent(q));
-    gres.innerHTML=r.length?`<div style="margin-top:10px;max-height:220px;overflow:auto">
-      ${r.map(x=>`<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line);font-size:12.5px">
-      <b style="flex:1">${esc(x.name_ar)}</b><span class="mut">${esc(x.name_en||"")}</span>
-      <span class="badge" style="color:var(--info);background:var(--info)22">${esc(x.level_ar)}</span>
-      ${x.parent?`<span class="mut" style="font-size:11px">← ${esc(x.parent)}</span>`:""}</div>`).join("")}</div>`
-      :`<div class="mut" style="margin-top:8px;font-size:12px">${t("noData")}</div>`;},280);};
-  const list=(el,items,label,onclick,sel)=>{el.innerHTML=items.map(i=>`<div data-i="${i.id}"
-    style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--line);font-size:12.5px;
-    ${sel===i.id?"background:var(--pri)22":""}">
-    <div class="row"><span style="flex:1">${esc(i.name_ar)}</span>
-    ${i.districts!=null?`<span class="mut" style="font-size:10.5px">${i.districts}</span>`:""}
-    ${i.uzlah!=null?`<span class="mut" style="font-size:10.5px">${i.uzlah}</span>`:""}
-    ${i.villages!=null?`<span class="mut" style="font-size:10.5px">${i.villages}</span>`:""}</div></div>`).join("");
-    el.querySelectorAll("[data-i]").forEach(d=>d.onclick=()=>onclick(+d.dataset.i));};
-  const govs=await api("/geo/governorates");
-  list(cgov,govs,"gov",async id=>{geoSel.gov=id;
-    list(cdis,await api("/geo/districts?gov_id="+id),"dis",async d=>{geoSel.dis=d;
-      list(cuz,await api("/geo/uzlah?district_id="+d),"uz",async u=>{
-        list(cvil,await api("/geo/villages?uzlah_id="+u),"vil",()=>{},null);},null);},null);
-    viewGeoRefresh();},geoSel.gov);
-  function viewGeoRefresh(){list(cgov,govs,"gov",cgov.__cb||(()=>{}),geoSel.gov);}
+    <div class="card"><b>${S.lang==="ar"?"الأداء حسب الدولة":"Performance by country"}</b><div style="height:10px"></div>
+      <div class="wrap-scroll"><table class="tbl"><thead><tr><th>${t("country")}</th><th>${t("region")}</th><th>${t("city")}</th>
+      <th>${t("accounts")||"Accounts"}</th><th>${t("revenue")}</th><th>${t("partners")}</th></tr></thead><tbody>
+      ${st.by_country.filter(x=>x.accounts||x.revenue||x.partners).slice(0,50).map(x=>`<tr><td><b>${esc(x.k)}</b> <span class="mut" style="font-size:11px">${esc(x.code||"")}</span></td>
+        <td>${fmtNum(x.regions)}</td><td>${fmtNum(x.cities)}</td><td>${x.accounts}</td><td><b>${fmtMoney(x.revenue)}</b></td><td>${x.partners}</td></tr>`).join("")
+        ||`<tr><td colspan="6"><div class="empty">${t("noData")}</div></td></tr>`}</tbody></table></div></div>`;
+
+  const countryBox=document.getElementById("ccountry"), regionBox=document.getElementById("cregion"), cityBox=document.getElementById("ccity");
+  const geoName=(item,kind)=>{try{if(kind==="country"&&S.lang==="ar"&&item.code&&Intl.DisplayNames)
+    return new Intl.DisplayNames(["ar"],{type:"region"}).of(item.code)||item.name_ar||item.name_en;}catch{}return item.name_ar||item.name_en;};
+  const itemList=(el,items,selected,onPick,kind)=>{
+    el.innerHTML=items.length?items.map(item=>`<div data-i="${item.id}" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--line);font-size:12.5px;${selected===item.id?"background:var(--pri)22":""}">
+      <div class="row"><span style="flex:1">${esc(geoName(item,kind))}</span>
+      <span class="mut" style="font-size:10.5px">${kind==="country"?item.code||"":kind==="region"?(item.cities||0):fmtNum(item.population||0)}</span></div>
+      ${item.name_en&&item.name_en!==item.name_ar?`<div class="mut" style="font-size:10.5px">${esc(item.name_en)}</div>`:""}</div>`).join("")
+      :`<div class="empty" style="padding:20px">${t("noData")}</div>`;
+    el.querySelectorAll("[data-i]").forEach(node=>node.onclick=()=>onPick(+node.dataset.i));
+  };
+  const countries=await api("/geo/countries");
+  const selectCity=id=>{geoSel.city=id;};
+  const selectRegion=async id=>{
+    geoSel.region=id; geoSel.city=null;
+    const cities=await api("/geo/cities?region_id="+id+"&limit=200");
+    itemList(cityBox,cities,geoSel.city,selectCity,"city");
+  };
+  const selectCountry=async id=>{
+    geoSel.country=id;geoSel.region=null;geoSel.city=null;
+    itemList(countryBox,countries,geoSel.country,selectCountry,"country");
+    const regions=await api("/geo/regions?country_id="+id+"&limit=200");
+    itemList(regionBox,regions,geoSel.region,selectRegion,"region");
+    cityBox.innerHTML=`<div class="empty" style="padding:20px">${S.lang==="ar"?"اختر منطقة":"Select a region"}</div>`;
+  };
+  itemList(countryBox,countries,geoSel.country,selectCountry,"country");
+  if(geoSel.country) selectCountry(geoSel.country);
+
+  let timer;gq.oninput=()=>{clearTimeout(timer);timer=setTimeout(async()=>{
+    const q=gq.value.trim();if(q.length<2){gres.innerHTML="";return;}
+    const rows=await api("/geo/search?q="+encodeURIComponent(q));
+    gres.innerHTML=rows.length?`<div style="margin-top:10px;max-height:260px;overflow:auto">${rows.map(x=>`<div style="padding:7px 0;border-bottom:1px solid var(--line);font-size:12.5px">
+      <div class="row"><b style="flex:1">${esc(x.name_ar||x.name_en)}</b><span class="badge" style="color:var(--info);background:var(--info)22">${esc(S.lang==="ar"?x.level_ar:x.level_en)}</span></div>
+      <div class="mut" style="font-size:11px">${esc(x.name_en||"")}${x.parent?" · "+esc(x.parent):""}${x.population?" · "+fmtNum(x.population):""}</div></div>`).join("")}</div>`
+      :`<div class="mut" style="margin-top:8px;font-size:12px">${t("noData")}</div>`;},250);};
 }
 
 /* ---------- partners ---------- */
@@ -1435,7 +1453,7 @@ async function viewPartners(){
       ${kp(t("netBal"),fmtMoney(k.owed),"var(--warn)")}
       ${kp(S.lang==="ar"?"السلف":"Advances",fmtMoney(k.advances),"var(--danger)")}</div>
     <div class="card" style="padding:0"><div class="wrap-scroll"><table class="tbl"><thead><tr>
-      <th>${t("name")}</th><th>${t("type")||"Type"}</th><th>${t("governorate")}</th>
+      <th>${t("name")}</th><th>${t("type")||"Type"}</th><th>${t("country")}</th>
       <th>${t("commModel")}</th><th>${t("revenue")}</th><th>${t("achievement")}</th>
       <th>${t("owedTo")}</th><th>${t("owedBy")}</th><th>${t("netBal")}</th></tr></thead><tbody>
       ${rows.map(r=>{const ach=r.target?Math.round(r.sales/r.target*100):null;
@@ -1458,16 +1476,16 @@ async function viewPartners(){
   main.querySelectorAll("tr[data-i]").forEach(tr=>tr.onclick=()=>openPartner(+tr.dataset.i));
 }
 async function partnerForm(p){
-  const govs=await api("/geo/governorates");
+  const govs=await api("/geo/countries");
   const el=modal(p?t("edit"):t("addPartner"),`<form id="pf" class="f2">
     <div class="fld"><label>${t("name")} *</label><input name="name" value="${esc(p?.name||"")}" required></div>
     <div class="fld"><label>${t("type")||"Type"}</label><select name="type">
       ${Object.entries(PMETA.types).map(([k,v])=>`<option value="${k}" ${p?.type===k?"selected":""}>${v.icon} ${S.lang==="ar"?v.ar:v.en}</option>`).join("")}</select></div>
     <div class="fld"><label>${t("phone")||"Phone"}</label><input name="phone" value="${esc(p?.phone||"")}"></div>
     <div class="fld"><label>${t("email")}</label><input name="email" value="${esc(p?.email||"")}"></div>
-    <div class="fld"><label>${t("governorate")}</label><select name="gov_id" id="pg"><option value="0"></option>
+    <div class="fld"><label>${t("country")}</label><select name="gov_id" id="pg"><option value="0"></option>
       ${govs.map(g=>`<option value="${g.id}" ${String(p?.gov_id)===String(g.id)?"selected":""}>${esc(g.name_ar)}</option>`).join("")}</select></div>
-    <div class="fld"><label>${t("district")}</label><select name="district_id" id="pd"><option value="0"></option></select></div>
+    <div class="fld"><label>${t("region")}</label><select name="district_id" id="pd"><option value="0"></option></select></div>
     <div class="fld"><label>${t("commModel")}</label><select name="commission_model" id="pm">
       ${Object.entries(PMETA.models).map(([k,v])=>`<option value="${k}" ${p?.commission_model===k?"selected":""}>${S.lang==="ar"?v.ar:v.en}</option>`).join("")}</select></div>
     <div class="fld"><label>${t("rate")}</label><input name="commission_rate" type="number" step="0.1" value="${p?.commission_rate??3}"></div>
@@ -1484,7 +1502,7 @@ async function partnerForm(p){
       toast(t("saved"));close_();viewPartners();}catch{}},"pri"]]);
   const pg=el.querySelector("#pg"),pd=el.querySelector("#pd"),pm=el.querySelector("#pm");
   const loadD=async()=>{if(!+pg.value){pd.innerHTML="<option value=0></option>";return;}
-    const ds=await api("/geo/districts?gov_id="+pg.value);
+    const ds=await api("/geo/regions?country_id="+pg.value);
     pd.innerHTML=`<option value="0"></option>`+ds.map(d=>`<option value="${d.id}" ${String(p?.district_id)===String(d.id)?"selected":""}>${esc(d.name_ar)}</option>`).join("");};
   pg.onchange=loadD; loadD();
   const hint=()=>el.querySelector("#tierhint").innerHTML = pm.value==="tiered"
@@ -2197,16 +2215,15 @@ async function rcRun(){
     return esc(v);
   };
   const cols=meta.cols;
-  const base=location.origin+`/reports/export/${RC.code}`;
-  const link=f=>`/api/reports/export/${RC.code}.${f}?date_from=${RC.from}&date_to=${RC.to}&lang=${S.lang}&token=${encodeURIComponent(S.token)}`;
+  const exportPath=f=>`/reports/export/${RC.code}.${f}?`+new URLSearchParams({date_from:RC.from,date_to:RC.to,lang:S.lang});
   main.innerHTML=`
     <div class="row no-print" style="margin-bottom:12px;flex-wrap:wrap;gap:8px">
       <button class="btn sm" id="rcBack">← ${t("backToList")}</button>
       <div class="h1" style="font-size:19px">${meta.icon} ${esc(S.lang==="ar"?meta.ar:meta.en)}</div>
       <div class="spacer"></div>
       <button class="btn sm" id="rcPrint">🖨 ${t("printR")}</button>
-      <a class="btn sm" href="${link("csv")}">⬇ ${t("exportCsv")}</a>
-      <a class="btn sm" href="${link("xls")}">⬇ ${t("exportXls")}</a>
+      <button class="btn sm" id="rcCsv">⬇ ${t("exportCsv")}</button>
+      <button class="btn sm" id="rcXls">⬇ ${t("exportXls")}</button>
     </div>
     ${meta.has_date?`<div class="card no-print" style="margin-bottom:12px">
       <div class="row" style="flex-wrap:wrap;gap:10px;align-items:flex-end">
@@ -2252,6 +2269,8 @@ async function rcRun(){
     </div>`;
   document.getElementById("rcBack").onclick=()=>{RC.code=null;RC.data=null;viewReportCentre();};
   document.getElementById("rcPrint").onclick=()=>window.print();
+  document.getElementById("rcCsv").onclick=()=>downloadApi(exportPath("csv"),`${RC.code}.csv`).catch(()=>{});
+  document.getElementById("rcXls").onclick=()=>downloadApi(exportPath("xls"),`${RC.code}.xls`).catch(()=>{});
   const go=document.getElementById("rcGo");
   if(go){go.onclick=()=>{RC.from=document.getElementById("rcFrom").value;
     RC.to=document.getElementById("rcTo").value;rcRun();};

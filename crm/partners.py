@@ -75,6 +75,8 @@ def init_tables(c):
     for sql in [
         "CREATE INDEX IF NOT EXISTS ix_txn_agent ON agent_txn(agent_id)",
         "CREATE INDEX IF NOT EXISTS ix_stock_agent ON agent_stock(agent_id)",
+        "CREATE UNIQUE INDEX IF NOT EXISTS ux_commission_deal ON agent_txn(ref_module,ref_id) "
+        "WHERE kind='commission' AND ref_module='deals'",
     ]:
         c.execute(sql)
     # link deals/accounts to the partner who owns them
@@ -145,6 +147,7 @@ def register(app, current_user, require):
     @app.get("/api/partners")
     def list_partners(q: str = "", type: str = "", gov_id: int = 0, status: str = "",
                       user=Depends(current_user)):
+        require(user, "admin", "manager")
         w, p = ["a.deleted=0"], []
         if q: w.append("(a.name LIKE ? OR a.code LIKE ? OR a.phone LIKE ?)"); p += [f"%{q}%"]*3
         if type: w.append("a.type=?"); p.append(type)
@@ -166,6 +169,7 @@ def register(app, current_user, require):
 
     @app.get("/api/partners/{aid}")
     def get_partner(aid: int, user=Depends(current_user)):
+        require(user, "admin", "manager")
         r = con.execute("""SELECT a.*, g.name_ar gov_ar, d.name_ar dis_ar
             FROM agents a LEFT JOIN geo_governorates g ON g.id=a.gov_id
             LEFT JOIN geo_districts d ON d.id=a.district_id
@@ -219,8 +223,28 @@ def register(app, current_user, require):
     def create_partner(b: Partner, user=Depends(current_user)):
         require(user, "admin", "manager")
         import db as D
-        if not b.name.strip(): raise HTTPException(400, "Name required")
-        code = b.code or f"AG-{con.execute('SELECT COALESCE(MAX(id),0)+1 n FROM agents').fetchone()['n']:04d}"
+        if not b.name.strip() or len(b.name) > 200:
+            raise HTTPException(400, "Name required")
+        if b.type not in TYPES or b.commission_model not in COMM_MODELS or b.status not in {"Active", "Suspended", "Inactive"}:
+            raise HTTPException(400, "Invalid partner configuration")
+        if b.commission_rate < 0 or b.target < 0 or b.credit_limit < 0:
+            raise HTTPException(400, "Financial values cannot be negative")
+        if b.tiers:
+            try:
+                import json
+                tiers = json.loads(b.tiers)
+                if not isinstance(tiers, list) or not tiers:
+                    raise ValueError
+                for tier in tiers:
+                    if not isinstance(tier, dict) or float(tier.get("min", -1)) < 0 or float(tier.get("rate", -1)) < 0:
+                        raise ValueError
+            except (TypeError, ValueError, json.JSONDecodeError):
+                raise HTTPException(400, "Invalid commission tiers")
+        code = (b.code or f"AG-{con.execute('SELECT COALESCE(MAX(id),0)+1 n FROM agents').fetchone()['n']:04d}").strip()
+        if not code or len(code) > 100:
+            raise HTTPException(400, "Invalid partner code")
+        if con.execute("SELECT 1 FROM agents WHERE code=? AND deleted=0", (code,)).fetchone():
+            raise HTTPException(400, "Partner code already exists")
         aid = con.execute("""INSERT INTO agents(code,name,type,phone,email,national_id,gov_id,
             district_id,village_id,quarter_id,address,commission_model,commission_rate,tiers,
             target,credit_limit,status,joined_at,created_at,updated_at,deleted,notes)
@@ -251,6 +275,8 @@ def register(app, current_user, require):
     @app.delete("/api/partners/{aid}")
     def del_partner(aid: int, user=Depends(current_user)):
         require(user, "admin")
+        if not con.execute("SELECT 1 FROM agents WHERE id=? AND deleted=0", (aid,)).fetchone():
+            raise HTTPException(404, "Partner not found")
         b = balance(aid)
         if abs(b["balance"]) > 0.01:
             raise HTTPException(400, f"Settle the balance first ({b['balance']})")
@@ -270,8 +296,15 @@ def register(app, current_user, require):
     @app.post("/api/partners/txn")
     def add_txn(b: Txn, user=Depends(current_user)):
         require(user, "admin", "manager")
-        if b.kind not in TXN_KINDS: raise HTTPException(400, "Unknown transaction kind")
-        if b.amount <= 0: raise HTTPException(400, "Amount must be positive")
+        if b.kind not in TXN_KINDS:
+            raise HTTPException(400, "Unknown transaction kind")
+        if b.amount <= 0:
+            raise HTTPException(400, "Amount must be positive")
+        partner = con.execute("SELECT * FROM agents WHERE id=? AND deleted=0", (b.agent_id,)).fetchone()
+        if not partner:
+            raise HTTPException(404, "Partner not found")
+        if partner["status"] != "Active" and b.kind in ("commission", "bonus", "advance", "payout"):
+            raise HTTPException(400, "Partner is not active")
         if b.kind in ("payout", "advance"):
             bal = balance(b.agent_id)
             if b.kind == "payout" and b.amount > bal["balance"] + 0.01:
@@ -325,6 +358,7 @@ def register(app, current_user, require):
     @app.get("/api/partners/{aid}/statement")
     def statement(aid: int, user=Depends(current_user)):
         """كشف حساب — running balance, oldest first."""
+        require(user, "admin", "manager")
         rows = [dict(r) for r in con.execute(
             "SELECT * FROM agent_txn WHERE agent_id=? ORDER BY id", (aid,))]
         run = 0.0
@@ -340,6 +374,7 @@ def register(app, current_user, require):
 
     @app.get("/api/partners/analytics/summary")
     def summary(user=Depends(current_user)):
+        require(user, "admin", "manager")
         g = lambda s: _f(con.execute(s).fetchone()[0])
         by_type = [dict(r) for r in con.execute("""
             SELECT type k, COUNT(*) n FROM agents WHERE deleted=0 GROUP BY type""")]
@@ -352,7 +387,7 @@ def register(app, current_user, require):
                         "target": _f(r["target"]), "balance": b["balance"],
                         "achievement": round(sales / _f(r["target"]) * 100, 1) if _f(r["target"]) else None})
         top.sort(key=lambda x: -x["v"])
-        by_gov = [dict(r) for r in con.execute("""
+        by_country = [dict(r) for r in con.execute("""
             SELECT COALESCE(g.name_ar,'—') k, COUNT(a.id) n FROM agents a
             LEFT JOIN geo_governorates g ON g.id=a.gov_id
             WHERE a.deleted=0 GROUP BY 1 ORDER BY n DESC""")]
@@ -368,5 +403,6 @@ def register(app, current_user, require):
                 "partner_sales": g("""SELECT SUM(amount) FROM deals WHERE deleted=0
                                       AND stage='Closed Won' AND agent_id IS NOT NULL AND agent_id!=''"""),
             },
-            "by_type": by_type, "leaderboard": top[:15], "by_governorate": by_gov,
+            "by_type": by_type, "leaderboard": top[:15],
+            "by_country": by_country, "by_governorate": by_country,
         }

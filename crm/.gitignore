@@ -8,6 +8,10 @@ mobile/android/.gradle/
 mobile/android/local.properties
 mobile/ios/App/Pods/
 *.keystore
+.env
+.env.local
 crm.db-wal
 crm.db-shm
 __pycache__/
+
+mobile/android/nebras-release.properties
