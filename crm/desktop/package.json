@@ -1,0 +1,121 @@
+{
+  "name": "nebras-crm-desktop",
+  "productName": "NebrasCRM",
+  "version": "1.0.0",
+  "description": "NebrasCRM — منصة إدارة علاقات العملاء للمؤسسات",
+  "author": {
+    "name": "NebrasCRM",
+    "email": "no-reply@nebrascrm.io"
+  },
+  "license": "MIT",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "NEBRAS_DEV=1 electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
+    "dist:linux": "electron-builder --linux"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "io.nebrascrm.desktop",
+    "productName": "NebrasCRM",
+    "copyright": "Copyright © NebrasCRM",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "splash.html",
+      "settings.html",
+      "build/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "artifactName": "NebrasCRM-Setup-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "NebrasCRM",
+      "installerLanguages": [
+        "en_US",
+        "ar_SA"
+      ],
+      "language": "1025"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "build/icon.icns",
+      "category": "public.app-category.business",
+      "darkModeSupport": true,
+      "artifactName": "NebrasCRM-${version}-${arch}.${ext}"
+    },
+    "dmg": {
+      "title": "NebrasCRM ${version}"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb",
+        "rpm"
+      ],
+      "icon": "build/icons",
+      "category": "Office;ProjectManagement",
+      "maintainer": "NebrasCRM <no-reply@nebrascrm.io>",
+      "desktop": {
+        "Name": "NebrasCRM",
+        "Name[ar]": "نبراس سي آر إم",
+        "Comment": "Enterprise CRM platform",
+        "Comment[ar]": "منصة إدارة علاقات العملاء للمؤسسات",
+        "Keywords": "crm;sales;business;نبراس;مبيعات"
+      },
+      "artifactName": "NebrasCRM-${version}-${arch}.${ext}"
+    }
+  },
+  "homepage": "https://nebrascrm.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nebrascrm/nebrascrm.git"
+  }
+}

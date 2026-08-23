@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html dir="rtl"><head><meta charset="utf-8">
+<title>Droid Arabic Kufi — معاينة الخط</title>
+<link rel="stylesheet" href="/styles.css">
+<style>
+ body{padding:28px;max-width:860px;margin:0 auto}
+ .row2{display:grid;grid-template-columns:110px 1fr;gap:14px;align-items:center;
+   padding:14px 0;border-bottom:1px solid var(--line)}
+ .lbl{color:var(--mut);font-size:11px}
+ .fallback{font-family:"Segoe UI",Tahoma,sans-serif}
+</style><link rel="icon" href="/brand/favicon/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/brand/favicon/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#2B4ACB">
+</head><body>
+<div class="h1" style="margin-bottom:6px">معاينة الخط الرسمي</div>
+<p class="mut" style="margin-bottom:20px">Droid Arabic Kufi — مضمّن داخل CSS (لا يحتاج إنترنت)</p>
+
+<div class="card">
+  <div class="row2"><span class="lbl">عادي 400</span>
+    <span style="font-size:20px">نظام إدارة علاقات العملاء للمؤسسات</span></div>
+  <div class="row2"><span class="lbl">عريض 700</span>
+    <span style="font-size:20px;font-weight:700">لوحة التحكم · الصفقات · الفواتير</span></div>
+  <div class="row2"><span class="lbl">نص صغير</span>
+    <span>تم تحصيل مبلغ ٣٩٬٠٠٠ دولار من فاتورة رقم INV-5016 بتاريخ ٢٠٢٦/٠٨/٢١.</span></div>
+  <div class="row2"><span class="lbl">أرقام</span>
+    <span style="font-size:18px">0123456789 · ١٢٣٤٥٦٧٨٩٠ · $26,000</span></div>
+  <div class="row2"><span class="lbl">لاتيني</span>
+    <span style="font-size:18px">NebrasCRM Enterprise Platform</span></div>
+  <div class="row2"><span class="lbl">شارات</span>
+    <span><span class="badge" style="color:var(--ok);background:var(--ok)22">مدفوعة</span>
+      <span class="badge" style="color:var(--warn);background:var(--warn)22">قيد التفاوض</span>
+      <span class="badge" style="color:var(--danger);background:var(--danger)22">متأخرة</span></span></div>
+  <div class="row2"><span class="lbl">أزرار</span>
+    <span><button class="btn pri">حفظ الصفقة</button> <button class="btn">إلغاء</button></span></div>
+  <div class="row2"><span class="lbl">حقل إدخال</span><input value="شركة يمن سوفت للتقنية"></div>
+</div>
+
+<div class="card" style="margin-top:16px">
+  <b>مقارنة</b>
+  <div style="font-size:19px;margin-top:10px">الخط الرسمي: بوابة العملاء والمدفوعات</div>
+  <div class="fallback" style="font-size:19px;margin-top:6px;color:var(--mut)">الخط الاحتياطي: بوابة العملاء والمدفوعات</div>
+  <p class="mut" style="font-size:12px;margin-top:10px">إذا بدا السطران مختلفَين فالخط يعمل بنجاح ✓</p>
+</div>
+
+<div class="card" style="margin-top:16px">
+  <b>جدول بكثافة حقيقية</b>
+  <table class="tbl" style="margin-top:8px"><thead><tr>
+    <th>الشركة</th><th>الصفقة</th><th>القيمة</th><th>المرحلة</th><th>المسؤول</th></tr></thead>
+  <tbody>
+    <tr><td>البنك الأهلي</td><td>تجديد التراخيص</td><td>26,000</td>
+      <td><span class="badge" style="color:var(--ok);background:var(--ok)22">مغلقة رابحة</span></td><td>سارة كمال</td></tr>
+    <tr><td>سبأفون</td><td>تطبيق المنصة</td><td>170,000</td>
+      <td><span class="badge" style="color:var(--warn);background:var(--warn)22">تفاوض</span></td><td>يوسف أحمد</td></tr>
+    <tr><td>يمن سوفت</td><td>عقد الدعم السنوي</td><td>48,500</td>
+      <td><span class="badge" style="color:var(--info);background:var(--info)22">عرض سعر</span></td><td>ليلى ناصر</td></tr>
+  </tbody></table>
+</div>
+
+<p class="mut" style="font-size:12px;margin-top:18px" id="st">جارٍ فحص تحميل الخط…</p>
+<script>
+document.fonts.ready.then(()=>{
+  const ok=document.fonts.check("16px 'Droid Arabic Kufi'");
+  const el=document.getElementById("st");
+  el.textContent = ok ? "✅ الخط Droid Arabic Kufi مُحمَّل ويعمل" : "⚠️ لم يتم تحميل الخط";
+  el.style.color = ok ? "var(--ok)" : "var(--danger)";
+});
+</script></body></html>

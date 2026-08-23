@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Secure Payment — NebrasCRM</title>
+<link rel="stylesheet" href="/styles.css">
+<style>
+.pay-wrap{min-height:100vh;display:grid;place-items:center;padding:20px;
+  background:radial-gradient(900px 500px at 50% -10%,#243a7a55,transparent),var(--bg)}
+.pay{width:100%;max-width:440px}
+.pcard{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--sh);overflow:hidden}
+.psum{padding:22px;border-bottom:1px solid var(--line);background:linear-gradient(135deg,var(--pri)18,transparent)}
+.amt{font-size:34px;font-weight:800;letter-spacing:-.5px}
+.pbody{padding:22px}
+.mrow{display:flex;gap:8px;margin-bottom:16px}
+.mrow button{flex:1;padding:9px;border-radius:9px;border:1px solid var(--line);background:var(--bg2);cursor:pointer;font-weight:600;font-size:12.5px}
+.mrow button.on{border-color:var(--pri);background:var(--pri)22;color:var(--txt)}
+.ok{text-align:center;padding:34px 22px}
+.tick{width:64px;height:64px;border-radius:99px;background:var(--ok)22;border:2px solid var(--ok);
+  display:grid;place-items:center;font-size:30px;margin:0 auto 14px;color:var(--ok)}
+.secure{text-align:center;color:var(--mut);font-size:11.5px;margin-top:14px}
+</style><link rel="icon" href="/brand/favicon/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/brand/favicon/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#2B4ACB">
+</head><body>
+<div id="root" class="pay-wrap"><div class="mut">Loading…</div></div>
+<script>
+const TOKEN = location.pathname.split("/").pop();
+let lang = localStorage.getItem("lang") || "ar";
+const L = {
+ ar:{pay:"دفع آمن",invoice:"الفاتورة",due:"الاستحقاق",amount:"المبلغ المستحق",method:"طريقة الدفع",
+  card:"بطاقة",bank:"حوالة بنكية",wallet:"محفظة",cardNum:"رقم البطاقة",cardName:"الاسم على البطاقة",
+  fee:"رسوم",totalPay:"الإجمالي",awaiting:"بانتظار التأكيد",awaitMsg:"سجّلنا حوالتك وسيتم تأكيدها خلال",hours:"ساعة",
+  chooseCh:"اختر وسيلة الدفع",search:"ابحث عن وسيلة دفع...",
+  exp:"تاريخ الانتهاء",cvc:"CVC",email:"البريد الإلكتروني (للإيصال)",payNow:"ادفع الآن",
+  paid:"تم الدفع بنجاح",ref:"رقم العملية",already:"هذه الفاتورة مدفوعة بالفعل",thanks:"شكراً لك! تم إرسال الإيصال إلى بريدك.",
+  secure:"🔒 اتصال مشفّر — لا يتم تخزين بيانات بطاقتك",processing:"جارٍ المعالجة...",
+  bankMsg:"سيتم تسجيل الدفعة كحوالة بنكية بانتظار التأكيد.",notfound:"رابط الدفع غير صالح أو منتهي"},
+ en:{pay:"Secure Payment",invoice:"Invoice",due:"Due",amount:"Amount due",method:"Payment method",
+  card:"Card",bank:"Bank Transfer",wallet:"Wallet",cardNum:"Card number",cardName:"Name on card",
+  fee:"Fee",totalPay:"Total",awaiting:"Awaiting confirmation",awaitMsg:"Your transfer was recorded, confirmation within",hours:"hours",
+  chooseCh:"Choose a payment method",search:"Search payment methods...",
+  exp:"Expiry",cvc:"CVC",email:"Email (for receipt)",payNow:"Pay now",
+  paid:"Payment successful",ref:"Reference",already:"This invoice is already paid",thanks:"Thank you! A receipt has been emailed to you.",
+  secure:"🔒 Encrypted connection — card details are never stored",processing:"Processing…",
+  bankMsg:"Payment will be recorded as a bank transfer pending confirmation.",notfound:"Payment link is invalid or expired"}};
+const x = k => L[lang][k] || k;
+const es = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let D=null, method="Card";
+
+async function load(){
+  document.body.dir = lang==="ar"?"rtl":"ltr";
+  document.body.className = (localStorage.getItem("theme")||"dark")==="light"?"light":"";
+  const r = await fetch("/pay/api/"+TOKEN);
+  if(!r.ok){root.innerHTML=`<div class="pay"><div class="pcard"><div class="ok">
+    <div class="tick" style="color:var(--danger);border-color:var(--danger);background:var(--danger)22">✕</div>
+    <b>${x("notfound")}</b></div></div></div>`;return;}
+  D = await r.json();
+  D.status==="paid" ? done(D.ref) : form();
+}
+const money = v => new Intl.NumberFormat(lang==="ar"?"ar-EG":"en-US",
+  {style:"currency",currency:D?.currency||"USD",maximumFractionDigits:2}).format(v);
+
+function form(){
+  root.innerHTML=`<div class="pay">
+   <div class="row" style="justify-content:space-between;margin-bottom:12px">
+     <div class="logo" style="font-size:17px"><span class="mark" style="width:26px;height:26px"><svg viewBox=\"0 0 64 64\" width=\"100%\" height=\"100%\" aria-hidden=\"true\"><defs><linearGradient id=\"nbf\" x1=\".5\" y1=\"0\" x2=\".5\" y2=\"1\"><stop offset=\"0\" stop-color=\"#fff\"/><stop offset=\".55\" stop-color=\"#FFF3D6\"/><stop offset=\"1\" stop-color=\"#FFC53D\"/></linearGradient><linearGradient id=\"nbc\" x1=\".5\" y1=\"0\" x2=\".5\" y2=\"1\"><stop offset=\"0\" stop-color=\"#FFC53D\"/><stop offset=\"1\" stop-color=\"#FF9F1C\"/></linearGradient></defs><path d=\"M33.4 8.2C33.9 15.6 40.1 18.6 43.6 24.4C46.9 29.9 47 36 45.1 40.7C42.6 47 37.6 51.4 31.6 51.4C24 51.4 17.4 45.6 17 37.4C16.7 31.3 20 27.6 22.6 24.9C24.2 27.4 25.9 28.6 27.4 28.8C26.2 22 28.6 14.2 33.4 8.2Z\" fill=\"url(#nbf)\"/><path d=\"M32.6 26C33 30.4 37.2 32.6 38.6 36.6C39.8 40.1 38.4 44 35.3 45.9C32 47.9 27.4 47 25.3 43.9C23.2 40.8 23.8 37.2 25.6 34.6C26.6 36 27.6 36.6 28.5 36.7C28 32.6 29.8 28.9 32.6 26Z\" fill=\"url(#nbc)\"/></svg></span> ${es(D.company)}</div>
+     <button class="btn sm" id="lng">${lang==="ar"?"EN":"ع"}</button></div>
+   <div class="pcard">
+    <div class="psum">
+      <div class="mut" style="font-size:12px">${x("amount")}</div>
+      <div class="amt">${money(D.amount)}</div>
+      <div class="mut" style="font-size:12.5px;margin-top:6px">${x("invoice")}: <b>${es(D.invoice)}</b>
+        ${D.due_date?` · ${x("due")}: ${es(D.due_date)}`:""}</div>
+      ${D.account?`<div class="mut" style="font-size:12px">${es(D.account)}</div>`:""}
+    </div>
+    <div class="pbody">
+      <label>${x("chooseCh")}</label>
+      <input id="chq" placeholder="${x("search")}" style="width:100%;background:var(--bg2);border:1px solid var(--line);
+        border-radius:9px;padding:8px 11px;margin-bottom:10px">
+      <div id="chlist" style="max-height:230px;overflow:auto;margin-bottom:14px"></div>
+      <div id="mf"></div>
+      <div class="fld"><label>${x("email")}</label><input id="em" type="email" placeholder="you@example.com"></div>
+      <div id="feebox"></div>
+      <button class="btn pri" id="go" style="width:100%;padding:12px;font-size:15px"></button>
+      <div class="secure">${x("secure")}</div>
+    </div></div></div>`;
+  lng.onclick=()=>{lang=lang==="ar"?"en":"ar";localStorage.setItem("lang",lang);load();};
+  chq.oninput=drawChannels;
+  drawChannels(); pick(D.channels.find(c=>c.code==="jawali")||D.channels[0]);
+}
+function drawChannels(){
+  const q=(document.getElementById("chq").value||"").toLowerCase();
+  const list=D.channels.filter(c=>!q||c.name_en.toLowerCase().includes(q)||c.name_ar.includes(q)||c.kind.includes(q));
+  const groups={};
+  list.forEach(c=>{(groups[c.kind]=groups[c.kind]||[]).push(c);});
+  chlist.innerHTML=Object.entries(groups).map(([k,items])=>`
+    <div class="mut" style="font-size:10.5px;font-weight:700;margin:8px 0 5px">
+      ${D.kinds[k]?(lang==="ar"?D.kinds[k].ar:D.kinds[k].en):k}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+    ${items.map(c=>`<button type="button" data-c="${c.code}" class="chbtn${method===c.code?" on":""}"
+      style="text-align:start;padding:8px 10px;border-radius:9px;cursor:pointer;font-size:12px;
+      border:1px solid ${method===c.code?"var(--pri)":"var(--line)"};
+      background:${method===c.code?"var(--pri)22":"var(--bg2)"};color:var(--txt)">
+      ${c.icon||""} ${es(lang==="ar"?c.name_ar:c.name_en)}
+      ${c.fee_pct?`<div class="mut" style="font-size:9.5px">${c.fee_pct}%</div>`:""}</button>`).join("")}
+    </div>`).join("")||`<div class="mut" style="font-size:12px">—</div>`;
+  chlist.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>pick(D.channels.find(c=>c.code===b.dataset.c)));
+}
+let CH=null;
+function pick(c){ if(!c)return; CH=c; method=c.code; drawChannels(); fields(); feebox(); }
+function feebox(){
+  const f=(D.amount*(CH.fee_pct||0)/100)+(CH.fee_flat||0);
+  document.getElementById("feebox").innerHTML = f>0?`<div class="row" style="justify-content:space-between;
+    padding:9px 11px;background:var(--bg2);border-radius:9px;margin-bottom:12px;font-size:12.5px">
+    <span class="mut">${x("fee")} (${CH.fee_pct||0}%)</span><span>${money(f)}</span></div>`:"";
+  go.textContent=`${x("payNow")} · ${money(D.amount+ (0))}`;
+}
+function fields(){
+  const need=CH.fields||[];
+  let html="";
+  if(need.includes("card")) html+=`
+    <div class="fld"><label>${x("cardNum")}</label><input id="cn" inputmode="numeric" placeholder="4242 4242 4242 4242" maxlength="23"></div>
+    <div class="fld"><label>${x("cardName")}</label><input id="ch_" placeholder="AHMED SALEH"></div>
+    <div class="f2"><div class="fld"><label>${x("exp")}</label><input id="ex" placeholder="12/28" maxlength="5"></div>
+    <div class="fld"><label>${x("cvc")}</label><input id="cv" inputmode="numeric" placeholder="123" maxlength="4"></div></div>`;
+  (CH.fields_meta||[]).forEach(f=>{
+    if(f.key==="card")return;
+    const lbl=lang==="ar"?f.ar:f.en;
+    html+=`<div class="fld"><label>${es(lbl)}</label><input id="f_${f.key}" type="${f.type==="tel"?"tel":f.type==="email"?"email":"text"}"
+      ${f.key==="msisdn"&&CH.prefix?`placeholder="${CH.prefix[0]}XXXXXXX"`:""}></div>`;
+  });
+  if(CH.kind==="remittance"||CH.kind==="bank")
+    html+=`<div class="card" style="background:var(--bg2);margin-bottom:12px;font-size:12.5px">
+      ${x("awaitMsg")} ${CH.settlement_hours||24} ${x("hours")}.</div>`;
+  mf.innerHTML=html;
+  const cn=document.getElementById("cn");
+  if(cn) cn.oninput=()=>{cn.value=cn.value.replace(/\D/g,"").slice(0,19).replace(/(.{4})/g,"$1 ").trim();};
+  const ex=document.getElementById("ex");
+  if(ex) ex.oninput=()=>{let v=ex.value.replace(/\D/g,"").slice(0,4);ex.value=v.length>2?v.slice(0,2)+"/"+v.slice(2):v;};
+}
+async function submit(){
+  go.disabled=true; go.textContent=x("processing");
+  const v=id=>(document.getElementById(id)||{}).value||"";
+  const b={channel:CH.code,email:v("em"),card_number:v("cn"),card_name:v("ch_"),exp:v("ex"),cvc:v("cv")};
+  (CH.fields_meta||[]).forEach(f=>{ if(f.key!=="card") b[f.key]=v("f_"+f.key); });
+  const r=await fetch(`/pay/api/${TOKEN}/confirm`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});
+  const j=await r.json();
+  if(!r.ok){go.disabled=false;feebox();
+    const d=document.createElement("div");d.className="toast";d.style.borderColor="var(--danger)";
+    d.textContent=j.detail||"Error";document.body.append(d);setTimeout(()=>d.remove(),3600);return;}
+  if(j.status==="awaiting_settlement") return pending(j);
+  done(j.ref,j.fee);
+}
+function pending(j){
+  root.innerHTML=`<div class="pay"><div class="pcard"><div class="ok">
+    <div class="tick" style="color:var(--warn);border-color:var(--warn);background:var(--warn)22">⏳</div>
+    <div style="font-size:19px;font-weight:800">${x("awaiting")}</div>
+    <div class="amt" style="font-size:26px;margin:8px 0">${money(D.amount)}</div>
+    <div class="mut" style="font-size:13px">${x("awaitMsg")} ${j.eta_hours||24} ${x("hours")}</div>
+    <div class="mut" style="font-size:11.5px;margin-top:10px">${es(j.channel||"")} · ${x("invoice")}: ${es(D.invoice)}</div>
+  </div></div></div>`;
+}
+function done(ref,fee){
+  root.innerHTML=`<div class="pay"><div class="pcard"><div class="ok">
+    <div class="tick">✓</div><div style="font-size:19px;font-weight:800">${x("paid")}</div>
+    <div class="amt" style="font-size:26px;margin:8px 0">${money(D.amount)}</div>
+    <div class="mut" style="font-size:13px">${x("thanks")}</div>
+    <div class="mut" style="font-size:11.5px;margin-top:10px">${x("ref")}: ${es(ref||"—")}</div>
+    <div class="mut" style="font-size:11.5px">${x("invoice")}: ${es(D.invoice)}</div>\n    ${fee?`<div class="mut" style="font-size:11.5px">${x("fee")}: ${money(fee)}</div>`:""}
+  </div></div></div>`;
+}
+load();
+</script></body></html>

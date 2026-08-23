@@ -1,0 +1,16 @@
+:root{
+  --nebras-indigo: #2B4ACB;
+  --nebras-indigo2: #4F7CFF;
+  --nebras-violet: #7C3AED;
+  --nebras-cyan: #06B6D4;
+  --nebras-gold: #FFC53D;
+  --nebras-gold2: #FF9F1C;
+  --nebras-ink: #0F1420;
+  --nebras-paper: #F7F9FC;
+  --nebras-slate: #5A6B85;
+  --nebras-ok: #15803D;
+  --nebras-warn: #B45309;
+  --nebras-danger: #DC2626;
+  --nebras-gradient: linear-gradient(135deg,#4F7CFF 0%,#2B4ACB 52%,#7C3AED 100%);
+  --nebras-light: linear-gradient(180deg,#FFFFFF 0%,#FFF3D6 55%,#FFC53D 100%);
+}

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>معاينة الثيم الفاتح</title>
+<link rel="stylesheet" href="/styles.css">
+<style>
+ .wrap{max-width:1000px;margin:0 auto;padding:24px}
+ .sec{margin:22px 0}
+ .sw{display:inline-flex;flex-direction:column;align-items:center;gap:5px;margin:5px}
+ .sw i{width:62px;height:40px;border-radius:9px;display:block;border:1px solid var(--line)}
+ .cmp{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+ @media(max-width:700px){.cmp{grid-template-columns:1fr}}
+</style><link rel="icon" href="/brand/favicon/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/brand/favicon/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#2B4ACB">
+</head>
+<body class="light">
+<div class="wrap">
+  <div class="row" style="margin-bottom:6px">
+    <div class="h1">معاينة الثيم الفاتح النهاري</div>
+    <div class="spacer" style="flex:1"></div>
+    <button class="btn" id="tg">تبديل الوضع</button>
+  </div>
+  <p class="mut" style="margin-bottom:18px">صفحة فحص بصري لكل العناصر — بدّل الوضع للمقارنة.</p>
+
+  <div class="sec"><b>الأسطح الثلاثة</b>
+    <div class="row" style="gap:0;margin-top:10px;border-radius:12px;overflow:hidden;border:1px solid var(--line)">
+      <div style="flex:1;background:var(--bg);padding:22px;text-align:center">الخلفية</div>
+      <div style="flex:1;background:var(--bg2);padding:22px;text-align:center">الشريط الجانبي</div>
+      <div style="flex:1;background:var(--card);padding:22px;text-align:center">البطاقة</div>
+    </div></div>
+
+  <div class="sec"><b>ألوان الحالة (نص على أبيض)</b><div style="margin-top:10px">
+    <span class="sw"><i style="background:var(--pri)"></i><small class="mut">أساسي</small></span>
+    <span class="sw"><i style="background:var(--ok)"></i><small class="mut">نجاح</small></span>
+    <span class="sw"><i style="background:var(--warn)"></i><small class="mut">تحذير</small></span>
+    <span class="sw"><i style="background:var(--danger)"></i><small class="mut">خطر</small></span>
+    <span class="sw"><i style="background:var(--info)"></i><small class="mut">معلومة</small></span>
+    <span class="sw"><i style="background:var(--purple)"></i><small class="mut">بنفسجي</small></span>
+  </div>
+  <div class="card" style="margin-top:10px">
+    <span class="badge" style="color:var(--ok);background:var(--ok)22">مدفوعة</span>
+    <span class="badge" style="color:var(--warn);background:var(--warn)22">قيد التفاوض</span>
+    <span class="badge" style="color:var(--danger);background:var(--danger)22">متأخرة</span>
+    <span class="badge" style="color:var(--info);background:var(--info)22">جديد</span>
+    <span class="badge" style="color:var(--purple);background:var(--purple)22">بلاتيني</span>
+    <span class="badge" style="color:var(--pri);background:var(--pri)22">مميز</span>
+  </div></div>
+
+  <div class="sec"><b>مؤشرات KPI</b>
+    <div class="kpis" style="margin-top:10px">
+      <div class="kpi" style="--pri:var(--ok)"><div class="l">الإيرادات المحققة</div><div class="v">٢٬١٦٤٬٠٠٠</div></div>
+      <div class="kpi" style="--pri:var(--pri)"><div class="l">خط المبيعات</div><div class="v">٦٬٣٠٨٬٠٠٠</div></div>
+      <div class="kpi" style="--pri:var(--danger)"><div class="l">مستحقات متأخرة</div><div class="v">٣٧٣٬٠٠٠</div></div>
+      <div class="kpi" style="--pri:var(--purple)"><div class="l">نسبة الفوز</div><div class="v">٦٥٪</div></div>
+    </div></div>
+
+  <div class="sec"><b>الأزرار والحقول</b>
+    <div class="card" style="margin-top:10px">
+      <div class="row" style="flex-wrap:wrap;margin-bottom:14px">
+        <button class="btn pri">حفظ</button><button class="btn">إلغاء</button>
+        <button class="btn dgr">حذف</button><button class="btn sm">صغير</button>
+        <button class="btn" disabled>معطّل</button><button class="icbtn">⚙</button>
+      </div>
+      <div class="f2">
+        <div class="fld"><label>اسم الشركة</label><input value="يمن سوفت للتقنية"></div>
+        <div class="fld"><label>المرحلة</label><select><option>تفاوض</option><option>عرض سعر</option></select></div>
+      </div>
+      <div class="fld"><label>ملاحظات</label><textarea placeholder="اكتب هنا..."></textarea></div>
+    </div></div>
+
+  <div class="sec"><b>جدول</b>
+    <div class="card" style="padding:0;margin-top:10px"><div class="wrap-scroll">
+      <table class="tbl"><thead><tr><th>الشركة</th><th>الصفقة</th><th>القيمة</th><th>المرحلة</th><th>الاحتمالية</th></tr></thead>
+      <tbody>
+        <tr><td>البنك الأهلي</td><td>تجديد التراخيص</td><td><b>٢٦٬٠٠٠</b></td>
+          <td><span class="badge" style="color:var(--ok);background:var(--ok)22">مغلقة رابحة</span></td>
+          <td><div class="row"><div class="barbg" style="width:60px"><div class="barfill" style="width:100%"></div></div><span class="mut">١٠٠٪</span></div></td></tr>
+        <tr><td>سبأفون</td><td>تطبيق المنصة</td><td><b>١٧٠٬٠٠٠</b></td>
+          <td><span class="badge" style="color:var(--warn);background:var(--warn)22">تفاوض</span></td>
+          <td><div class="row"><div class="barbg" style="width:60px"><div class="barfill" style="width:80%"></div></div><span class="mut">٨٠٪</span></div></td></tr>
+        <tr><td>تهامة الصناعية</td><td>عقد الدعم</td><td><b>٤٨٬٥٠٠</b></td>
+          <td><span class="badge" style="color:var(--info);background:var(--info)22">عرض سعر</span></td>
+          <td><div class="row"><div class="barbg" style="width:60px"><div class="barfill" style="width:55%"></div></div><span class="mut">٥٥٪</span></div></td></tr>
+      </tbody></table></div></div></div>
+
+  <div class="sec"><b>كانبان ورسوم</b>
+    <div class="cmp" style="margin-top:10px">
+      <div class="kbcol"><h4><span class="badge" style="color:var(--warn);background:var(--warn)22">تفاوض</span><span class="mut">٣ · ٢٤٠٬٠٠٠</span></h4>
+        <div class="kbcard"><div style="font-weight:600;font-size:13px">سبأفون — تطبيق المنصة</div>
+          <div style="color:var(--ok);font-weight:700;font-size:13px">١٧٠٬٠٠٠</div>
+          <div class="mut" style="font-size:11.5px;margin-top:4px">سارة كمال</div></div>
+        <div class="kbcard"><div style="font-weight:600;font-size:13px">يمن سوفت — ترخيص إضافي</div>
+          <div style="color:var(--ok);font-weight:700;font-size:13px">٧٠٬٠٠٠</div></div></div>
+      <div class="card"><b>حسب المرحلة</b><div style="height:10px"></div>
+        <div class="bars">
+          <div class="bar"><div>تأهيل</div><div class="barbg"><div class="barfill" style="width:100%"></div></div><div style="text-align:end;font-weight:700">٢٫٥م</div></div>
+          <div class="bar"><div>عرض سعر</div><div class="barbg"><div class="barfill" style="width:62%"></div></div><div style="text-align:end;font-weight:700">١٫٥م</div></div>
+          <div class="bar"><div>تفاوض</div><div class="barbg"><div class="barfill" style="width:40%"></div></div><div style="text-align:end;font-weight:700">١٫٠م</div></div>
+        </div></div>
+    </div></div>
+
+  <div class="sec"><b>فئات الولاء (ألوان قادمة من الخادم)</b>
+    <div class="card" style="margin-top:10px" id="tiers"></div></div>
+
+  <div class="sec"><b>التبويبات والتنبيه</b>
+    <div class="tabs" style="margin-top:10px"><button class="on">التفاصيل</button><button>الملاحظات</button><button>السجل</button></div>
+    <div class="card">محتوى التبويب النشط.</div></div>
+</div>
+
+<script>
+function TC(c){
+  if(!c||typeof c!=="string"||c[0]!=="#") return c;
+  if(!document.body.classList.contains("light")) return c;
+  let h=c.slice(1); if(h.length===3) h=h.split("").map(x=>x+x).join("");
+  let r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);
+  const lum=(0.2126*r+0.7152*g+0.0722*b)/255;
+  if(lum<=0.42) return c;
+  const k=Math.max(0.40,0.42/lum);
+  const f=v=>Math.round(Math.max(0,Math.min(255,v*k))).toString(16).padStart(2,"0");
+  return "#"+f(r)+f(g)+f(b);
+}
+const TIERS=[{ar:"ماسي",c:"#22d3ee"},{ar:"بلاتيني",c:"#a855f7"},{ar:"ذهبي",c:"#f59e0b"},
+  {ar:"فضي",c:"#94a3b8"},{ar:"برونزي",c:"#b45309"},{ar:"عضو",c:"#64748b"}];
+function drawTiers(){
+  document.getElementById("tiers").innerHTML=TIERS.map(t=>{
+    const c=TC(t.c);
+    return `<span class="badge" style="color:${c};background:${c}22;border-color:${c}55;margin:3px">${t.ar}</span>`;
+  }).join("")+`<div class="mut" style="font-size:11.5px;margin-top:8px">
+    تُعتَّم الألوان الفاتحة تلقائياً في الوضع النهاري لتبقى مقروءة.</div>`;
+}
+drawTiers();
+document.getElementById("tg").onclick=()=>{document.body.classList.toggle("light");drawTiers();};
+</script></body></html>

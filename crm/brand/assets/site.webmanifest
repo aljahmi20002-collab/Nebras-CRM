@@ -1,0 +1,121 @@
+{
+  "id": "/app",
+  "name": "NebrasCRM — نبراس سي آر إم",
+  "short_name": "نبراس",
+  "description": "منصة إدارة علاقات العملاء للمؤسسات — مبيعات، تسويق، دعم، مخزون ومالية",
+  "start_url": "/app?src=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "any",
+  "background_color": "#0F1420",
+  "theme_color": "#2B4ACB",
+  "lang": "ar",
+  "dir": "rtl",
+  "categories": [
+    "business",
+    "productivity",
+    "finance"
+  ],
+  "prefer_related_applications": false,
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "icons": [
+    {
+      "src": "/brand/favicon/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "/brand/favicon/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/brand/favicon/icon-256.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    },
+    {
+      "src": "/brand/favicon/icon-384.png",
+      "sizes": "384x384",
+      "type": "image/png"
+    },
+    {
+      "src": "/brand/favicon/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/brand/favicon/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/brand/favicon/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "لوحة التحكم",
+      "short_name": "اللوحة",
+      "url": "/app?src=shortcut",
+      "icons": [
+        {
+          "src": "/brand/favicon/icon-96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "المساعد الذكي",
+      "short_name": "الذكاء",
+      "url": "/app?view=ai",
+      "icons": [
+        {
+          "src": "/brand/favicon/icon-96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "بوابة العملاء",
+      "short_name": "العملاء",
+      "url": "/portal",
+      "icons": [
+        {
+          "src": "/brand/favicon/icon-96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "بوابة الشركاء",
+      "short_name": "الشركاء",
+      "url": "/agent",
+      "icons": [
+        {
+          "src": "/brand/favicon/icon-96.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/brand/social/og-image.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "لوحة التحكم"
+    }
+  ]
+}

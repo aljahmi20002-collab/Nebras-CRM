@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="color-scheme" content="dark light">
+<title>NebrasCRM</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{--bg:#0F1420;--card:#1A2233;--line:#26314A;--line2:#324060;--txt:#E8EDF7;
+  --mut:#8B98B4;--pri:#4F7CFF;--gold:#FFC53D;--ok:#22C55E;--danger:#EF4444}
+html,body{height:100%}
+body{background:var(--bg);color:var(--txt);overflow:hidden;
+  font-family:"Droid Arabic Kufi","Segoe UI",system-ui,-apple-system,Tahoma,sans-serif;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+#frame{position:fixed;inset:0;width:100%;height:100%;border:0;display:none;background:var(--bg)}
+#boot{position:fixed;inset:0;display:grid;place-items:center;padding:26px;overflow-y:auto}
+.aur{position:fixed;inset:0;overflow:hidden;z-index:-1}
+.aur i{position:absolute;border-radius:50%;filter:blur(70px);opacity:.42;display:block;animation:dr 18s ease-in-out infinite alternate}
+.aur i:nth-child(1){width:74vw;height:74vw;background:#4F7CFF;top:-26vw;inset-inline-start:-22vw}
+.aur i:nth-child(2){width:64vw;height:64vw;background:#7C3AED;bottom:-22vw;inset-inline-end:-18vw;animation-delay:-6s}
+@keyframes dr{100%{transform:translate3d(5vw,4vh,0) scale(1.15)}}
+.wrap{width:100%;max-width:400px;text-align:center}
+.mk{width:92px;height:92px;margin:0 auto 18px;border-radius:24px;display:grid;place-items:center;
+  background:linear-gradient(135deg,#4F7CFF,#2B4ACB 52%,#7C3AED);
+  box-shadow:0 14px 38px rgba(43,74,203,.5),inset 0 0 0 1px rgba(255,255,255,.18);
+  animation:pop .55s cubic-bezier(.2,.9,.3,1.4)}
+@keyframes pop{from{transform:scale(.6);opacity:0}}
+.mk svg{width:70%;height:70%;animation:fl 2.6s ease-in-out infinite}
+@keyframes fl{50%{transform:scale(1.06) translateY(-1px)}}
+h1{font-size:27px;font-weight:800;letter-spacing:-.4px}
+.ar{color:var(--gold);font-size:18px;font-weight:700;margin-top:2px}
+.sub{color:var(--mut);font-size:12.5px;margin-top:9px;line-height:1.9}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;margin-top:24px;text-align:start}
+label{display:block;font-size:11.5px;color:var(--mut);font-weight:700;margin-bottom:6px}
+input{width:100%;background:var(--bg);border:1px solid var(--line2);color:var(--txt);
+  border-radius:12px;padding:13px 14px;font-size:16px;outline:none;font-family:inherit;direction:ltr;text-align:left}
+input:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(79,124,255,.2)}
+.btn{width:100%;padding:15px;border-radius:13px;border:none;font-size:15.5px;font-weight:800;
+  cursor:pointer;font-family:inherit;color:#fff;margin-top:12px;
+  background:linear-gradient(100deg,#4F7CFF,#7C5CFF 60%,#a855f7);
+  box-shadow:0 8px 24px rgba(79,124,255,.4);transition:.2s}
+.btn:active{transform:scale(.98)}
+.btn.g{background:transparent;border:1px solid var(--line2);color:var(--txt);box-shadow:none}
+.recent{margin-top:10px}
+.recent button{width:100%;text-align:start;background:var(--bg);border:1px solid var(--line);
+  border-radius:11px;padding:11px 13px;margin-top:7px;color:var(--txt);font-family:inherit;
+  font-size:13px;cursor:pointer;direction:ltr}
+.msg{font-size:12px;padding:10px 12px;border-radius:10px;margin-top:11px;display:none}
+.msg.e{display:block;background:rgba(239,68,68,.14);color:#FCA5A5;border:1px solid var(--danger)}
+.msg.w{display:block;background:rgba(245,158,11,.14);color:#FCD34D;border:1px solid #F59E0B}
+.msg.o{display:block;background:rgba(34,197,94,.14);color:#86EFAC;border:1px solid var(--ok)}
+.sp{width:19px;height:19px;border:2.5px solid rgba(255,255,255,.28);border-top-color:#fff;
+  border-radius:50%;animation:sp .7s linear infinite;display:inline-block;vertical-align:-4px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.lnk{color:var(--mut);font-size:12.5px;margin-top:16px;display:block;text-decoration:none}
+</style></head><body>
+
+<div class="aur"><i></i><i></i></div>
+<iframe id="frame" allow="camera;microphone;geolocation;clipboard-write"></iframe>
+
+<div id="boot"><div class="wrap">
+  <div class="mk"><svg viewBox="0 0 64 64"><defs>
+    <linearGradient id="f" x1=".5" y1="0" x2=".5" y2="1"><stop offset="0" stop-color="#fff"/>
+    <stop offset=".55" stop-color="#FFF3D6"/><stop offset="1" stop-color="#FFC53D"/></linearGradient>
+    <linearGradient id="c" x1=".5" y1="0" x2=".5" y2="1"><stop offset="0" stop-color="#FFC53D"/>
+    <stop offset="1" stop-color="#FF9F1C"/></linearGradient></defs>
+    <path d="M33.4 8.2C33.9 15.6 40.1 18.6 43.6 24.4C46.9 29.9 47 36 45.1 40.7C42.6 47 37.6 51.4 31.6 51.4C24 51.4 17.4 45.6 17 37.4C16.7 31.3 20 27.6 22.6 24.9C24.2 27.4 25.9 28.6 27.4 28.8C26.2 22 28.6 14.2 33.4 8.2Z" fill="url(#f)"/>
+    <path d="M32.6 26C33 30.4 37.2 32.6 38.6 36.6C39.8 40.1 38.4 44 35.3 45.9C32 47.9 27.4 47 25.3 43.9C23.2 40.8 23.8 37.2 25.6 34.6C26.6 36 27.6 36.6 28.5 36.7C28 32.6 29.8 28.9 32.6 26Z" fill="url(#c)"/></svg></div>
+  <h1>NebrasCRM</h1>
+  <div class="ar" id="l-ar">نِبراس سي آر إم</div>
+  <div class="sub" id="l-sub">أدخل عنوان خادم مؤسستك للاتصال</div>
+
+  <div class="card">
+    <label id="l-url">عنوان الخادم</label>
+    <input id="url" type="url" inputmode="url" autocapitalize="off" autocorrect="off"
+           placeholder="https://crm.company.com" value="">
+    <button class="btn" id="go"><span id="l-go">اتصال</span></button>
+    <button class="btn g" id="demo"><span id="l-demo">تجربة الخادم المحلي</span></button>
+    <div class="msg" id="msg"></div>
+    <div class="recent" id="recent"></div>
+  </div>
+  <a class="lnk" id="lang">English</a>
+</div></div>
+
+<script>
+const L={ar:{ar:"نِبراس سي آر إم",sub:"أدخل عنوان خادم مؤسستك للاتصال",url:"عنوان الخادم",
+  go:"اتصال",demo:"تجربة الخادم المحلي",sw:"English",
+  testing:"جارٍ التحقق من الخادم…",bad:"تعذّر الوصول إلى هذا الخادم — تحقق من العنوان والاتصال",
+  ok:"تم الاتصال ✓",noUrl:"أدخل عنواناً صحيحاً",offline:"لا يوجد اتصال بالإنترنت",
+  recent:"خوادم سابقة"},
+ en:{ar:"Nebras CRM",sub:"Enter your organisation's server address",url:"Server URL",
+  go:"Connect",demo:"Try local server",sw:"العربية",
+  testing:"Checking server…",bad:"Could not reach this server — check the URL and your connection",
+  ok:"Connected ✓",noUrl:"Enter a valid URL",offline:"No internet connection",
+  recent:"Recent servers"}};
+let lang=localStorage.getItem("lang")||"ar";
+const $=i=>document.getElementById(i);
+const KEY="nb-servers";
+
+function paint(){
+  document.documentElement.lang=lang; document.body.dir=lang==="ar"?"rtl":"ltr";
+  const t=L[lang];
+  $("l-ar").textContent=t.ar; $("l-sub").textContent=t.sub; $("l-url").textContent=t.url;
+  $("l-go").textContent=t.go; $("l-demo").textContent=t.demo; $("lang").textContent=t.sw;
+  drawRecent();
+}
+function servers(){ try{return JSON.parse(localStorage.getItem(KEY)||"[]")}catch{return[]} }
+function remember(u){
+  const s=servers().filter(x=>x!==u); s.unshift(u);
+  localStorage.setItem(KEY, JSON.stringify(s.slice(0,4)));
+}
+function drawRecent(){
+  const s=servers(); const box=$("recent");
+  box.innerHTML = s.length ? `<label style="margin-top:12px">${L[lang].recent}</label>` +
+    s.map(u=>`<button data-u="${u}">${u}</button>`).join("") : "";
+  box.querySelectorAll("[data-u]").forEach(b=>b.onclick=()=>{ $("url").value=b.dataset.u; connect(); });
+}
+function say(kind,text){ const m=$("msg"); m.className="msg "+kind; m.innerHTML=text; }
+
+function normalise(u){
+  u=(u||"").trim().replace(/\s+/g,"");
+  if(!u) return "";
+  if(!/^https?:\/\//i.test(u)) u="https://"+u;
+  return u.replace(/\/+$/,"");
+}
+
+async function connect(url){
+  const u = normalise(url || $("url").value);
+  if(!u){ say("e", L[lang].noUrl); return; }
+  if(navigator.onLine===false){ say("e", L[lang].offline); return; }
+  say("w", `<span class="sp"></span> ${L[lang].testing}`);
+  try{
+    const ctrl=new AbortController();
+    const to=setTimeout(()=>ctrl.abort(), 9000);
+    const r=await fetch(u+"/api/meta",{signal:ctrl.signal,cache:"no-store"});
+    clearTimeout(to);
+    // 401 is a healthy server that simply wants a login
+    if(!(r.status===200||r.status===401)) throw new Error("status "+r.status);
+    say("o", L[lang].ok);
+    remember(u);
+    localStorage.setItem("nb-server", u);
+    setTimeout(()=>launch(u), 350);
+  }catch(e){ say("e", L[lang].bad); }
+}
+
+function launch(u){
+  const f=$("frame");
+  f.src = u + "/app";
+  f.style.display="block";
+  $("boot").style.display="none";
+  try{ window.Capacitor?.Plugins?.StatusBar?.setBackgroundColor({color:"#0F1420"}); }catch{}
+}
+
+$("go").onclick=()=>connect();
+$("demo").onclick=()=>connect("http://10.0.2.2:8000");   // Android emulator -> host machine
+$("url").addEventListener("keydown",e=>{ if(e.key==="Enter") connect(); });
+$("lang").onclick=()=>{ lang=lang==="ar"?"en":"ar"; localStorage.setItem("lang",lang); paint(); };
+
+// Android hardware back -> navigate inside the CRM, exit only at the root
+document.addEventListener("deviceready",()=>{
+  const App=window.Capacitor?.Plugins?.App;
+  App?.addListener("backButton",({canGoBack})=>{
+    const f=$("frame");
+    if(f.style.display==="block"){
+      try{ f.contentWindow.history.back(); }catch{ f.style.display="none"; $("boot").style.display="grid"; }
+    } else { App.exitApp(); }
+  });
+});
+
+// auto-reconnect to the last good server
+const saved=localStorage.getItem("nb-server");
+if(saved){ $("url").value=saved; connect(saved); }
+paint();
+</script></body></html>
