@@ -449,7 +449,9 @@ class NebrasApiTests(unittest.TestCase):
 
             def fetchone(self):
                 if "information_schema.columns" in self.sql:
-                    return {"data_type": "text"}
+                    # MySQL may preserve the INFORMATION_SCHEMA column name in
+                    # uppercase; POS migration must not depend on its mapping key.
+                    return {"DATA_TYPE": "text"}
                 return None
 
             def fetchall(self):
@@ -485,6 +487,8 @@ class NebrasApiTests(unittest.TestCase):
 
         sales_ddl = next(sql for sql in raw.calls if "CREATE TABLE IF NOT EXISTS pos_sales" in sql)
         self.assertIn("created_at VARCHAR(40)", sales_ddl)
+        legacy_lookup = next(sql for sql in raw.calls if "information_schema.columns" in sql)
+        self.assertIn("data_type IN ('tinytext','text','mediumtext','longtext')", legacy_lookup)
         alter_index = next(index for index, sql in enumerate(raw.calls)
                            if "ALTER TABLE pos_sales MODIFY COLUMN created_at VARCHAR(40)" in sql)
         created_index = next(index for index, sql in enumerate(raw.calls)

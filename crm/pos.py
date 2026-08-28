@@ -108,11 +108,13 @@ def init_tables(c):
     # idempotent before creating ix_pos_sales_created below. SQLite and
     # PostgreSQL can index TEXT directly and therefore need no migration.
     if D.is_mariadb():
-        created_type = c.execute("""SELECT data_type FROM information_schema.columns
-            WHERE table_schema=DATABASE() AND table_name='pos_sales' AND column_name='created_at'""").fetchone()
-        if created_type and str(created_type["data_type"]).lower() in {
-            "tinytext", "text", "mediumtext", "longtext"
-        }:
+        # Select a constant rather than the INFORMATION_SCHEMA column name: some
+        # MySQL builds expose that mapping as DATA_TYPE while others preserve
+        # data_type.  Only the existence of a legacy TEXT-family type matters.
+        legacy_text_timestamp = c.execute("""SELECT 1 FROM information_schema.columns
+            WHERE table_schema=DATABASE() AND table_name='pos_sales' AND column_name='created_at'
+              AND data_type IN ('tinytext','text','mediumtext','longtext')""").fetchone()
+        if legacy_text_timestamp:
             c.execute("ALTER TABLE pos_sales MODIFY COLUMN created_at VARCHAR(40)")
     for sql in (
         "CREATE INDEX IF NOT EXISTS ix_pos_sales_cashier ON pos_sales(cashier_id)",
