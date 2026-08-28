@@ -31,7 +31,7 @@ con = None  # injected from main
 def init_tables(c):
     c.execute("""CREATE TABLE IF NOT EXISTS portal_users(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        contact_id INTEGER UNIQUE, email TEXT UNIQUE, password TEXT,
+        contact_id INTEGER UNIQUE, email VARCHAR(320) UNIQUE, password TEXT,
         active INTEGER DEFAULT 1, last_login TEXT, created_at TEXT)""")
     c.execute("""CREATE TABLE IF NOT EXISTS portal_messages(
         id INTEGER PRIMARY KEY AUTOINCREMENT, ticket_id INTEGER, body TEXT,
@@ -170,7 +170,7 @@ def pnew_ticket(b: NewTicket, u=Depends(portal_user)):
                 (tid, b.description or b.subject, "customer", u["cname"], ts))
     D.log(con, "tickets", tid, "portal_create", {"by": u["email"]}, None)
     if owner and owner["owner_id"]:
-        con.execute("INSERT INTO notifications(user_id,title,body,read,created_at) VALUES(?,?,?,0,?)",
+        con.execute("INSERT INTO notifications(user_id,title,body,\"read\",created_at) VALUES(?,?,?,0,?)",
                     (owner["owner_id"], "🎫 New portal ticket", f'{u["cname"]}: {b.subject}', ts))
         ow = con.execute("SELECT email,name FROM users WHERE id=?", (owner["owner_id"],)).fetchone()
         if ow and ow["email"]:
@@ -199,7 +199,7 @@ def preply(tid: int, b: Reply, u=Depends(portal_user)):
     if r["status"] in ("Closed", "Waiting on Customer"):
         con.execute("UPDATE tickets SET status='Open', updated_at=? WHERE id=?", (ts, tid))
     if r["owner_id"]:
-        con.execute("INSERT INTO notifications(user_id,title,body,read,created_at) VALUES(?,?,?,0,?)",
+        con.execute("INSERT INTO notifications(user_id,title,body,\"read\",created_at) VALUES(?,?,?,0,?)",
                     (r["owner_id"], "💬 Portal reply", f'{u["cname"]} on #{tid}: {b.body[:60]}', ts))
     con.commit()
     return {"ok": True}
@@ -243,7 +243,7 @@ def pquote_decision(qid: int, b: QuoteAct, u=Depends(portal_user)):
     con.execute("UPDATE quotes SET status=?, updated_at=? WHERE id=?", (b.decision, D.now(), qid))
     D.log(con, "quotes", qid, "portal_" + b.decision.lower(), {"by": u["email"]}, None)
     if r["owner_id"]:
-        con.execute("INSERT INTO notifications(user_id,title,body,read,created_at) VALUES(?,?,?,0,?)",
+        con.execute("INSERT INTO notifications(user_id,title,body,\"read\",created_at) VALUES(?,?,?,0,?)",
                     (r["owner_id"], f"📄 Quote {b.decision}", f'{u["cname"]} {b.decision.lower()} {r["subject"]}', D.now()))
     con.commit()
     return {"ok": True}
@@ -355,7 +355,7 @@ def pnew_order(b: NewOrder, u=Depends(portal_user)):
     con.execute("UPDATE quotes SET amount=? WHERE id=?", (total, qid))
     D.log(con, "quotes", qid, "portal_order", {"by": u["email"], "total": total}, None)
     if acc["owner_id"]:
-        con.execute("INSERT INTO notifications(user_id,title,body,read,created_at) VALUES(?,?,?,0,?)",
+        con.execute("INSERT INTO notifications(user_id,title,body,\"read\",created_at) VALUES(?,?,?,0,?)",
                     (acc["owner_id"], "🛒 طلب جديد من البوابة", f'{u["cname"]} — {total:,.0f}', ts))
         ow = con.execute("SELECT email FROM users WHERE id=?", (acc["owner_id"],)).fetchone()
         if ow and ow["email"]:
@@ -458,11 +458,35 @@ def pdocument(kind: str, did: int, u=Depends(portal_user)):
     if not r:
         raise HTTPException(404, "Not found")
     d = dict(r)
-    d["items"] = [dict(x) for x in con.execute(
-        "SELECT * FROM line_items WHERE module=? AND record_id=?", (tbl, did))]
+    items = []
+    subtotal = discount_total = tax_total = 0.0
+    for item in con.execute("""SELECT li.*, p.code product_code FROM line_items li
+        LEFT JOIN products p ON p.id=li.product_id AND p.deleted=0
+        WHERE li.module=? AND li.record_id=? ORDER BY li.id""", (tbl, did)):
+        line = dict(item)
+        qty, price = float(line.get("qty") or 0), float(line.get("price") or 0)
+        discount, tax = float(line.get("discount") or 0), float(line.get("tax") or 0)
+        gross = max(0, qty) * max(0, price)
+        discount_amount = gross * min(100, max(0, discount)) / 100
+        net = gross - discount_amount
+        tax_amount = net * min(100, max(0, tax)) / 100
+        line.update(gross=round(gross, 2), discount_amount=round(discount_amount, 2),
+                    net=round(net, 2), tax_amount=round(tax_amount, 2),
+                    line_total=round(net + tax_amount, 2))
+        subtotal += gross; discount_total += discount_amount; tax_total += tax_amount
+        items.append(line)
+    total = round(sum(x["line_total"] for x in items), 2) if items else float(d.get("amount") or 0)
+    d["items"] = items
+    d["totals"] = {"subtotal": round(subtotal, 2), "discount_total": round(discount_total, 2),
+                   "tax_total": round(tax_total, 2), "total": total}
     d["company"] = M.cfg("company_name", "NebrasCRM")
+    d["company_info"] = {"name": d["company"], "phone": M.cfg("company_phone", ""),
+                         "address": M.cfg("company_address", ""), "tax_number": M.cfg("tax_number", ""),
+                         "currency": M.cfg("currency", "USD")}
     d["account_name"] = u["aname"]
     d["contact_name"] = u["cname"]
+    d["contact_email"] = u["email"]
+    d["contact_phone"] = u["phone"]
     return d
 
 

@@ -13,7 +13,7 @@ TARGET="${1:-linux}"
 
 find_python() {
   local candidate
-  for candidate in "${PYTHON_BIN:-}" python3 python py; do
+  for candidate in "${PYTHON_BIN:-}" python3 py; do
     [ -n "$candidate" ] || continue
     if command -v "$candidate" >/dev/null 2>&1; then
       printf '%s\n' "$candidate"
@@ -73,7 +73,7 @@ required = [brand / "icon-512.png", brand / "icon-32.png", brand / "icon-256.png
 missing = [str(path) for path in required if not path.is_file()]
 if missing:
     raise SystemExit("✗ أيقونات الهوية غير موجودة: " + ", ".join(missing) +
-                     ". شغّل: cd brand && python build_brand.py")
+                     ". شغّل: cd brand && python3 build_brand.py")
 
 Path("build/icons").mkdir(parents=True, exist_ok=True)
 Image.open(brand / "icon-512.png").save("build/icon.png")

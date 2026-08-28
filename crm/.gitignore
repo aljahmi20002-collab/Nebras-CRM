@@ -10,6 +10,16 @@ mobile/ios/App/Pods/
 *.keystore
 .env
 .env.local
+.env.docker
+.env.mariadb
+.env.mariadb.local
+.env.mariadb.local.bat
+.env.postgresql
+.env.postgresql.local
+.env.postgresql.local.bat
+.env.mysql
+.env.mysql.local
+.env.mysql.local.bat
 crm.db-wal
 crm.db-shm
 __pycache__/

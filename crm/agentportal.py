@@ -33,7 +33,7 @@ con = None
 def init_tables(c):
     c.execute("""CREATE TABLE IF NOT EXISTS agent_users(
         id INTEGER PRIMARY KEY AUTOINCREMENT, agent_id INTEGER UNIQUE,
-        email TEXT UNIQUE, password TEXT, active INTEGER DEFAULT 1,
+        email VARCHAR(320) UNIQUE, password TEXT, active INTEGER DEFAULT 1,
         last_login TEXT, created_at TEXT)""")
     c.execute("""CREATE TABLE IF NOT EXISTS agent_requests(
         id INTEGER PRIMARY KEY AUTOINCREMENT, agent_id INTEGER, kind TEXT,
@@ -222,7 +222,7 @@ def anew_lead(b: ALead, u=Depends(agent_user)):
          b.estimated_value, f'{b.description}\n\n— عبر الوكيل: {u["aname"]}')).lastrowid
     D.log(con, "leads", lid, "partner_submit", {"agent": u["aname"]}, None)
     for m in con.execute("SELECT id,email FROM users WHERE role IN ('admin','manager') AND active=1"):
-        con.execute("INSERT INTO notifications(user_id,title,body,read,created_at) VALUES(?,?,?,0,?)",
+        con.execute("INSERT INTO notifications(user_id,title,body,\"read\",created_at) VALUES(?,?,?,0,?)",
                     (m["id"], "🌱 عميل محتمل من وكيل", f'{u["aname"]}: {b.name}', ts))
     con.commit()
     return {"id": lid}
@@ -316,7 +316,7 @@ def anew_request(b: ARequest, u=Depends(agent_user)):
         VALUES(?,?,?,?,?,'pending',?)""",
         (aid, b.kind, b.amount, b.subject or REQ_KINDS[b.kind], b.body, ts)).lastrowid
     for m in con.execute("SELECT id,email FROM users WHERE role IN ('admin','manager') AND active=1"):
-        con.execute("INSERT INTO notifications(user_id,title,body,read,created_at) VALUES(?,?,?,0,?)",
+        con.execute("INSERT INTO notifications(user_id,title,body,\"read\",created_at) VALUES(?,?,?,0,?)",
                     (m["id"], f"📨 {REQ_KINDS[b.kind]}",
                      f'{u["aname"]}: {b.amount:,.0f}' if b.amount else u["aname"], ts))
     con.commit()

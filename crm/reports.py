@@ -445,12 +445,18 @@ def register(app, current_user, require):
         ("invoice_prefix", "بادئة الفواتير", "Invoice prefix", "text", "finance"),
         ("payment_terms_days", "مهلة السداد (يوم)", "Payment terms (days)", "number", "finance"),
         ("fiscal_year_start", "بداية السنة المالية", "Fiscal year start", "text", "finance"),
+        ("email_provider", "مزود الإرسال", "Email provider", "select:sandbox,resend,smtp", "email"),
+        ("resend_api_key", "مفتاح Resend API", "Resend API key", "password", "email"),
+        ("resend_from", "عنوان Resend المعتمد", "Verified Resend From address", "text", "email"),
+        ("resend_reply_to", "الرد إلى", "Resend reply-to", "text", "email"),
         ("smtp_host", "خادم البريد", "SMTP host", "text", "email"),
         ("smtp_port", "المنفذ", "SMTP port", "number", "email"),
         ("smtp_user", "المستخدم", "SMTP user", "text", "email"),
         ("smtp_pass", "كلمة المرور", "SMTP password", "password", "email"),
         ("smtp_from", "المرسل", "From address", "text", "email"),
         ("smtp_tls", "تشفير TLS", "TLS", "select:1,0", "email"),
+        ("pos_require_session", "إلزام فتح وردية في نقطة البيع", "Require POS shift", "select:1,0", "sales"),
+        ("pos_allow_negative_stock", "السماح بمخزون سالب في نقطة البيع", "Allow negative POS stock", "select:1,0", "sales"),
         ("openai_key", "مفتاح الذكاء الاصطناعي", "AI API key", "password", "ai"),
         ("openai_model", "النموذج", "Model", "text", "ai"),
         ("lead_auto_assign", "توزيع العملاء تلقائياً", "Auto-assign leads", "select:1,0", "sales"),
@@ -468,7 +474,7 @@ def register(app, current_user, require):
     @app.get("/api/settings/all")
     def all_settings(user=Depends(current_user)):
         require(user, "admin", "manager")
-        cur = {r["key"]: r["value"] for r in con.execute("SELECT key,value FROM settings")}
+        cur = {r["key"]: r["value"] for r in con.execute("SELECT \"key\",\"value\" FROM settings")}
         out = []
         for key, ar, en, typ, grp in SETTING_DEFS:
             v = cur.get(key, "")
@@ -488,8 +494,8 @@ def register(app, current_user, require):
                 continue
             if v == "••••":          # untouched password field
                 continue
-            con.execute("""INSERT INTO settings(key,value) VALUES(?,?)
-                ON CONFLICT(key) DO UPDATE SET value=excluded.value""", (k, str(v)))
+            con.execute("""INSERT INTO settings(\"key\",\"value\") VALUES(?,?)
+                ON CONFLICT(\"key\") DO UPDATE SET value=excluded.value""", (k, str(v)))
             n += 1
         D.log(con, "settings", 0, "update", {"keys": list(body.keys())}, user["id"])
         con.commit()

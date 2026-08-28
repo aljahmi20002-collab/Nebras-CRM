@@ -42,11 +42,13 @@ LEVELS = {
 
 
 def _table_exists(c, table: str) -> bool:
-    return bool(c.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (table,)).fetchone())
+    import db as D
+    return D.table_exists(c, table)
 
 
 def _columns(c, table: str) -> set[str]:
-    return {row["name"] for row in c.execute(f'PRAGMA table_info("{table}")')}
+    import db as D
+    return D.table_columns(c, table)
 
 
 def _ensure_columns(c, table: str, columns: dict[str, str]):
@@ -57,13 +59,13 @@ def _ensure_columns(c, table: str, columns: dict[str, str]):
 
 
 def _setting(c, key: str, default: str = "") -> str:
-    row = c.execute("SELECT value FROM settings WHERE key=?", (key,)).fetchone()
+    row = c.execute("SELECT \"value\" FROM settings WHERE \"key\"=?", (key,)).fetchone()
     return (row["value"] if row else default) or default
 
 
 def _set_setting(c, key: str, value: str):
     c.execute(
-        "INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+        "INSERT INTO settings(\"key\",\"value\") VALUES(?,?) ON CONFLICT(\"key\") DO UPDATE SET value=excluded.value",
         (key, value),
     )
 
@@ -285,32 +287,32 @@ def world_status(c=None):
 def init_tables(c):
     # Legacy table names are kept so existing deployments can migrate in place.
     c.execute("""CREATE TABLE IF NOT EXISTS geo_governorates(
-        id INTEGER PRIMARY KEY, code TEXT, name_ar TEXT, name_en TEXT,
-        capital_ar TEXT, capital_en TEXT, phone_plan TEXT, lat REAL, lon REAL,
-        iso3 TEXT, continent TEXT, population INTEGER DEFAULT 0)""")
+        id INTEGER PRIMARY KEY, code VARCHAR(16), name_ar VARCHAR(255), name_en VARCHAR(255),
+        capital_ar VARCHAR(255), capital_en VARCHAR(255), phone_plan VARCHAR(64), lat REAL, lon REAL,
+        iso3 VARCHAR(16), continent VARCHAR(16), population INTEGER DEFAULT 0)""")
     c.execute("""CREATE TABLE IF NOT EXISTS geo_districts(
-        id INTEGER PRIMARY KEY AUTOINCREMENT, gov_id INTEGER, code TEXT,
-        name_ar TEXT, name_en TEXT, lat REAL, lon REAL, country_code TEXT)""")
+        id INTEGER PRIMARY KEY AUTOINCREMENT, gov_id INTEGER, code VARCHAR(64),
+        name_ar VARCHAR(255), name_en VARCHAR(255), lat REAL, lon REAL, country_code VARCHAR(16))""")
     c.execute("""CREATE TABLE IF NOT EXISTS geo_uzlah(
         id INTEGER PRIMARY KEY AUTOINCREMENT, district_id INTEGER,
-        name_ar TEXT, name_en TEXT)""")
+        name_ar VARCHAR(255), name_en VARCHAR(255))""")
     c.execute("""CREATE TABLE IF NOT EXISTS geo_villages(
         id INTEGER PRIMARY KEY AUTOINCREMENT, uzlah_id INTEGER,
-        name_ar TEXT, name_en TEXT, region_id INTEGER, country_id INTEGER,
+        name_ar VARCHAR(255), name_en VARCHAR(255), region_id INTEGER, country_id INTEGER,
         code INTEGER, population INTEGER DEFAULT 0, lat REAL, lon REAL,
-        timezone TEXT, country_code TEXT, region_code TEXT, feature_code TEXT)""")
+        timezone VARCHAR(64), country_code VARCHAR(16), region_code VARCHAR(32), feature_code VARCHAR(32))""")
     c.execute("""CREATE TABLE IF NOT EXISTS geo_quarters(
         id INTEGER PRIMARY KEY AUTOINCREMENT, district_id INTEGER, village_id INTEGER,
-        name_ar TEXT, name_en TEXT, notes TEXT, created_at TEXT)""")
+        name_ar VARCHAR(255), name_en VARCHAR(255), notes TEXT, created_at TEXT)""")
     c.execute("""CREATE TABLE IF NOT EXISTS geo_streets(
         id INTEGER PRIMARY KEY AUTOINCREMENT, quarter_id INTEGER, district_id INTEGER,
-        name_ar TEXT, name_en TEXT, notes TEXT, created_at TEXT)""")
+        name_ar VARCHAR(255), name_en VARCHAR(255), notes TEXT, created_at TEXT)""")
     c.execute("""CREATE TABLE IF NOT EXISTS territories(
         id INTEGER PRIMARY KEY AUTOINCREMENT, agent_id INTEGER,
         gov_id INTEGER, district_id INTEGER, exclusive INTEGER DEFAULT 1,
         created_at TEXT)""")
     if not _table_exists(c, "settings"):
-        c.execute("CREATE TABLE settings(key TEXT PRIMARY KEY, value TEXT)")
+        c.execute("CREATE TABLE settings(\"key\" VARCHAR(255) PRIMARY KEY, \"value\" TEXT)")
 
     _ensure_columns(c, "geo_governorates", {
         "iso3": "TEXT", "continent": "TEXT", "population": "INTEGER DEFAULT 0",

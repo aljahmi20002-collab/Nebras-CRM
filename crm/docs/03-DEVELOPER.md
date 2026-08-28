@@ -9,7 +9,7 @@
 # المتطلبات: Python 3.11+
 cd crm
 pip install fastapi uvicorn pydantic
-python3 -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
+python3 -m uvicorn main:app --reload --host 0.0.0.0 --port 8008
 ```
 
 **بيانات تجريبية** (أول مرة فقط، بالترتيب):
@@ -121,7 +121,7 @@ crm/
 | ويب هوكس واردة | 3 | `/api/hooks/...` |
 | API عام بمفتاح | 2 | `/api/v1/...` |
 
-**توثيق تفاعلي كامل:** `http://localhost:8000/docs`
+**توثيق تفاعلي كامل:** `http://localhost:8008/docs`
 
 ### CRUD العام (يعمل لكل وحدة)
 
@@ -139,20 +139,20 @@ POST   /api/{module}/import        # multipart CSV
 ### المصادقة
 
 ```bash
-TOKEN=$(curl -s -XPOST localhost:8000/api/auth/login \
+TOKEN=$(curl -s -XPOST localhost:8008/api/auth/login \
   -H 'Content-Type: application/json' \
   -d '{"email":"admin@nebrascrm.io","password":"admin123"}' | jq -r .token)
 
-curl -H "Authorization: Bearer $TOKEN" localhost:8000/api/deals
+curl -H "Authorization: Bearer $TOKEN" localhost:8008/api/deals
 ```
 
 ### API عام بمفتاح (للتكاملات)
 
 ```bash
 # أنشئ مفتاحاً من: التكاملات ← مفاتيح API
-curl -H "X-API-Key: nx_xxxxx" localhost:8000/api/v1/leads?limit=50
+curl -H "X-API-Key: nx_xxxxx" localhost:8008/api/v1/leads?limit=50
 curl -XPOST -H "X-API-Key: nx_xxxxx" -H 'Content-Type: application/json' \
-     -d '{"name":"عميل جديد","email":"x@y.com"}' localhost:8000/api/v1/leads
+     -d '{"name":"عميل جديد","email":"x@y.com"}' localhost:8008/api/v1/leads
 ```
 
 ### ويب هوكس واردة
@@ -276,11 +276,11 @@ async function viewMyScreen(){
 
 ```bash
 # فحص شامل سريع
-TOKEN=$(curl -s -XPOST localhost:8000/api/auth/login -H 'Content-Type: application/json' \
+TOKEN=$(curl -s -XPOST localhost:8008/api/auth/login -H 'Content-Type: application/json' \
   -d '{"email":"admin@nebrascrm.io","password":"admin123"}' | python3 -c 'import sys,json;print(json.load(sys.stdin)["token"])')
 
 for ep in /api/analytics/dashboard /api/ai/digest /api/reports/catalogue /api/meta; do
-  echo -n "$ep = "; curl -s -o /dev/null -w "%{http_code}\n" -H "Authorization: Bearer $TOKEN" localhost:8000$ep
+  echo -n "$ep = "; curl -s -o /dev/null -w "%{http_code}\n" -H "Authorization: Bearer $TOKEN" localhost:8008$ep
 done
 ```
 

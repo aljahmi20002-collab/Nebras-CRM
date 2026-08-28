@@ -11,6 +11,7 @@ from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel
 
 import db as D
+import documents as DOC
 import mailer as M
 import gateways as G
 from authz import can_access_record, scope_clause
@@ -30,21 +31,20 @@ def init_tables(c):
     c.execute("""CREATE TABLE IF NOT EXISTS payments(
         id INTEGER PRIMARY KEY AUTOINCREMENT, invoice_id INTEGER, amount REAL,
         currency TEXT DEFAULT 'USD', method TEXT, status TEXT DEFAULT 'pending',
-        provider TEXT, provider_ref TEXT, token TEXT UNIQUE, payer_email TEXT,
+        provider TEXT, provider_ref TEXT, token VARCHAR(255) UNIQUE, payer_email TEXT,
         note TEXT, created_at TEXT, paid_at TEXT, created_by INTEGER,
         channel TEXT, fee REAL DEFAULT 0, net REAL DEFAULT 0, payer_ref TEXT)""")
+    existing = D.table_columns(c, "payments")
     for col, typ in (("channel", "TEXT"), ("fee", "REAL DEFAULT 0"),
                      ("net", "REAL DEFAULT 0"), ("payer_ref", "TEXT")):
-        try:
+        if col not in existing:
             c.execute(f"ALTER TABLE payments ADD COLUMN {col} {typ}")
-        except Exception:
-            pass
     c.execute("""CREATE TABLE IF NOT EXISTS payment_events(
         id INTEGER PRIMARY KEY AUTOINCREMENT, payment_id INTEGER, event TEXT,
         payload TEXT, created_at TEXT)""")
     for k, v in [("currency", "USD"), ("payment_provider", "mock")]:
-        if not c.execute("SELECT 1 FROM settings WHERE key=?", (k,)).fetchone():
-            c.execute("INSERT INTO settings(key,value) VALUES(?,?)", (k, v))
+        if not c.execute("SELECT 1 FROM settings WHERE \"key\"=?", (k,)).fetchone():
+            c.execute("INSERT INTO settings(\"key\",\"value\") VALUES(?,?)", (k, v))
     c.commit()
 
 
@@ -121,7 +121,7 @@ def apply_payment(p_row, ref="", source="checkout"):
     D.log(con, "invoices", inv["id"], "payment",
           {"amount": amount, "source": source, "paid_total": new_paid}, None)
     if inv["owner_id"]:
-        con.execute("INSERT INTO notifications(user_id,title,body,read,created_at) VALUES(?,?,?,0,?)",
+        con.execute("INSERT INTO notifications(user_id,title,body,\"read\",created_at) VALUES(?,?,?,0,?)",
                     (inv["owner_id"], "💳 Payment received", f'{amount:,.0f} on {inv["subject"]}', ts))
     # receipt email
     to = p_row["payer_email"]
@@ -537,6 +537,24 @@ def register_portal(portal_router, portal_user_dep):
             raise HTTPException(404, "Not found")
         r = create_link(inv_id, None, u["email"], None)
         return r
+
+    @portal_router.get("/portal/api/payments/{pid}/receipt")
+    def portal_payment_receipt(pid: int, u=Depends(portal_user_dep)):
+        """A customer may print only vouchers belonging to their own account."""
+        try:
+            account_id = int(u["account_id"])
+        except (TypeError, ValueError):
+            raise HTTPException(404, "Payment not found")
+        payload = DOC.build_payment(pid, account_id=account_id)
+        # The signed-in portal contact is the person receiving the voucher,
+        # rather than an arbitrary contact from the same account.
+        payload["contact"] = {
+            "name": u.get("cname") or "",
+            "title": u.get("title") or "",
+            "email": u.get("email") or "",
+            "phone": u.get("phone") or "",
+        }
+        return payload
 
     @portal_router.get("/portal/api/payments")
     def portal_payments(u=Depends(portal_user_dep)):

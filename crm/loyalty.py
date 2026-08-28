@@ -83,16 +83,16 @@ def dsince(s):
 
 def init_tables(c):
     c.execute("""CREATE TABLE IF NOT EXISTS loyalty_points(
-        id INTEGER PRIMARY KEY AUTOINCREMENT, member_type TEXT, member_id INTEGER,
+        id INTEGER PRIMARY KEY AUTOINCREMENT, member_type VARCHAR(32), member_id INTEGER,
         rule TEXT, points REAL, basis TEXT, period TEXT,
         expires_at TEXT, created_at TEXT)""")
     c.execute("""CREATE TABLE IF NOT EXISTS loyalty_members(
-        id INTEGER PRIMARY KEY AUTOINCREMENT, member_type TEXT, member_id INTEGER,
+        id INTEGER PRIMARY KEY AUTOINCREMENT, member_type VARCHAR(32), member_id INTEGER,
         points REAL DEFAULT 0, tier TEXT DEFAULT 'member', lifetime REAL DEFAULT 0,
         redeemed REAL DEFAULT 0, joined_at TEXT, computed_at TEXT,
         UNIQUE(member_type, member_id))""")
     c.execute("""CREATE TABLE IF NOT EXISTS loyalty_redemptions(
-        id INTEGER PRIMARY KEY AUTOINCREMENT, member_type TEXT, member_id INTEGER,
+        id INTEGER PRIMARY KEY AUTOINCREMENT, member_type VARCHAR(32), member_id INTEGER,
         points REAL, reward TEXT, value REAL, status TEXT DEFAULT 'approved',
         note TEXT, created_by INTEGER, created_at TEXT)""")
     c.execute("CREATE INDEX IF NOT EXISTS ix_lp_member ON loyalty_points(member_type,member_id)")
@@ -341,7 +341,8 @@ def register(app, current_user, require):
                 VALUES(?,?,?,?,?,?,?)
                 ON CONFLICT(member_type,member_id) DO UPDATE SET
                   points=excluded.points, tier=excluded.tier,
-                  lifetime=MAX(loyalty_members.lifetime,excluded.points),
+                  lifetime=CASE WHEN loyalty_members.lifetime > excluded.points
+                    THEN loyalty_members.lifetime ELSE excluded.points END,
                   computed_at=excluded.computed_at""",
                 (member_type, s["id"], total, t["code"], total, D.now(), D.now()))
             con.execute("DELETE FROM loyalty_points WHERE member_type=? AND member_id=?",

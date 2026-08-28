@@ -42,6 +42,14 @@ const T = {
     confirmDel:"Delete this record?",addItem:"Add item",qty:"Qty",price:"Price",disc:"Disc %",tax:"Tax %",
     product:"Product",lineTotal:"Line total",saveItems:"Save items",globalNoRes:"No results",portal:"Customer Portal",grantAccess:"Grant Access",contact:"Contact",lastLogin:"Last login",revoke:"Revoke",resetPw:"Reset password",openPortal:"Open portal",portalThread:"Portal Thread",replyCustomer:"Reply to customer",credsMsg:"Login credentials",email_m:"Email",outbox:"Outbox",templates:"Templates",smtp:"SMTP Settings",compose:"Compose",to:"To",subj:"Subject",body:"Body",sendMail:"Send",testMail:"Send test email",sandboxMode:"Sandbox mode (nothing is actually delivered)",smtpMode:"Live via SMTP",payments:"Payments",collected:"Collected",pendingP:"Pending",refunded:"Refunded",outstandingP:"Outstanding",overdueP:"Overdue",payLink:"Payment link",manualPay:"Record payment",refund:"Refund",method:"Method",ref:"Reference",copy:"Copy",copied:"Copied",sendWithEmail:"Email the link",emails:"Emails",invoice:"Invoice",payEvents:"Event log",variables:"Available variables",preview:"Preview",intel:"Market Intelligence",battlecard:"Battlecard",matrix:"Comparison Matrix",overview:"Overview",competitorsK:"Competitors",primaryThreats:"Primary Threats",trackedProducts:"Tracked Products",studiesK:"Studies",tam:"Total Market (TAM)",avgGrowth:"Avg Growth",ourShare:"Our Share",contested:"Contested Pipeline",lostTo:"Lost to Competitors",winLoss:"Win/Loss by Competitor",lossReasons:"Why We Lose",priceGap:"Price Gap",positioningK:"Positioning",marketShare:"Market Share",tamBySeg:"Market Size by Segment",threat:"Threat",wonK:"Won",lostK:"Lost",openK:"Open",winRateK:"Win Rate",vsUs:"vs Us",cheaper:"cheaper",pricier:"pricier",strengths:"Strengths",weaknesses:"Weaknesses",counterStrategy:"Our Counter-Strategy",theirProducts:"Their Products",recentDeals:"Recent Deals",ourPrice:"Our Price",theirPrice:"Their Price",gap:"Gap",basis:"Basis: per user / year",marketRange:"Market Range",noRivals:"No rivals tracked",openBattlecard:"Open battlecard",findings:"Key Findings",recommendations:"Recommendations",opps:"Opportunities",oppPotential:"Potential",oppWon:"Won",oppLost:"Lost",weighted:"Weighted Value",winReasons:"Win Reasons",convertOpp:"Convert to Deal",segmentsM:"Customer Segments",lists:"Lists",recompute:"Recompute",applySeg:"Apply segments",score:"Score",suggested:"Suggested",current:"Current",lastActivity:"Last activity",daysIdle:"Days idle",tagAs:"Tag as",reason:"Reason",members:"Members",stagnant:"Stagnation",deadStock:"Dead Stock",idleCustomers:"Inactive Customers",tiedCapital:"Tied Capital",neverSold:"Never sold",revenueAtRisk:"Revenue at risk",risk:"Risk",inStock:"In stock",lastSold:"Last sold",channels:"Payment Channels",fees:"Fees",netAmt:"Net",awaitingS:"Awaiting settlement",settle:"Confirm receipt",blocked:"Blocked",blacklistWarn:"This account is blacklisted",geo:"Global Administrative Map",country:"Country",region:"Region / State",city:"City",neighborhood:"Neighborhood",street:"Street",governorate:"Country",district:"Region",uzlah:"City",village:"City",quarter:"Neighborhood",partners:"Agents & Distributors",partnerT:"Agent",distributorT:"Distributor",repT:"Sales Rep",brokerT:"Broker",commission:"Commission",commModel:"Commission model",rate:"Rate",owedTo:"Credit",owedBy:"Debit",netBal:"Balance",statement:"Statement",addTxn:"New transaction",accrue:"Accrue commissions",payout:"Payout",territoriesT:"Territories",coverage:"Coverage",achievement:"Achievement",targetT:"Target",loyalty:"Loyalty",tier:"Tier",points:"Points",available:"Available",breakdown:"Points breakdown",nextTier:"Next tier",redeem:"Redeem",reward:"Reward",principles:"Program principles",programRules:"Program rules",recomputeL:"Recompute",perks:"Perks",discount:"Discount",consigned:"Consigned",sold:"Sold",addPartner:"New partner",locations:"Locations",searchGeo:"Search country, region or city...",members:"Members",penaltiesL:"Penalties",agentPortal:"Partner Portal",agentReqs:"Partner Requests",grantAgent:"Grant partner access",approve:"Approve",reject:"Reject",pendingR:"Pending",replyR:"Reply",requestKind:"Request type",openAgent:"Open partner portal",ai:"AI Assistant",copilot:"Copilot",digest:"Today\u2019s brief",forecast:"Sales Forecast",leadScoring:"Lead Scoring",pipelineHealth:"Pipeline Health",churnRisk:"Churn Risk",nba:"Next Best Action",whyThis:"Why?",genEmail:"Generate email",summarize:"Summarize",view360:"360° View",timeline:"Timeline",channelsL:"Channels",winProb:"Win probability",expected:"Expected value",atRisk:"At risk",factors:"Factors",readiness:"Readiness",integrations:"Integrations",apiKeys:"API Keys",customFields:"Custom Fields",builder:"Dashboard Builder",addWidget:"Add widget",saveDash:"Save dashboard",overdueTasks:"Overdue tasks",todayTasks:"Today",hotLeads:"Hottest leads",closingSoon:"Closing soon",enable:"Enable",disable:"Disable",newKey:"New key",scopes:"Scopes",webhookUrl:"Webhook URL",addField:"New field",fieldLabel:"Label",fieldType:"Type",showInList:"Show in list",quota:"Quota",committed:"Committed",low:"Low",high:"High",generate:"Generate",meetingNotes:"Meeting notes",actionItems:"Action items",insert:"Insert",aiOff:"Runs locally, no key",aiOn:"LLM-powered",reportCentre:"Report Centre",settingsSys:"System Settings",printR:"Print",exportCsv:"Export CSV",exportXls:"Export Excel",dateFrom:"From",dateTo:"To",runReport:"Run",totalRow:"TOTAL",records2:"rows",generatedAt:"Generated",noRows:"No data for this period",backToList:"Back to list",saveSettings:"Save settings",thisMonth:"This month",lastMonth:"Last month",thisYear:"This year",allTime:"All time",quickRange:"Quick range"},
 };
+Object.assign(T.ar, {
+  printPage:"طباعة الصفحة", printMatrix:"طباعة المصفوفة", printRecord:"طباعة السجل",
+  printDocument:"طباعة المستند", printVoucher:"طباعة سند الدفع", paymentVoucher:"سند دفع",
+});
+Object.assign(T.en, {
+  printPage:"Print page", printMatrix:"Print matrix", printRecord:"Print record",
+  printDocument:"Print document", printVoucher:"Print payment voucher", paymentVoucher:"Payment voucher",
+});
 const t = k => (T[S.lang][k] || k);
 const L = o => S.lang === "ar" ? (o.label_ar || o.ar || o.label_en) : (o.label_en || o.en);
 
@@ -239,6 +247,7 @@ function renderApp(){
         <a data-v="builder" class="${S.view==="builder"?"on":""}"><span class="ic">🧱</span>${t("builder")}</a>
         ${management?`<a data-v="emails" class="${S.view==="emails"?"on":""}"><span class="ic">✉️</span>${t("email_m")}</a>`:""}
         <a data-v="payments" class="${S.view==="payments"?"on":""}"><span class="ic">💳</span>${t("payments")}</a>
+        ${S.user.role!=="readonly"?`<a data-v="pos" class="${S.view==="pos"?"on":""}"><span class="ic">🛒</span>${S.lang==="ar"?"نقطة البيع":"Point of Sale"}</a>`:""}
         <a data-v="intel" class="${S.view==="intel"?"on":""}"><span class="ic">🎯</span>${t("intel")}</a>
         ${management?`<a data-v="segments" class="${S.view==="segments"?"on":""}"><span class="ic">🏅</span>${t("segmentsM")}</a>`:""}
         ${management?`<a data-v="stagnant" class="${S.view==="stagnant"?"on":""}"><span class="ic">🧊</span>${t("stagnant")}</a>`:""}
@@ -270,6 +279,7 @@ function renderApp(){
         <div class="search"><input id="gs" placeholder="${t("search")}"><div id="sres"></div></div>
         <div class="spacer"></div>
         <button class="icbtn" id="bell">🔔<span id="bdot"></span></button>
+        <button class="btn sm" id="pagePrint" title="${t("printPage")}">🖨 <span class="print-page-label">${t("printPage")}</span></button>
         <button class="icbtn" id="thm">${S.theme==="dark"?"☀️":"🌙"}</button>
         <button class="btn sm" id="lng">${S.lang==="ar"?"EN":"ع"}</button>
       </div>
@@ -298,10 +308,12 @@ function renderApp(){
   burger.style.display=window.innerWidth<900?"grid":"none";
   burger.onclick=()=>side.classList.toggle("open");
   bell.onclick=showNotifs;
+  const pagePrintButton=document.getElementById("pagePrint");
+  if(pagePrintButton) pagePrintButton.onclick=()=>printCurrentView();
   let tmr; gs.oninput=()=>{clearTimeout(tmr);tmr=setTimeout(doSearch,250);};
   gs.onblur=()=>setTimeout(()=>sres.innerHTML="",200);
   loadNotifBadge();
-  ({dashboard:viewDashboard,module:viewModule,reports:viewReports,users:viewUsers,workflows:viewWorkflows,portal:viewPortal,emails:viewEmails,payments:viewPayments,intel:viewIntel,segments:viewSegments,stagnant:viewStagnant,loyalty:viewLoyalty,partners:viewPartners,geo:viewGeo,aportal:viewAgentPortal,ai:viewAI,builder:viewBuilder,integrations:viewIntegrations,cfields:viewCFields,repcentre:viewReportCentre,syssettings:viewSysSettings}[S.view]||viewDashboard)();
+  ({dashboard:viewDashboard,module:viewModule,reports:viewReports,users:viewUsers,workflows:viewWorkflows,portal:viewPortal,emails:viewEmails,payments:viewPayments,pos:viewPOS,intel:viewIntel,segments:viewSegments,stagnant:viewStagnant,loyalty:viewLoyalty,partners:viewPartners,geo:viewGeo,aportal:viewAgentPortal,ai:viewAI,builder:viewBuilder,integrations:viewIntegrations,cfields:viewCFields,repcentre:viewReportCentre,syssettings:viewSysSettings}[S.view]||viewDashboard)();
 }
 async function doSearch(){
   const q=gs.value.trim(); if(q.length<2){sres.innerHTML="";return;}
@@ -377,6 +389,7 @@ async function viewModule(){
         <button class="${S.viewMode==="list"?"on":""}" id="vl">${t("list")}</button>
         <button class="${S.viewMode==="kanban"?"on":""}" id="vk">${t("kanban")}</button></div>`:""}
       <button class="btn sm" id="flt">⚙ ${t("filters")}${S.filters.length?" ("+S.filters.length+")":""}</button>
+      <button class="btn sm" id="pmatrix">🖨 ${t("printMatrix")}</button>
       <button class="btn sm" id="exp">⬇ ${t("export")}</button>
       <label class="btn sm" style="margin:0">⬆ ${t("import")}<input type="file" id="imp" accept=".csv" hidden></label>
       ${S.user.role!=="readonly"?`<button class="btn pri sm" id="add">+ ${t("new")}</button>`:""}
@@ -394,6 +407,7 @@ async function viewModule(){
   mine.onchange=()=>{S.mine=mine.checked?1:0;S.page=1;loadList();};
   if(canKanban){vl.onclick=()=>{S.viewMode="list";viewModule();};vk.onclick=()=>{S.viewMode="kanban";viewModule();};}
   flt.onclick=filterDialog;
+  document.getElementById("pmatrix").onclick=()=>printModuleMatrix();
   exp.onclick=()=>downloadApi(`/${S.module}/export/csv`,`${S.module}.csv`).catch(()=>{});
   imp.onchange=async e=>{const fd=new FormData();fd.append("file",e.target.files[0]);
     const r=await fetch(`/api/${S.module}/import`,{method:"POST",headers:{Authorization:"Bearer "+S.token},body:fd});
@@ -417,11 +431,13 @@ async function loadList(){
   body.innerHTML=r.data.length?`<table class="tbl"><thead><tr>
       ${S.user.role!=="readonly"?`<th style="width:34px"><input type="checkbox" id="ckall"></th>`:""}
       ${cols.map(c=>`<th data-s="${c}">${L(fmap[c]||{label_en:c,label_ar:c})}${S.sort===c?(S.dir==="asc"?" ▲":" ▼"):""}</th>`).join("")}
-      <th style="width:60px"></th></tr></thead><tbody>
-      ${r.data.map(row=>`<tr data-i="${row.id}">
+      <th style="width:104px"></th></tr></thead><tbody>
+      ${r.data.map(row=>{const isDocument=["invoices","quotes"].includes(S.module);
+        return `<tr data-i="${row.id}">
         ${S.user.role!=="readonly"?`<td><input type="checkbox" class="ck" data-i="${row.id}" ${S.sel.has(row.id)?"checked":""}></td>`:""}
         ${cols.map(c=>`<td data-l="${esc(L(fmap[c]||{label_en:c,label_ar:c}))}">${cell(row,fmap[c]||{name:c,type:"text"})}</td>`).join("")}
-        <td><button class="btn sm" data-e="${row.id}">✎</button></td></tr>`).join("")}
+        <td data-l="${t("printRecord")}"><button class="btn sm" ${isDocument?`data-doc="${row.id}" title="${t("printDocument")}"`:`data-recprint="${row.id}" title="${t("printRecord")}"`}>🖨</button>
+          ${S.user.role!=="readonly"?`<button class="btn sm" data-e="${row.id}">✎</button>`:""}</td></tr>`;}).join("")}
     </tbody></table>
     <div class="row" style="padding:12px 14px">
       <button class="btn sm" id="prev" ${S.page<=1?"disabled":""}>‹</button>
@@ -430,9 +446,15 @@ async function loadList(){
     :`<div class="empty">${t("noData")}</div>`;
   body.querySelectorAll("th[data-s]").forEach(h=>h.onclick=()=>{
     if(S.sort===h.dataset.s)S.dir=S.dir==="asc"?"desc":"asc";else{S.sort=h.dataset.s;S.dir="asc";}loadList();});
+  body.querySelectorAll("[data-doc]").forEach(button=>button.onclick=event=>{
+    event.stopPropagation();printDocument(S.module,+button.dataset.doc);});
+  body.querySelectorAll("[data-recprint]").forEach(button=>button.onclick=event=>{
+    event.stopPropagation();const row=r.data.find(item=>item.id===+button.dataset.recprint);
+    if(row)printGenericRecord(S.module,row);});
+  body.querySelectorAll("[data-e]").forEach(button=>button.onclick=event=>{
+    event.stopPropagation();openForm(S.module,+button.dataset.e);});
   body.querySelectorAll("tr[data-i]").forEach(tr=>tr.onclick=e=>{
-    if(e.target.tagName==="INPUT")return;
-    if(e.target.dataset.e)return openForm(S.module,+e.target.dataset.e);
+    if(e.target.closest("input,button,a,label"))return;
     openRecord(S.module,+tr.dataset.i);});
   body.querySelectorAll(".ck").forEach(c=>c.onchange=()=>{c.checked?S.sel.add(+c.dataset.i):S.sel.delete(+c.dataset.i);bulk();});
   if(document.getElementById("ckall"))ckall.onchange=()=>{r.data.forEach(x=>ckall.checked?S.sel.add(x.id):S.sel.delete(x.id));loadList();bulk();};
@@ -575,6 +597,8 @@ async function openRecord(mod,id){
     [...(mod==="leads"&&r.status!=="Converted"&&S.user.role!=="readonly"?[["🔄 "+t("convert"),conv,""]]:[]),
      ...(mod==="opportunities"&&!r.deal_id&&S.user.role!=="readonly"?[["🔄 "+t("convertOpp"),convOpp,""]]:[]),
      ...(["accounts","contacts","leads"].includes(mod)?[["🔎 "+t("view360"),()=>{close_();open360(mod,id);},""]]:[]),
+     ...([["🖨 "+(["invoices","quotes"].includes(mod)?t("printDocument"):t("printRecord")),
+       ()=>["invoices","quotes"].includes(mod)?printDocument(mod,id):printGenericRecord(mod,r),""]]),
      ...(S.user.role!=="readonly"?[[t("delete"),del,"dgr"],[t("edit"),()=>{close_();openForm(mod,id);},"pri"]]:[])]);
   const tc=el.querySelector("#tc");
   const paint=k=>{
@@ -740,6 +764,64 @@ async function openRecord(mod,id){
   paint("details");
 }
 
+/* ---------- printable invoices and quotations ---------- */
+function printDocument(module,recordId){
+  const kind=module==="invoices"?"invoice":"quote";
+  const title=S.lang==="ar"?(kind==="invoice"?"فاتورة":"عرض سعر"):(kind==="invoice"?"Invoice":"Quotation");
+  const win=window.open("","_blank");
+  if(!win){toast(S.lang==="ar"?"تعذّر فتح نافذة الطباعة. اسمح بالنوافذ المنبثقة ثم أعد المحاولة.":"Print window was blocked. Allow pop-ups and try again.");return;}
+  win.document.write(`<title>${title}</title><body style="font-family:system-ui;padding:32px">Loading document…</body>`);
+  const money=(value,currency)=>{
+    try{return new Intl.NumberFormat(S.lang==="ar"?"ar-EG":"en-US",{style:"currency",currency:currency||"USD",maximumFractionDigits:2}).format(value||0);}
+    catch{return `${Number(value||0).toFixed(2)} ${currency||""}`;}
+  };
+  const date=value=>{
+    if(!value)return "—";
+    const raw=String(value).slice(0,10);
+    try{return new Intl.DateTimeFormat(S.lang==="ar"?"ar-EG":"en-US",{dateStyle:"medium"}).format(new Date(raw+"T12:00:00"));}
+    catch{return raw;}
+  };
+  const label=S.lang==="ar"?{
+    bill:"بيانات العميل",contact:"جهة الاتصال",phone:"الهاتف",email:"البريد الإلكتروني",address:"العنوان",
+    issue:"تاريخ الإصدار",due:kind==="invoice"?"تاريخ الاستحقاق":"صالح حتى",status:"الحالة",owner:"المسؤول",
+    item:"الصنف",code:"الرمز",qty:"الكمية",unit:"سعر الوحدة",discount:"الخصم",tax:"الضريبة",line:"الإجمالي",
+    subtotal:"الإجمالي قبل الخصم",discountTotal:"إجمالي الخصم",taxTotal:"إجمالي الضريبة",total:"الإجمالي النهائي",
+    paid:"المدفوع",balance:"المتبقي",terms:kind==="invoice"?"ملاحظات":"الشروط والأحكام",thank:"شكرًا لتعاملكم معنا",
+  }:{
+    bill:"Bill to",contact:"Contact",phone:"Phone",email:"Email",address:"Address",
+    issue:"Issued",due:kind==="invoice"?"Due date":"Valid until",status:"Status",owner:"Owner",
+    item:"Item",code:"Code",qty:"Qty",unit:"Unit price",discount:"Discount",tax:"Tax",line:"Line total",
+    subtotal:"Subtotal",discountTotal:"Discount",taxTotal:"Tax",total:"Grand total",
+    paid:"Paid",balance:"Balance due",terms:kind==="invoice"?"Notes":"Terms",thank:"Thank you for your business",
+  };
+  const palette=kind==="invoice"
+    ? {accent:"#3156c7",accent2:"#1e8acb",soft:"#eef3ff"}
+    : {accent:"#7c3aed",accent2:"#c14fe4",soft:"#f6efff"};
+  api(`/documents/${kind}/${recordId}`).then(data=>{
+    const doc=data.document, company=data.company, account=data.account, contact=data.contact, totals=data.totals;
+    const contactLine=[contact.name,contact.title].filter(Boolean).map(esc).join(" · ");
+    const contactMeta=[contact.phone,contact.email].filter(Boolean).map(esc).join(" · ");
+    const companyMeta=[company.address,company.phone,company.tax_number?`${S.lang==="ar"?"رقم ضريبي":"Tax no."}: ${company.tax_number}`:""].filter(Boolean).map(esc).join("<br>");
+    const lineRows=data.items.map((item,index)=>`<tr>
+      <td class="item"><b>${esc(item.name||"—")}</b>${item.product_code?`<small>${label.code}: ${esc(item.product_code)}</small>`:""}</td>
+      <td>${Number(item.qty||0).toLocaleString(S.lang==="ar"?"ar-EG":"en-US",{maximumFractionDigits:2})}</td>
+      <td>${money(item.price,company.currency)}</td>
+      <td>${item.discount?`${Number(item.discount).toFixed(2)}%<small>−${money(item.discount_amount,company.currency)}</small>`:"—"}</td>
+      <td>${item.tax?`${Number(item.tax).toFixed(2)}%<small>+${money(item.tax_amount,company.currency)}</small>`:"—"}</td>
+      <td class="line-total">${money(item.line_total,company.currency)}</td>
+    </tr>`).join("")||`<tr><td colspan="6" class="empty">${S.lang==="ar"?"لا توجد أصناف مسجلة":"No line items were recorded"}</td></tr>`;
+    const settlement=kind==="invoice"?`<div class="settlement"><div><span>${label.paid}</span><b>${money(doc.paid,company.currency)}</b></div><div><span>${label.balance}</span><b>${money(doc.remaining,company.currency)}</b></div></div>`:"";
+    const terms=doc.terms?`<section class="terms"><h3>${label.terms}</h3><p>${esc(doc.terms).replace(/\n/g,"<br>")}</p></section>`:"";
+    const html=`<!doctype html><html lang="${S.lang}" dir="${S.lang==="ar"?"rtl":"ltr"}"><head><meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(data.reference)}</title>
+      <style>
+        :root{--accent:${palette.accent};--accent2:${palette.accent2};--soft:${palette.soft}}@page{size:A4;margin:12mm}.doc{max-width:186mm;margin:auto;color:#172033;font:13px/1.6 "Segoe UI",Tahoma,Arial,sans-serif}.top{display:flex;justify-content:space-between;gap:18px;padding:0 0 18px;border-bottom:3px solid var(--accent)}.brand{display:flex;gap:12px;align-items:flex-start}.mark{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:24px;font-weight:800;box-shadow:0 8px 20px color-mix(in srgb,var(--accent) 22%,transparent)}.company h1{font-size:22px;margin:0 0 3px}.company .meta{font-size:11px;color:#667085}.doc-title{text-align:end}.doc-title .kind{display:inline-block;padding:4px 12px;border-radius:999px;background:var(--soft);color:var(--accent);font-size:11px;font-weight:700}.doc-title h2{margin:8px 0 0;font-size:20px}.doc-title p{margin:2px 0;color:#667085;font-size:11px}.info{display:grid;grid-template-columns:1.35fr 1fr;gap:14px;margin:20px 0}.box{border:1px solid #dbe2ee;border-radius:12px;padding:13px 15px;background:#fbfcff}.box h3{margin:0 0 8px;font-size:11px;letter-spacing:.3px;text-transform:uppercase;color:#5f6e85}.box strong{font-size:15px}.box p{margin:3px 0;color:#526078;font-size:11.5px}.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px}.meta-grid div span{display:block;font-size:10px;color:#7a8799}.meta-grid div b{font-size:12px}.status{color:var(--accent)}.items{width:100%;border-collapse:collapse;margin-top:18px}.items thead{display:table-header-group}.items th{background:var(--accent);color:#fff;padding:9px 8px;font-size:10.5px;text-align:center}.items th:first-child{text-align:start;border-radius:7px 0 0 7px}.items th:last-child{border-radius:0 7px 7px 0}.items td{padding:10px 8px;border-bottom:1px solid #e4e9f1;text-align:center;vertical-align:top;font-size:11px}.items tr:nth-child(even){background:#fafbfe}.items td.item{text-align:start;min-width:42%}.items small{display:block;color:#758196;font-size:9.5px}.line-total{font-weight:700;color:#172f83}.empty{text-align:center;color:#7a8799;padding:18px!important}.bottom{display:grid;grid-template-columns:1fr 72mm;gap:18px;align-items:start;margin-top:18px}.terms{border-inline-start:3px solid #b6c4ff;padding-inline-start:11px;color:#4b5a70}.terms h3{font-size:11px;margin:0 0 5px}.terms p{font-size:11px;margin:0;white-space:normal}.totals{border:1px solid #dbe2ee;border-radius:12px;padding:10px 14px;background:#fbfcff}.totals .row{display:flex;justify-content:space-between;padding:5px 0;font-size:11.5px;color:#526078}.totals .grand{margin-top:5px;padding-top:10px;border-top:1px solid #cdd7e7;color:#172033;font-size:15px;font-weight:800}.settlement{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.settlement div{padding:8px 10px;border-radius:8px;background:#f1f5ff}.settlement span{display:block;color:#63728a;font-size:10px}.settlement b{font-size:12px}.footer{display:flex;justify-content:space-between;align-items:center;margin-top:26px;padding-top:10px;border-top:1px solid #e4e9f1;color:#7a8799;font-size:10px}.footer .thank{color:var(--accent);font-weight:700}@media print{body{margin:0}.doc{max-width:none}.top{break-inside:avoid}.items tr{break-inside:avoid}.box{background:#fbfcff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.items th{background:var(--accent)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.items tr:nth-child(even){background:#fafbfe!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+      </style></head><body><main class="doc"><header class="top"><div class="brand"><div class="mark">${S.lang==="ar"?"ن":"N"}</div><div class="company"><h1>${esc(company.name)}</h1><div class="meta">${companyMeta||"—"}</div></div></div><div class="doc-title"><span class="kind">${esc(S.lang==="ar"?data.label_ar:data.label_en)}</span><h2>${esc(data.reference)}</h2><p>${esc(doc.status||"")}</p></div></header><section class="info"><div class="box"><h3>${label.bill}</h3><strong>${esc(account.name||"—")}</strong>${contactLine?`<p>${contactLine}</p>`:""}${contactMeta?`<p>${contactMeta}</p>`:""}${account.address?`<p>${esc(account.address).replace(/\n/g,"<br>")}</p>`:""}${account.website?`<p>${esc(account.website)}</p>`:""}</div><div class="box meta-grid"><div><span>${label.issue}</span><b>${date(doc.issued_on)}</b></div><div><span>${label.due}</span><b>${date(doc.due_on)}</b></div><div><span>${label.status}</span><b class="status">${esc(doc.status||"—")}</b></div><div><span>${label.owner}</span><b>${esc(data.owner.name||"—")}</b></div></div></section><table class="items"><thead><tr><th>${label.item}</th><th>${label.qty}</th><th>${label.unit}</th><th>${label.discount}</th><th>${label.tax}</th><th>${label.line}</th></tr></thead><tbody>${lineRows}</tbody></table><section class="bottom"><div>${terms}</div><div><div class="totals"><div class="row"><span>${label.subtotal}</span><b>${money(totals.subtotal,company.currency)}</b></div><div class="row"><span>${label.discountTotal}</span><b>− ${money(totals.discount_total,company.currency)}</b></div><div class="row"><span>${label.taxTotal}</span><b>+ ${money(totals.tax_total,company.currency)}</b></div><div class="row grand"><span>${label.total}</span><b>${money(totals.total,company.currency)}</b></div></div>${settlement}</div></section><footer class="footer"><span>${date(data.generated_at)}</span><span class="thank">${label.thank}</span></footer></main></body></html>`;
+    win.document.open();win.document.write(html);win.document.close();
+    win.onload=()=>setTimeout(()=>{win.focus();win.print();},180);
+  }).catch(()=>{win.close();});
+}
+
 /* ---------- reports ---------- */
 function viewReports(){
   const mods=Object.entries(S.meta.modules);
@@ -890,7 +972,7 @@ async function viewEmails(){
     <div class="tabs" id="et">
       <button data-t="outbox" class="${emailTab==="outbox"?"on":""}">${t("outbox")}</button>
       <button data-t="templates" class="${emailTab==="templates"?"on":""}">${t("templates")}</button>
-      ${S.user.role==="admin"?`<button data-t="smtp" class="${emailTab==="smtp"?"on":""}">${t("smtp")}</button>`:""}
+      ${S.user.role==="admin"?`<button data-t="smtp" class="${emailTab==="smtp"?"on":""}">⚙ ${S.lang==="ar"?"إعدادات الإرسال":"Delivery settings"}</button>`:""}
     </div><div id="ec"><div class="empty">…</div></div>`;
   if(document.getElementById("cp"))cp.onclick=()=>composeMail();
   main.querySelectorAll("#et button").forEach(b=>b.onclick=()=>{emailTab=b.dataset.t;viewEmails();});
@@ -900,13 +982,13 @@ const mailStatus=s=>({sent:"var(--ok)",sandbox:"var(--info)",queued:"var(--warn)
 async function eOutbox(){
   const rows=await api("/email/outbox");
   ec.innerHTML=`<div class="card" style="padding:0"><div class="wrap-scroll"><table class="tbl"><thead><tr>
-    <th>${t("to")}</th><th>${t("subj")}</th><th>${t("status")||"Status"}</th><th>${t("created")||"Date"}</th></tr></thead><tbody>
+    <th>${t("to")}</th><th>${t("subj")}</th><th>${t("status")||"Status"}</th><th>${S.lang==="ar"?"المزود":"Provider"}</th><th>${t("created")||"Date"}</th></tr></thead><tbody>
     ${rows.map(r=>`<tr data-i="${r.id}"><td>${esc(r.to_email)}</td><td><b>${esc(r.subject)}</b>
       ${r.template?`<div class="mut" style="font-size:11px">${esc(r.template)}</div>`:""}</td>
       <td><span class="badge" style="color:${mailStatus(r.status)};background:${mailStatus(r.status)}22">${r.status}</span>
       ${r.error?`<div class="mut" style="font-size:10.5px;color:var(--danger)">${esc(r.error.slice(0,50))}</div>`:""}</td>
-      <td class="mut">${(r.created_at||"").replace("T"," ")}</td></tr>`).join("")
-      ||`<tr><td colspan="4"><div class="empty">${t("noData")}</div></td></tr>`}
+      <td class="mut">${esc(r.provider||"—")}</td><td class="mut">${(r.created_at||"").replace("T"," ")}</td></tr>`).join("")
+      ||`<tr><td colspan="5"><div class="empty">${t("noData")}</div></td></tr>`}
     </tbody></table></div></div>`;
   ec.querySelectorAll("tr[data-i]").forEach(tr=>tr.onclick=()=>{
     const r=rows.find(z=>z.id==tr.dataset.i);
@@ -952,36 +1034,66 @@ function composeMail(pre={}){
 }
 async function eSmtp(){
   const c=await api("/email/settings");
-  ec.innerHTML=`<div class="card" style="max-width:620px">
-    <div class="row" style="margin-bottom:12px"><b>${t("smtp")}</b><div class="spacer"></div>
-      <span class="badge" style="color:${c.mode==="smtp"?"var(--ok)":"var(--info)"};background:${c.mode==="smtp"?"var(--ok)":"var(--info)"}22">
-      ${c.mode==="smtp"?t("smtpMode"):t("sandboxMode")}</span></div>
-    <form id="sf" class="f2">
-      <div class="fld"><label>Host</label><input name="smtp_host" value="${esc(c.smtp_host||"")}" placeholder="smtp.gmail.com"></div>
-      <div class="fld"><label>Port</label><input name="smtp_port" value="${esc(c.smtp_port||"587")}"></div>
-      <div class="fld"><label>User</label><input name="smtp_user" value="${esc(c.smtp_user||"")}"></div>
-      <div class="fld"><label>Password</label><input name="smtp_pass" type="password" value="${esc(c.smtp_pass||"")}"></div>
-      <div class="fld"><label>From</label><input name="smtp_from" value="${esc(c.smtp_from||"")}"></div>
-      <div class="fld"><label>TLS</label><select name="smtp_tls"><option value="1" ${c.smtp_tls==="1"?"selected":""}>ON</option>
-        <option value="0" ${c.smtp_tls!=="1"?"selected":""}>OFF</option></select></div>
-      <div class="fld"><label>${S.lang==="ar"?"اسم الشركة":"Company name"}</label><input name="company_name" value="${esc(c.company_name||"")}"></div>
-      <div class="fld"><label>Base URL</label><input name="base_url" value="${esc(c.base_url||"")}" placeholder="https://your-domain.com"></div>
+  const tx=S.lang==="ar"?{
+    title:"إعدادات إرسال البريد",provider:"مزود الإرسال",sandbox:"تجريبي — تُحفظ الرسائل داخل النظام فقط",
+    smtp:"SMTP",resend:"Resend",resendKey:"مفتاح Resend API",resendFrom:"عنوان الإرسال المعتمد",replyTo:"الرد إلى (اختياري)",
+    resendHint:"أضف نطاقك وتحقق من عنوان الإرسال في Resend قبل تفعيل الإرسال.",smtpHint:"استخدم بيانات خادم البريد أو مزود الاستضافة الخاص بك.",
+    company:"اسم الشركة",base:"رابط النظام العام",save:"حفظ الإعدادات",test:"إرسال رسالة اختبار",configured:"مُهيأ",notConfigured:"يلزم استكمال الإعدادات",host:"الخادم",port:"المنفذ",user:"اسم المستخدم",password:"كلمة المرور",from:"من",tls:"TLS",
+  }:{
+    title:"Email delivery settings",provider:"Delivery provider",sandbox:"Sandbox — messages stay inside NebrasCRM",
+    smtp:"SMTP",resend:"Resend",resendKey:"Resend API key",resendFrom:"Verified From address",replyTo:"Reply-to (optional)",
+    resendHint:"Verify your sending domain and From address in Resend before going live.",smtpHint:"Use your mail host or hosting-provider credentials.",
+    company:"Company name",base:"Public CRM URL",save:"Save settings",test:"Send test email",configured:"Configured",notConfigured:"Configuration required",host:"Host",port:"Port",user:"User",password:"Password",from:"From",tls:"TLS",
+  };
+  const provider=c.email_provider||c.mode||"sandbox";
+  const color=provider==="resend"?"var(--purple)":provider==="smtp"?"var(--ok)":"var(--info)";
+  const label=provider==="resend"?tx.resend:provider==="smtp"?tx.smtp:tx.sandbox;
+  ec.innerHTML=`<div class="card" style="max-width:760px">
+    <div class="row" style="margin-bottom:12px;gap:10px"><div><b>${tx.title}</b><div class="mut" style="font-size:11.5px;margin-top:3px">${label}</div></div><div class="spacer"></div>
+      <span class="badge" style="color:${color};background:${color}22">${esc(label)}</span></div>
+    <form id="deliveryForm">
+      <div class="fld"><label>${tx.provider}</label><select name="email_provider" id="deliveryProvider">
+        <option value="sandbox" ${provider==="sandbox"?"selected":""}>${tx.sandbox}</option>
+        <option value="resend" ${provider==="resend"?"selected":""}>${tx.resend}</option>
+        <option value="smtp" ${provider==="smtp"?"selected":""}>${tx.smtp}</option></select></div>
+      <div id="resendFields" style="display:${provider==="resend"?"block":"none"}">
+        <div class="card" style="padding:14px;margin:10px 0;background:var(--purple)10;border-color:var(--purple)55">
+          <div class="row" style="margin-bottom:8px"><b style="color:var(--purple)">✉ ${tx.resend}</b><div class="spacer"></div>
+            <span class="badge" style="color:${c.resend_configured?"var(--ok)":"var(--warn)"};background:${c.resend_configured?"var(--ok)":"var(--warn)"}22">${c.resend_configured?tx.configured:tx.notConfigured}</span></div>
+          <div class="f2"><div class="fld"><label>${tx.resendKey}</label><input name="resend_api_key" type="password" value="${esc(c.resend_api_key||"")}" placeholder="re_…" autocomplete="new-password"></div>
+            <div class="fld"><label>${tx.resendFrom}</label><input name="resend_from" value="${esc(c.resend_from||"")}" placeholder="Sales <sales@yourdomain.com>"></div>
+            <div class="fld"><label>${tx.replyTo}</label><input name="resend_reply_to" type="email" value="${esc(c.resend_reply_to||"")}" placeholder="support@yourdomain.com"></div></div>
+          <div class="mut" style="font-size:11px">${tx.resendHint}</div></div></div>
+      <div id="smtpFields" style="display:${provider==="smtp"?"block":"none"}">
+        <div class="card" style="padding:14px;margin:10px 0;background:var(--info)10;border-color:var(--info)55"><div class="f2">
+          <div class="fld"><label>${tx.host}</label><input name="smtp_host" value="${esc(c.smtp_host||"")}" placeholder="smtp.example.com"></div>
+          <div class="fld"><label>${tx.port}</label><input name="smtp_port" value="${esc(c.smtp_port||"587")}" inputmode="numeric"></div>
+          <div class="fld"><label>${tx.user}</label><input name="smtp_user" value="${esc(c.smtp_user||"")}" autocomplete="username"></div>
+          <div class="fld"><label>${tx.password}</label><input name="smtp_pass" type="password" value="${esc(c.smtp_pass||"")}" autocomplete="new-password"></div>
+          <div class="fld"><label>${tx.from}</label><input name="smtp_from" type="email" value="${esc(c.smtp_from||"")}"></div>
+          <div class="fld"><label>${tx.tls}</label><select name="smtp_tls"><option value="1" ${c.smtp_tls==="1"?"selected":""}>ON</option><option value="0" ${c.smtp_tls!=="1"?"selected":""}>OFF</option></select></div>
+        </div><div class="mut" style="font-size:11px">${tx.smtpHint}</div></div></div>
+      <div class="f2"><div class="fld"><label>${tx.company}</label><input name="company_name" value="${esc(c.company_name||"")}"></div>
+        <div class="fld"><label>${tx.base}</label><input name="base_url" value="${esc(c.base_url||"")}" placeholder="https://crm.example.com"></div></div>
     </form>
-    <div class="row"><button class="btn pri sm" id="ss">${t("save")}</button>
-      <button class="btn sm" id="tm">${t("testMail")}</button></div></div>`;
-  ss.onclick=async()=>{const fd=new FormData(ec.querySelector("#sf"));const b={};fd.forEach((v,k)=>b[k]=v);
-    await api("/email/settings",{method:"PUT",body:JSON.stringify(b)});toast(t("saved"));eSmtp();};
-  tm.onclick=async()=>{const r=await api("/email/test",{method:"POST",body:JSON.stringify({to:S.user.email})});
-    toast(r.status+(r.error?": "+r.error:" ✓"));};
+    <div class="row" style="margin-top:4px"><button class="btn pri sm" id="saveDelivery">💾 ${tx.save}</button><button class="btn sm" id="testDelivery">✉ ${tx.test}</button></div>
+  </div>`;
+  const providerSelect=ec.querySelector("#deliveryProvider"),smtpFields=ec.querySelector("#smtpFields"),resendFields=ec.querySelector("#resendFields");
+  providerSelect.onchange=()=>{smtpFields.style.display=providerSelect.value==="smtp"?"block":"none";resendFields.style.display=providerSelect.value==="resend"?"block":"none";};
+  ec.querySelector("#saveDelivery").onclick=async()=>{const fd=new FormData(ec.querySelector("#deliveryForm")),body={};fd.forEach((value,key)=>body[key]=value);
+    await api("/email/settings",{method:"PUT",body:JSON.stringify(body)});toast(t("saved"));eSmtp();};
+  ec.querySelector("#testDelivery").onclick=async()=>{const result=await api("/email/test",{method:"POST",body:JSON.stringify({to:S.user.email})});
+    toast(`${result.provider||providerSelect.value}: ${result.status}${result.error?": "+result.error:" ✓"}`);};
 }
 
 /* ---------- payments ---------- */
 async function viewPayments(){
   const [s,rows]=await Promise.all([api("/payments/summary"),api("/payments")]);
   const k=(l,v,c)=>`<div class="kpi" style="--pri:${c}"><div class="l">${l}</div><div class="v">${v}</div></div>`;
-  const pcl=x=>({paid:"var(--ok)",pending:"var(--warn)",failed:"var(--danger)",refunded:"var(--purple)"}[x]||"var(--mut)");
+  const pcl=x=>({paid:"var(--ok)",pending:"var(--warn)",awaiting_settlement:"var(--info)",failed:"var(--danger)",refunded:"var(--purple)"}[x]||"var(--mut)");
   main.innerHTML=`<div class="row" style="margin-bottom:14px"><div class="h1">💳 ${t("payments")}</div>
-    <div class="spacer"></div>${S.user.role!=="readonly"?`<button class="btn sm" id="mp">＋ ${t("manualPay")}</button>
+    <div class="spacer"></div><button class="btn sm" id="paymentMatrix">🖨 ${t("printMatrix")}</button>
+    ${S.user.role!=="readonly"?`<button class="btn sm" id="mp">＋ ${t("manualPay")}</button>
     <button class="btn pri sm" id="pl">🔗 ${t("payLink")}</button>`:""}</div>
     <div class="kpis" style="margin-bottom:16px">
       ${k(t("collected"),fmtMoney(s.collected),"var(--ok)")}
@@ -997,16 +1109,18 @@ async function viewPayments(){
     <div class="card" style="padding:0"><div class="wrap-scroll"><table class="tbl"><thead><tr>
       <th>#</th><th>${t("invoice")}</th><th>${S.lang==="ar"?"الشركة":"Account"}</th><th>${t("amount")||"Amount"}</th>
       <th>${t("method")}</th><th>Status</th><th>${t("ref")}</th><th></th></tr></thead><tbody>
-      ${rows.map(r=>`<tr data-i="${r.id}"><td class="mut">#${r.id}</td><td>${esc(r.invoice_subject||"—")}</td>
-        <td>${esc(r.account||"—")}</td><td><b>${fmtMoney(r.amount)}</b></td><td>${esc(r.method||"—")}</td>
-        <td><span class="badge" style="color:${pcl(r.status)};background:${pcl(r.status)}22">${r.status}</span></td>
-        <td class="mut" style="font-size:11.5px">${esc(r.provider_ref||"—")}</td>
-        <td>${r.status==="pending"?`<button class="btn sm" data-cp="${r.token}">🔗</button>`:""}
-        ${r.status==="awaiting_settlement"&&["admin","manager"].includes(S.user.role)?`<button class="btn sm" data-st="${r.id}" style="color:var(--ok);border-color:var(--ok)55">✓</button>`:""}
-        ${r.status==="paid"&&["admin","manager"].includes(S.user.role)?`<button class="btn sm dgr" data-rf="${r.id}">↩</button>`:""}</td></tr>`).join("")
+      ${rows.map(r=>`<tr data-i="${r.id}"><td class="mut" data-l="#">#${r.id}</td><td data-l="${t("invoice")}">${esc(r.invoice_subject||"—")}</td>
+        <td data-l="${S.lang==="ar"?"الشركة":"Account"}">${esc(r.account||"—")}</td><td data-l="${t("amount")||"Amount"}"><b>${fmtMoney(r.amount)}</b></td><td data-l="${t("method")}">${esc(r.method||"—")}</td>
+        <td data-l="Status"><span class="badge" style="color:${pcl(r.status)};background:${pcl(r.status)}22">${esc(r.status)}</span></td>
+        <td class="mut" data-l="${t("ref")}" style="font-size:11.5px">${esc(r.provider_ref||"—")}</td>
+        <td data-l="${t("paymentVoucher")}"><button class="btn sm" data-pv="${r.id}" title="${t("printVoucher")}">🖨</button>
+          ${r.status==="pending"?`<button class="btn sm" data-cp="${r.token}">🔗</button>`:""}
+          ${r.status==="awaiting_settlement"&&["admin","manager"].includes(S.user.role)?`<button class="btn sm" data-st="${r.id}" style="color:var(--ok);border-color:var(--ok)55">✓</button>`:""}
+          ${r.status==="paid"&&["admin","manager"].includes(S.user.role)?`<button class="btn sm dgr" data-rf="${r.id}">↩</button>`:""}</td></tr>`).join("")
         ||`<tr><td colspan="8"><div class="empty">${t("noData")}</div></td></tr>`}
       </tbody></table></div></div>`;
   if(document.getElementById("pl")){pl.onclick=payLinkForm;mp.onclick=manualPayForm;}
+  document.getElementById("paymentMatrix").onclick=()=>printCurrentView();
   api("/payments/by-channel").then(ch=>{
     const box=document.getElementById("chbox"); if(!box)return;
     const mx=Math.max(...ch.map(c=>c.v||0),1);
@@ -1015,6 +1129,7 @@ async function viewPayments(){
       <div class="barbg"><div class="barfill" style="width:${(c.v||0)/mx*100}%"></div></div>
       <div style="text-align:end;font-weight:700">${fmtMoney(c.v)}<span class="mut" style="font-size:10.5px"> −${fmtMoney(c.fees)}</span></div>
     </div>`).join("")}</div>`:`<div class="empty">${t("noData")}</div>`;});
+  main.querySelectorAll("[data-pv]").forEach(b=>b.onclick=e=>{e.stopPropagation();printPaymentReceipt(+b.dataset.pv);});
   main.querySelectorAll("[data-cp]").forEach(b=>b.onclick=e=>{e.stopPropagation();
     copyTxt(location.origin+"/pay/"+b.dataset.cp);});
   main.querySelectorAll("[data-st]").forEach(b=>b.onclick=async e=>{e.stopPropagation();
@@ -1022,11 +1137,34 @@ async function viewPayments(){
   main.querySelectorAll("[data-rf]").forEach(b=>b.onclick=async e=>{e.stopPropagation();
     if(!confirm(t("confirmQ")||"?"))return;
     await api(`/payments/${b.dataset.rf}/refund`,{method:"POST"});toast(t("saved"));viewPayments();});
-  main.querySelectorAll("tr[data-i]").forEach(tr=>tr.onclick=async()=>{
-    const evs=await api(`/payments/${tr.dataset.i}/events`);
-    modal(t("payEvents")+" #"+tr.dataset.i,evs.map(e=>`<div style="padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px">
-      <b>${esc(e.event)}</b> <span class="mut">${(e.created_at||"").replace("T"," ")}</span>
-      <div class="mut" style="font-size:11px">${esc(e.payload||"")}</div></div>`).join("")||`<div class="empty">${t("noData")}</div>`,[]);});
+  main.querySelectorAll("tr[data-i]").forEach(tr=>tr.onclick=e=>{
+    if(e.target.closest("button,a,input"))return;
+    openPaymentRecord(+tr.dataset.i);});
+}
+
+async function openPaymentRecord(paymentId){
+  const [doc,events]=await Promise.all([
+    api(`/documents/payment/${paymentId}`), api(`/payments/${paymentId}/events`),
+  ]);
+  const p=doc.payment||{}, invoice=doc.invoice||{}, account=doc.account||{}, contact=doc.contact||{};
+  const currency=p.currency||doc.company?.currency||"USD";
+  const money=value=>printMoneyValue(value,currency);
+  const label=S.lang==="ar"?{
+    title:"سند دفع",customer:"العميل",payment:"تفاصيل السداد",invoice:"الفاتورة المرتبطة",amount:"المبلغ",method:"الطريقة",status:"الحالة",date:"التاريخ",reference:"المرجع",balance:"المتبقي",events:"سجل العملية",
+  }:{
+    title:"Payment voucher",customer:"Customer",payment:"Payment details",invoice:"Linked invoice",amount:"Amount",method:"Method",status:"Status",date:"Date",reference:"Reference",balance:"Balance due",events:"Event log",
+  };
+  const field=(name,value)=>`<div style="padding:8px 0;border-bottom:1px solid var(--line)"><div class="mut" style="font-size:11px">${esc(name)}</div><b style="font-size:12.5px">${esc(value||"—")}</b></div>`;
+  const contactLine=[contact.name,contact.title].filter(Boolean).join(" · ");
+  const eventHtml=events.map(event=>`<div style="padding:8px 0;border-bottom:1px solid var(--line);font-size:12px">
+    <b>${esc(event.event)}</b> <span class="mut">${(event.created_at||"").replace("T"," ")}</span>
+    <div class="mut" style="font-size:10.5px;overflow-wrap:anywhere">${esc(event.payload||"")}</div></div>`).join("")||`<div class="empty">${t("noData")}</div>`;
+  modal(`${label.title} · ${esc(doc.reference||"#"+paymentId)}`,`<div class="f2">
+    <div class="card" style="padding:12px"><b>${label.customer}</b>${field(S.lang==="ar"?"الشركة":"Account",account.name)}${field(t("contact"),contactLine)}${field(t("phone"),[contact.phone,contact.email].filter(Boolean).join(" · ")||account.phone)}</div>
+    <div class="card" style="padding:12px"><b>${label.payment}</b>${field(label.amount,money(p.amount))}${field(label.method,[p.method,p.channel].filter(Boolean).join(" · "))}${field(label.status,p.status)}${field(label.date,(p.paid_on||p.created_on||"").replace("T"," "))}${field(label.reference,p.provider_ref||doc.reference)}</div>
+  </div><div class="card" style="padding:12px;margin-top:10px"><b>${label.invoice}</b>${field(t("invoice"),invoice.subject||"#"+invoice.id)}${field(label.balance,money(invoice.remaining))}</div>
+  <div style="margin-top:14px"><b style="font-size:12.5px">${label.events}</b>${eventHtml}</div>`,
+  [["🖨 "+t("printVoucher"),()=>printPaymentReceipt(paymentId),"pri"]]);
 }
 function copyTxt(s){navigator.clipboard?.writeText(s);toast(t("copied")+": "+s);}
 async function invoicePicker(){
@@ -2268,7 +2406,7 @@ async function rcRun(){
       </table></div>`:`<div class="empty">${t("noRows")}</div>`}
     </div>`;
   document.getElementById("rcBack").onclick=()=>{RC.code=null;RC.data=null;viewReportCentre();};
-  document.getElementById("rcPrint").onclick=()=>window.print();
+  document.getElementById("rcPrint").onclick=()=>printCurrentView();
   document.getElementById("rcCsv").onclick=()=>downloadApi(exportPath("csv"),`${RC.code}.csv`).catch(()=>{});
   document.getElementById("rcXls").onclick=()=>downloadApi(exportPath("xls"),`${RC.code}.xls`).catch(()=>{});
   const go=document.getElementById("rcGo");
@@ -2279,12 +2417,37 @@ async function rcRun(){
 
 /* ================= system settings ================= */
 async function viewSysSettings(){
-  const d=await api("/settings/all");
+  const isAdmin=S.user.role==="admin";
+  const [d,demo]=await Promise.all([
+    api("/settings/all"),
+    isAdmin?api("/admin/demo-data/summary"):Promise.resolve(null),
+  ]);
   const byG={};
   d.settings.forEach(s2=>{(byG[s2.group]=byG[s2.group]||[]).push(s2);});
+  const tx=S.lang==="ar"?{
+    title:"إدارة البيانات التجريبية",addTitle:"إضافة بيانات تجريبية",addButton:"✨ إضافة بيانات تجريبية",
+    addDesc:"يضيف حزمة بيانات جاهزة تشمل منتجات وعملاء وعروض أسعار وفواتير ومدفوعات وبيعاً تجريبياً في نقطة البيع.",
+    addKeeps:"لن يستبدل بياناتك الحالية ولن يغيّر المستخدمين أو الإعدادات أو الخريطة العالمية.",
+    addPhrase:"اكتب العبارة التالية للتأكيد",addConfirm:"إضافة البيانات التجريبية",addDone:"تمت إضافة البيانات التجريبية",already:"حزمة البيانات التجريبية موجودة بالفعل",
+    deleteTitle:"حذف البيانات التجريبية",deleteButton:"🗑 حذف البيانات التجريبية",count:"سجل سيتم حذفه",
+    deleteDesc:"سيتم حذف العملاء والعملاء المحتملون والصفقات والفواتير والمدفوعات والأنشطة والبيانات التجريبية المرتبطة بها.",
+    keeps:"سيتم الإبقاء على حسابات المستخدمين والإعدادات وقوالب البريد والتخصيصات ومفاتيح API والتكاملات والخريطة العالمية.",
+    warning:"هذه العملية لا يمكن التراجع عنها. لا تستخدمها إذا كانت قاعدة البيانات تحتوي على بيانات تشغيل حقيقية.",
+    deletePhrase:"اكتب العبارة التالية للتأكيد",deleteConfirm:"تنفيذ الحذف النهائي",deleteDone:"تم حذف البيانات التجريبية بنجاح",present:"البيانات التجريبية موجودة",absent:"لا توجد حزمة بيانات تجريبية مضافة",
+  }:{
+    title:"Demo data management",addTitle:"Add demo data",addButton:"✨ Add demo data",
+    addDesc:"Adds a ready-to-use pack of products, customers, quotes, invoices, payments and a sample POS sale.",
+    addKeeps:"It does not overwrite current business data or change users, settings or global geography.",
+    addPhrase:"Type the following phrase to confirm",addConfirm:"Add demo data",addDone:"Demo data was added",already:"The demo sample pack is already present",
+    deleteTitle:"Delete demo data",deleteButton:"🗑 Delete demo data",count:"records will be deleted",
+    deleteDesc:"This removes demo customers, leads, deals, invoices, payments, activities and their related business data.",
+    keeps:"User accounts, settings, email templates, customizations, API keys, integrations and the global map are preserved.",
+    warning:"This cannot be undone. Do not use it when the database contains real operating data.",
+    deletePhrase:"Type the following phrase to confirm",deleteConfirm:"Delete permanently",deleteDone:"Demo data was deleted",present:"Demo data is present",absent:"No UI-added demo pack yet",
+  };
   main.innerHTML=`<div class="row" style="margin-bottom:14px"><div class="h1">⚙️ ${t("settingsSys")}</div>
       <div class="spacer"></div>
-      ${S.user.role==="admin"?`<button class="btn pri sm" id="ssSave">💾 ${t("saveSettings")}</button>`:""}</div>
+      ${isAdmin?`<button class="btn pri sm" id="ssSave">💾 ${t("saveSettings")}</button>`:""}</div>
     <form id="ssForm">
     ${Object.entries(byG).map(([g,items])=>{const G=d.groups[g]||{};
       return `<div class="card" style="margin-bottom:12px">
@@ -2302,13 +2465,59 @@ async function viewSysSettings(){
           return `<div class="fld"><label>${lbl}</label>
             <input type="${it}" name="${s2.key}" value="${esc(s2.value)}"></div>`;
         }).join("")}</div></div>`;}).join("")}
-    </form>`;
+    </form>
+    ${demo?`<section class="card" style="margin-top:16px;border:1px solid var(--line2);background:linear-gradient(135deg,var(--pri)08,transparent)">
+      <div class="row" style="align-items:flex-start;gap:10px;margin-bottom:12px"><div style="font-size:22px">🧪</div><div style="flex:1"><b>${tx.title}</b>
+        <div class="mut" style="font-size:11.5px;margin-top:3px">${demo.sample_pack_present?tx.present:tx.absent}</div></div>
+        <span class="badge" style="color:var(--info);background:var(--info)22">${fmtNum(demo.total)} ${tx.count}</span></div>
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px">
+        <div style="border:1px solid var(--ok);background:var(--ok)10;border-radius:12px;padding:13px"><div class="row" style="gap:9px;align-items:flex-start"><div style="font-size:20px">✨</div><div style="flex:1"><b>${tx.addTitle}</b>
+          <div class="mut" style="font-size:12px;margin-top:4px">${tx.addDesc}</div><div class="mut" style="font-size:10.5px;margin-top:5px">${tx.addKeeps}</div></div></div>
+          <button class="btn sm" id="addDemo" style="margin-top:11px;color:var(--ok);border-color:var(--ok)66">${tx.addButton}</button></div>
+        <div style="border:1px solid var(--danger);background:var(--danger)10;border-radius:12px;padding:13px"><div class="row" style="gap:9px;align-items:flex-start"><div style="font-size:20px">⚠️</div><div style="flex:1"><b>${tx.deleteTitle}</b>
+          <div class="mut" style="font-size:12px;margin-top:4px">${tx.deleteDesc}</div><div class="mut" style="font-size:10.5px;margin-top:5px">${tx.keeps}</div></div></div>
+          <button class="btn dgr sm" id="clearDemo" style="margin-top:11px">${tx.deleteButton}</button></div>
+      </div></section>`:""}`;
   const btn=document.getElementById("ssSave");
   if(btn)btn.onclick=async()=>{
     const fd=new FormData(document.getElementById("ssForm"));const b={};
     fd.forEach((v,k)=>b[k]=v);
     try{await api("/settings/all",{method:"PUT",body:JSON.stringify(b)});
       toast(t("saved"));viewSysSettings();}catch{}};
+  const addBtn=document.getElementById("addDemo");
+  if(addBtn)addBtn.onclick=()=>{
+    const phraseRequired=demo.add_confirmation||"ADD DEMO DATA";
+    const el=modal(tx.addTitle,`<div class="card" style="border:1px solid var(--ok);background:var(--ok)10;margin-bottom:12px">
+      <b style="color:var(--ok)">✨ ${tx.addTitle}</b><div class="mut" style="font-size:12px;margin-top:5px">${tx.addKeeps}</div></div>
+      <div style="font-size:13px;margin-bottom:8px">${tx.addDesc}</div>
+      <div class="fld"><label>${tx.addPhrase}: <code>${phraseRequired}</code></label>
+        <input id="addDemoPhrase" autocomplete="off" spellcheck="false" placeholder="${phraseRequired}"></div>`,
+      [[t("cancel"),close_,""],[tx.addConfirm,async()=>{
+        const phrase=(el.querySelector("#addDemoPhrase").value||"").trim();
+        if(phrase!==phraseRequired){toast(tx.addPhrase+": "+phraseRequired);return;}
+        try{
+          const result=await api("/admin/demo-data/add",{method:"POST",body:JSON.stringify({confirmation:phrase})});
+          toast(result.already_present?tx.already:`${tx.addDone} · ${fmtNum(result.total)}`);close_();viewSysSettings();
+        }catch{}
+      },"pri"]]);
+  };
+  const clearBtn=document.getElementById("clearDemo");
+  if(clearBtn)clearBtn.onclick=()=>{
+    const el=modal(tx.deleteTitle,`<div class="card" style="border:1px solid var(--danger);background:var(--danger)12;margin-bottom:12px">
+      <b style="color:var(--danger)">⚠ ${tx.warning}</b></div>
+      <div style="font-size:13px;margin-bottom:8px">${tx.deleteDesc}</div>
+      <div class="mut" style="font-size:12px;margin-bottom:14px">${tx.keeps}</div>
+      <div class="fld"><label>${tx.deletePhrase}: <code>${demo.confirmation}</code></label>
+        <input id="demoPhrase" autocomplete="off" spellcheck="false" placeholder="${demo.confirmation}"></div>`,
+      [[t("cancel"),close_,""],[tx.deleteConfirm,async()=>{
+        const phrase=(el.querySelector("#demoPhrase").value||"").trim();
+        if(phrase!==demo.confirmation){toast(tx.deletePhrase+": "+demo.confirmation);return;}
+        try{
+          const result=await api("/admin/demo-data/clear",{method:"POST",body:JSON.stringify({confirmation:phrase})});
+          toast(`${tx.deleteDone} · ${fmtNum(result.total)}`);close_();viewSysSettings();
+        }catch{}
+      },"dgr"]]);
+  };
 }
 
 boot();

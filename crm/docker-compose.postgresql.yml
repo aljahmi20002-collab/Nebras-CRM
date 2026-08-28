@@ -1,0 +1,29 @@
+services:
+  postgresql:
+    image: postgres:17
+    container_name: nebrascrm-postgresql
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-nebrascrm}
+      POSTGRES_USER: ${POSTGRES_USER:-nebrascrm}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.postgresql}
+      TZ: ${TZ:-UTC}
+    command:
+      - postgres
+      - -c
+      - shared_buffers=256MB
+      - -c
+      - max_connections=150
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - nebrascrm_postgresql:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+volumes:
+  nebrascrm_postgresql:

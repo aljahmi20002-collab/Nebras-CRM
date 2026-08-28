@@ -180,12 +180,14 @@ function shell(){
       <div style="flex:1"></div>
       <div style="text-align:end;line-height:1.3"><div style="font-weight:700;font-size:13px">${es(A.me.name)}</div>
         <div class="mut" style="font-size:11px">${es(A.me.code||"")} · ${es(A.me.country||A.me.gov||"")}</div></div>
+      <button class="btn sm" id="pagePrintAgent" title="${A.lang==="ar"?"طباعة الصفحة":"Print page"}">🖨</button>
       <button class="icbtn" id="th">${A.theme==="dark"?"☀️":"🌙"}</button>
       <button class="btn sm" id="lg">${A.lang==="ar"?"EN":"ع"}</button>
       <button class="btn sm" id="lo">${y("logout")}</button></div></div>
     <div class="ashell"><div class="atabs">${tabs.map(([k,l])=>`<button data-t="${k}" class="${A.tab===k?"on":""}">${l}</button>`).join("")}</div>
     <div id="ac"><div class="empty">…</div></div></div>`;
   th.onclick=()=>{A.theme=A.theme==="dark"?"light":"dark";localStorage.setItem("theme",A.theme);paint();};
+  document.getElementById("pagePrintAgent").onclick=()=>printCurrentView();
   lg.onclick=()=>{A.lang=A.lang==="ar"?"en":"ar";localStorage.setItem("lang",A.lang);paint();};
   lo.onclick=alogout;
   document.querySelectorAll(".atabs button").forEach(b=>b.onclick=()=>{A.tab=b.dataset.t;shell();});

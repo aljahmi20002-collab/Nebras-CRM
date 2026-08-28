@@ -107,7 +107,7 @@ def diagram_architecture():
 
     # data + integrations
     s.append(box(60, 626, 500, 120, C["panel"], C["line"]))
-    s.append(T("قاعدة البيانات — SQLite (WAL)", 14, 310, 656, C["txt"]))
+    s.append(T("قاعدة البيانات — SQLite / MariaDB / MySQL / PostgreSQL", 14, 310, 656, C["txt"]))
     s.append(T("48 جدولاً · حذف ناعم · سجل تدقيق كامل", 11.5, 310, 680, C["mut"], weight="regular"))
     s.append(T("ترحيل تلقائي للمخطط عند الإقلاع", 11.5, 310, 700, C["mut"], weight="regular"))
     s.append(T("45 ألف سجل في البيانات التجريبية", 11.5, 310, 720, C["mut"], weight="regular"))
@@ -243,7 +243,7 @@ def diagram_deployment():
 
     s.append(box(430, 90, 320, 96, C["indigo"], C["indigo"], 14, 0.18))
     s.append(T("خادم NebrasCRM", 17, 590, 128, C["indigo"]))
-    s.append(T("Python · FastAPI · SQLite", 12, 590, 152, C["mut"], weight="regular"))
+    s.append(T("Python · FastAPI · SQLite / MariaDB / MySQL / PostgreSQL", 12, 590, 152, C["mut"], weight="regular"))
     s.append(T("uvicorn main:app --host 0.0.0.0", 10.5, 590, 172, C["mut"], weight="regular"))
 
     clients = [

@@ -1,345 +1,503 @@
-# NebrasCRM — نِبراس سي آر إم
-**منصة إدارة علاقات العملاء للمؤسسات** · Enterprise CRM
+# NebrasCRM
 
-> **النِّبراس**: المصباح الذي يُهتدى به — والشعار شعلة ذهبية داخل مصباح نيلي.
-> الهوية البصرية الكاملة في مجلد [`brand/`](brand/README.md).
+NebrasCRM is a self-hosted CRM application for sales, customer support, invoices, partner management, and internal reporting. The interface supports Arabic (RTL) and English. The backend is FastAPI; the frontend is plain HTML, CSS, and JavaScript.
 
-نظام CRM مؤسسي كامل، ثنائي اللغة (عربي RTL / English LTR)، مبني على FastAPI + SQLite + واجهة SPA بدون أي اعتماديات خارجية.
+SQLite is the default database for a local installation. MariaDB, MySQL, and PostgreSQL are available when the application is deployed against a network database server.
 
-## التشغيل / Run
+## Quick start
+
 ```bash
 cd crm
+./run.sh
+```
+
+The application starts on:
+
+```text
+http://localhost:8008/app
+```
+
+API documentation is available at:
+
+```text
+http://localhost:8008/docs
+```
+
+If you do not use the helper script:
+
+```bash
+python3 -m pip install -r requirements.txt
 python3 -m uvicorn main:app --host 0.0.0.0 --port 8008
-# أول مرة فقط: python3 seed.py
 ```
 
-## حسابات الدخول التجريبية
-| الدور | البريد | كلمة المرور |
-|---|---|---|
-| Admin | admin@nebrascrm.io | admin123 |
-| Sales Manager | manager@nebrascrm.io | manager123 |
-| Sales Rep | sara@nebrascrm.io | sara123 |
-| Read-only | viewer@nebrascrm.io | viewer123 |
+On Windows, use the included launcher from Command Prompt or PowerShell:
 
-## الذكاء الاصطناعي (AI) — `ai.py`
-سبعة محركات تعمل **محلياً على بياناتك دون أي مفتاح خارجي**، وكل تنبؤ يأتي مع **العوامل التي أنتجته**:
-
-| المحرك | ماذا يقدم |
-|---|---|
-| **تسجيل العملاء المحتملين** | درجة جاهزية 0-100 (جاهز/واعد/يحتاج رعاية/بارد) من 8 عوامل |
-| **احتمالية فوز الصفقة** | أساس المرحلة + سجلنا أمام المنافس + أداء المسؤول + الركود + صحة العميل |
-| **التنبؤ بالمبيعات** | 3 أشهر بمزيج المسار المرجّح × انحدار الاتجاه التاريخي، بنطاق متحفظ/متفائل |
-| **الخطوة القادمة الأفضل** | توصيات مرتّبة بالأولوية لكل صفقة/عميل محتمل/شركة |
-| **مخاطر فقد العملاء** | درجة خطر مع أسبابها والإيراد المعرّض للفقد |
-| **توليد الرسائل** | 6 أنواع رسائل ثنائية اللغة |
-| **تلخيص الاجتماعات** | ملخص نقطي + استخراج المهام |
-| **موجز اليوم** | لوحة «ماذا أفعل اليوم»: مهام متأخرة، أهم العملاء، صفقات قرب الإغلاق ومعرّضة للخطر |
-
-> **لماذا محلياً؟** الدرجة التي لا يستطيع المندوب تفسيرها هي درجة لن يثق بها. كل محرك يعرض تفصيل نقاطه. ويمكن اختيارياً إضافة مفتاح نموذج لغوي في الإعدادات لتحسين توليد النصوص فقط — وبدونه يعمل النظام بقوالب احترافية.
-
-## الرؤية الموحدة 360° وتعدد القنوات — `platform_ext.py`
-- **شاشة 360°**: كل شيء عن العميل في مكان واحد — جهات الاتصال، الصفقات، الفرص، الفواتير، المدفوعات، التذاكر، الولاء، وتوصيات الذكاء الاصطناعي.
-- **سجل زمني موحّد لـ12 قناة**: بريد · مكالمة · اجتماع · **واتساب** · SMS · بوابة · فيسبوك · إنستغرام · X · لينكدإن · موقع · ملاحظات — بوارد/صادر وعدّاد لكل قناة.
-
-## الحقول المخصصة بلا كود (No-Code)
-أضف أي حقل لأي وحدة من الواجهة، فيظهر **تلقائياً** في: النماذج · القوائم · الفلاتر · البحث · التقارير · تصدير واستيراد CSV · التعديل الجماعي · عناصر اللوحات. عشرة أنواع حقول.
-
-## منشئ اللوحات التفاعلية
-اِبنِ لوحتك بعناصر مخصصة (أي وحدة × عدد/مجموع/متوسط × تجميع حسب أي حقل)، واحفظها وشاركها مع الفريق.
-
-## التكاملات و API — 18 تكاملاً
-مراسلة (واتساب · تيليجرام · Twilio) · تسويق (فيسبوك · نماذج ويب) · تجارة إلكترونية (WooCommerce · Shopify) · ERP (QuickBooks · Odoo · أونكس برو) · إنتاجية (Gmail · تقويم جوجل · Slack) · أتمتة (Zapier) · مدفوعات · تحليلات (Power BI).
-
-**API عام موثّق** على `/api/v1/{module}` بمفاتيح `X-API-Key` وصلاحيات read/write منفصلة، و**ويب-هوكس واردة** تعمل فعلياً:
-`/api/hooks/whatsapp` (يطابق الرقم بجهة الاتصال أو ينشئ عميلاً محتملاً) · `/api/hooks/leadform` (ينشئ عميلاً + يحسب درجته فوراً) · `/api/hooks/order` (ينشئ شركة وفاتورة).
-
-## الجوال والأمن
-- **تصميم متجاوب حقيقي**: شريط تنقل سفلي، الجداول تتحول إلى بطاقات على الشاشات الصغيرة، أهداف لمس كبيرة، ونوافذ من الأسفل.
-- **حماية**: تحديد معدل الطلبات (240/دقيقة)، **قفل الحساب بعد 5 محاولات فاشلة**، ترويسات أمنية (nosniff · X-Frame-Options · Referrer-Policy)، تسجيل كل دخول في سجل التدقيق، وصلاحيات دقيقة على 4 أدوار.
-
-## قاعدة جغرافية عالمية — `geo.py`
-تم استبدال خريطة اليمن الإدارية بقاعدة عالمية محلية تعمل دون خدمة خرائط خارجية:
-
-| المستوى | العدد | المصدر |
-|---|---:|---|
-| **دولة / إقليم** | 252 | GeoNames `countryInfo` |
-| **منطقة / ولاية إدارية أولى** | 3,865 | GeoNames `admin1CodesASCII` |
-| **مدينة / تجمع سكاني** | +235,000 | GeoNames `cities500` |
-| **حي** | يُدار من النظام | بيانات مؤسستك |
-| **شارع** | يُدار من النظام | بيانات مؤسستك |
-
-المصدر مضمن محلياً في `data/geonames/` ويُستورد مرة واحدة إلى SQLite عند بدء التشغيل. يشمل `cities500` المدن ذات السكان 500 فأكثر والمراكز الإدارية، مع الاسم المحلي والاسم الإنجليزي والإحداثيات والسكان والمنطقة والدولة. بيانات GeoNames مرخصة بموجب **CC BY 4.0**.
-
-توفّر الشاشة: تصفح دولة ← منطقة / ولاية ← مدينة، بحث عالمي سريع، ربط العملاء والشركاء بالموقع، ومناطق حصرية وتقارير أداء حسب الدولة.
-
-> عند ترحيل قاعدة قديمة، تُحذف **مراجع الموقع اليمنية فقط** (لا تُحذف سجلات العملاء أو الشركاء أو المبيعات) لأن معرفاتها لم تعد تمثل المواقع نفسها؛ أعد اختيار مواقعها من القاعدة العالمية.
-
-## إدارة الوكلاء والموزعين والمندوبين — `partners.py`
-أربعة أنواع: 🤝 وكيل · 🚚 موزع · 🧑‍💼 مندوب · 🔗 وسيط
-
-**نماذج العمولة الأربعة**: نسبة ثابتة · **نسبة تصاعدية بالشرائح** (3% → 4.5% → 6% → 8% حسب حجم المبيعات) · مبلغ ثابت لكل صفقة · لكل وحدة مباعة.
-
-**ما لهم وما عليهم** — دفتر حسابات كامل بسبعة أنواع حركات:
-- **لهم (+)**: عمولات · مكافآت · تسويات
-- **عليهم (−)**: مدفوعات مصروفة · خصومات · سلف · غرامات
-- **كشف حساب** برصيد تراكمي جارٍ لكل حركة
-- **احتساب تلقائي للعمولات** من الصفقات المكسوبة دون تكرار
-- **حماية مالية**: يُمنع صرف مبلغ يتجاوز المستحق فعلاً، وتُمنع السلفة التي تتجاوز سقف الائتمان، ويُمنع حذف وكيل له رصيد غير مسوّى
-
-**المناطق الحصرية**: تعيين محافظات/مديريات للوكلاء مع **منع التعارض** — لا يمكن إسناد منطقة محجوزة حصرياً لوكيل آخر. كما يدير النظام **بضاعة الأمانة** (المسلّم/المباع/المتبقي) لكل وكيل.
-
-## محرك الولاء — `loyalty.py`
-يغطي **العملاء والوكلاء** معاً بست فئات: 💎 ماسي · بلاتيني · ذهبي · فضي · برونزي · عضو، مع خصم ومزايا لكل فئة.
-
-**كيف تتحقق العدالة والإنصاف** — ثلاثة مبادئ مبنية في الخوارزمية:
-
-1. **الأداء النسبي لا الحجم المطلق**: النقاط تأتي من النمو مقارنة بتاريخ العضو نفسه، ومن الانتظام، لا من الإيراد الخام فقط. **لكل قاعدة سقف أقصى** يمنع أي عامل واحد من الهيمنة — نقاط الشراء مسقوفة بـ 2000 نقطة، فلا يستطيع عميل ضخم واحد اكتساح البرنامج.
-2. **الجهد يُكافأ لا المال وحده**: تكرار التعامل (50 نقطة لكل عملية) والانتظام الشهري (150) والالتزام بالسداد (200 لكل فاتورة في موعدها) والأقدمية والتفاعل — كلها تمنح نقاطاً بغض النظر عن قيمة الصفقة. للوكلاء تُضاف **التغطية الجغرافية** (80 نقطة لكل مديرية) والترشيحات.
-3. **الشفافية الكاملة**: 11 قاعدة معلنة، وكل عضو يمكن عرض **تفصيل كامل** لنقاطه — القاعدة، الأساس المحسوب عليه، والنقاط الممنوحة. لا صندوق أسود. والنقاط تنتهي بعد 24 شهراً وفق جدول معلن.
-
-كما توجد **خصومات عادلة**: تأخر السداد (−150 لكل فاتورة) والركود (−10 لكل شهر بعد 3 أشهر)، ونظام استبدال النقاط بمكافآت مع منع الاستبدال بما يتجاوز الرصيد.
-
-## وسائل الدفع (36 قناة) — `gateways.py`
-سجل قنوات تعريفي: نموذج الدفع والتحقق ومحرك الرسوم كلها مولّدة من جدول واحد، فإضافة مزوّد جديد = سطر واحد.
-
-| النوع | القنوات |
-|---|---|
-| **محافظ الجوال (9)** | جوالي · جيب · ون كاش · فلوسك · إم فلوس · كاش · STC Pay · Apple Pay · Google Pay |
-| **شبكات الحوالات (8)** | الكريمي · بنك الأمل · بن دول · النجم الثاقب · القطيبي · العمقي · Western Union · MoneyGram |
-| **بوابات دولية (8)** | Stripe · PayPal · Tap · PayTabs · HyperPay · Checkout.com · MyFatoorah · Moyasar |
-| **البطاقات (5)** | Visa · Mastercard · American Express · mada · UnionPay |
-| **الدفع المسبق (3)** | بطاقة مسبقة الدفع · كرت شحن · بطاقة هدايا |
-| **أخرى (3)** | حوالة بنكية · نقداً · شيك |
-
-- **تحقق خاص بكل قناة**: بادئات أرقام المحافظ اليمنية (77/78 لجوالي، 73/70 لجيب، 71 لون كاش)، رمز OTP، Luhn وIIN وطول الرقم للبطاقات، ورقم الحوالة/المستفيد للصرافات. **يمنع النظام إدخال بطاقة فيزا تحت ماستركارد** ويكشف عدم تطابق الشبكة تلقائياً.
-- **محرك رسوم**: نسبة + مبلغ ثابت لكل قناة، مع احتساب **الصافي** وتقرير تفصيلي للتحصيل والرسوم حسب القناة.
-- **تسوية مؤجلة للقنوات غير الفورية**: الحوالات والصرافات تُسجَّل `awaiting_settlement` ولا تُضاف للفاتورة إلا بعد تأكيد الموظف — هذا يمنع اعتبار حوالة لم تصل دخلاً محصّلاً.
-
-## إدارة الفرص (Opportunities) — وحدة جديدة
-دورة حياة كاملة منفصلة عن الصفقات: **فرص محتملة / محققة / ضائعة** عبر 8 مراحل، مع:
-- **القيمة المرجّحة** محسوبة تلقائياً (القيمة × الاحتمالية) وتُحدَّث مع كل تعديل
-- أسباب الفوز وأسباب الخسارة، والمنافس المرتبط بكل فرصة
-- **تحويل الفرصة إلى صفقة** بنقرة (مع منع التحويل إن كان العميل في القائمة السوداء)
-- لوحة تحليلية: التوزيع بالمراحل، أسباب الفوز والخسارة، المصادر، ونسبة الفوز
-
-## تصنيف العملاء والقوائم — `segments.py`
-**محرك تسجيل RFM** يحسب لكل عميل درجة من 100: الحداثة (40) + التكرار (25) + القيمة (35)، مع خصم على الفواتير المتأخرة، ثم يقترح شريحة:
-**بلاتيني · ذهبي · فضي · برونزي · راكد** — مع زر لتطبيق التصنيف على كل العملاء دفعة واحدة.
-
-**ست قوائم مُدارة**: 👑 كبار العملاء (VIP) · 🤝 الأوفياء · 🚀 المبادرون · ⭐ المميزون · 👁️ قائمة المراقبة · ⛔ القائمة السوداء
-- تصنيف جماعي بتحديد عدة عملاء دفعة واحدة
-- **القائمة السوداء محمية**: تتطلب صلاحية مدير + سبب مكتوب إجبارياً، وتُسجَّل في سجل التدقيق، وتظهر كتحذير أحمر على صفحة العميل، **وتمنع تحويل الفرص إلى صفقات**
-
-## تقارير الرواكد
-- **المنتجات الراكدة**: تصنيف رباعي (لم يُبع أبداً · عُرض ولم يُبع · راكد · حرج +365 يوم) مع **رأس المال المحتجز** لكل صنف وإجمالي، وفترات قابلة للتبديل (30/90/180/365 يوم)
-- **العملاء الراكدون**: أيام الركود، **الإيرادات المعرضة للخطر**، المستحقات غير المحصلة، ودرجة خطورة (متوسط/عالٍ/مفقود)
-
-## ذكاء السوق والمنافسون — شاشة "ذكاء السوق" + 3 وحدات جديدة
-
-### الوحدات
-- **المنافسون (⚔️)** — مستوى التهديد، الشريحة، الحصة السوقية، درجة التهديد (١-١٠)، نموذج التسعير، نقاط القوة والضعف، واستراتيجيتنا المضادة. مزوّدة ببيانات حقيقية لـ 8 منافسين: Zoho · Salesforce · HubSpot · Dynamics 365 · Pipedrive · Freshsales · Odoo · Bitrix24.
-- **منتجات المنافسين (🧩)** — 15 منتجاً مرصوداً مع السعر ودورة الفوترة والشريحة المستهدفة، **مربوطة بمنتجنا المقابل** مع الموقع التنافسي (نفوز / تعادل / يفوزون) والميزات والفجوات.
-- **دراسات السوق (🔬)** — 8 دراسات: تحجيم السوق، تحليل تنافسي، دراسة تسعير، مراجعة فوز/خسارة، SWOT، اتجاهات. مع حجم السوق (TAM)، معدل النمو، حصتنا، درجة الثقة، النتائج والتوصيات.
-
-### التحليلات
-- **لوحة ذكاء السوق**: 9 مؤشرات (TAM، النمو، حصتنا، الصفقات المتنازع عليها، الخسائر للمنافسين...) + الحصص السوقية + حجم السوق حسب الشريحة + توزيع الموقع التنافسي.
-- **جدول الفوز والخسارة لكل منافس**: عدد الصفقات المكسوبة والمخسورة، نسبة الفوز، وقيمة ما خسرناه لصالحه.
-- **تحليل "لماذا نخسر"**: تجميع أسباب الخسارة (السعر، الميزات، العلاقة، التوقيت، العلامة، الدعم) بالقيمة المالية.
-- **بطاقة المواجهة (Battlecard)** لكل منافس: إحصاءات الفوز/الخسارة، نقاط القوة والضعف، استراتيجيتنا المضادة، مقارنة منتجاتهم بأسعارنا، وأسباب الخسارة أمامه، والصفقات الأخيرة — كل ما يحتاجه المندوب في مكالمة واحدة.
-- **مصفوفة المقارنة**: لكل منتج لدينا، جميع المنتجات المنافسة مع نطاق السوق (الأدنى/الأعلى/المتوسط) وفجوة السعر والفجوات الوظيفية.
-
-### الربط بالمبيعات
-أُضيف حقلا **"المنافس في الصفقة"** و**"سبب الفوز/الخسارة"** إلى وحدة الصفقات، وهما مصدر كل تحليلات الفوز والخسارة أعلاه.
-
-> ⚠️ **ملاحظة منهجية مهمة**: كل مقارنات الأسعار موحَّدة على أساس **دولار لكل مستخدم سنوياً**. المقارنة المباشرة بين سعر ترخيص لمرة واحدة وسعر اشتراك شهري تنتج فجوات وهمية بمئات بالمئة وقرارات تسعير خاطئة، لذا يعرض النظام أساس المقارنة صراحةً في كل جدول.
-
-## تكامل البريد الإلكتروني (Email) — شاشة "البريد الإلكتروني"
-يعمل فوراً في **وضع الاختبار (sandbox)**: كل رسالة تُخزَّن وتُعرض في صندوق الصادر دون إرسال فعلي. أدخل بيانات SMTP في الإعدادات للتحويل إلى الإرسال الحقيقي — دون أي تغيير في الكود.
-
-- **6 قوالب جاهزة** ثنائية اللغة بمتغيرات `{{name}} {{company}} {{owner}} {{subject}} {{amount}} {{due_date}} {{pay_link}}`: ترحيب بعميل محتمل، إرسال عرض سعر، إشعار فاتورة، إيصال دفع، رد على تذكرة، دعوة للبوابة. قابلة للتعديل من الواجهة.
-- **صندوق صادر** بتتبع الحالة (`sandbox` / `sent` / `failed` مع نص الخطأ) وعرض نص الرسالة.
-- **تبويب "رسائل البريد" داخل كل سجل** — سجل المراسلات مرتبط بالعميل/الصفقة/الفاتورة مع إنشاء رسالة بنقرة.
-- **إرسال غير محجوب (async)** عبر خيوط منفصلة، فلا يتأخر أي طلب بسبب SMTP.
-- **إرسال تلقائي مربوط بالأحداث**: دعوة البوابة عند منح الوصول، إيصال عند الدفع، إشعار للمسؤول عند تذكرة جديدة، رد على العميل عند رد الموظف.
-- **إجراء `send_email` في محرك الأتمتة**: أي شرط على أي حقل → إرسال قالب تلقائياً (مثال مُختبر: عرض سعر يتحول إلى "Sent" → يصل القالب للعميل).
-
-## بوابة الدفع (Payments) — شاشة "المدفوعات" + `/pay/{token}`
-مصممة كطبقة محايدة عن المزوّد: دفتر مدفوعات + روابط دفع مستضافة + ويب-هوك موقّع. تعمل بمزوّد **mock** مدمج لتجربة الدورة كاملة، والتبديل إلى Stripe/Tap/PayTabs يتم بتنفيذ دالة واحدة.
-
-- **صفحة دفع مستضافة وآمنة** (`/pay/{token}`) — رابط عشوائي 24 بايت، بدون تسجيل دخول، ثنائية اللغة، بتنسيق تلقائي لرقم البطاقة والتاريخ، وثلاث طرق دفع (بطاقة/حوالة/محفظة).
-- **تحقق فعلي**: خوارزمية Luhn لرقم البطاقة، والبطاقات المنتهية بـ `0000` تُرفض عمداً لاختبار مسار الفشل.
-- **تسوية تلقائية للفاتورة**: تحديث المدفوع، نقل الحالة إلى `Paid` عند الاكتمال، دعم **الدفعات الجزئية**، إشعار للمسؤول، وإرسال إيصال بالبريد.
-- **ويب-هوك موقّع HMAC-SHA256** (`POST /pay/webhook`) يدعم `payment.succeeded` / `failed` / `refunded` — **آمن ضد التكرار (idempotent)** فإعادة إرسال نفس الحدث لا تُحتسب مرتين.
-- **تسجيل دفعة يدوية** (حوالة/نقد) و**استرجاع (refund)** مع عكس رصيد الفاتورة — مقصور على admin/manager.
-- **حماية من الدفع الزائد**: أي مبلغ يتجاوز الرصيد المتبقي يُرفض.
-- **سجل أحداث لكل عملية**: `link_created` → `page_viewed` → `captured` / `declined` / `refunded`.
-- **الدفع من بوابة العملاء**: زر "ادفع الآن" على كل فاتورة غير مسددة + سجل مدفوعات كامل للعميل.
-
-### اختبار الدفع
-| البطاقة | النتيجة |
-|---|---|
-| `4242 4242 4242 4242` | نجاح ✅ |
-| أي رقم ينتهي بـ `0000` | رفض من البنك ❌ |
-| رقم لا يجتاز Luhn | رقم بطاقة غير صالح ❌ |
-
-## بوابة الشركاء (وكلاء · موزعون · مندوبون) — `/agent`
-عالَم مصادقة **ثالث مستقل تماماً** (`ASECRET` منفصل)، مربوط بسجل الوكيل، وكل استعلام مقيّد به.
-
-**حسابات تجريبية:** `agent0@partners.ye` (وكيل) · `agent1@partners.ye` (موزع) · `agent6@partners.ye` (مندوب) — كلمة المرور `agent123`
-
-9 تبويبات:
-- **الرئيسية** — مبيعاتي، رصيدي المستحق، عمولة الشهر، قيد التفاوض، **حلقة إنجاز الهدف**، رسم المبيعات الشهرية، ونقاط الولاء
-- **عملائي / صفقاتي** — محفظته فقط، بالمنطقة الجغرافية والمستحقات
-- **العملاء المحتملون** — **تقديم عميل من الميدان** يصل فوراً للإدارة كإشعار
-- **كشف الحساب** — «ما له وما عليه» برصيد تراكمي جارٍ
-- **البضاعة** — المسلَّم والمباع والمتبقي من بضاعة الأمانة
-- **الولاء** — فئته ونقاطه و**تفصيل كامل لكل قاعدة**
-- **الطلبات** — طلب صرف مستحقات / بضاعة / دعم، مع تتبع حالة كل طلب
-- **الحساب** — بياناته ومناطقه الحصرية وتغيير كلمة المرور
-
-**ترتيب مجهّل**: يرى الوكيل ترتيبه بين الشركاء (مثلاً 3 من 10) **دون رؤية أرقام غيره** — تحفيز بلا انتهاك خصوصية.
-
-**دورة الطلبات مغلقة مالياً**: طلب الصرف لا يمكن أن يتجاوز الرصيد المستحق فعلاً، وعند موافقة المدير **تُقيَّد الحركة تلقائياً في دفتر الحسابات** وينخفض الرصيد — لا خطوة يدوية منفصلة. شاشة «بوابة الشركاء» في CRM تدير الوصول وتوافق على الطلبات.
-
-## بوابة العملاء (Customer Portal) — `/portal`
-منطقة خدمة ذاتية للعملاء بمصادقة منفصلة تماماً عن حسابات الموظفين.
-
-**حسابات تجريبية:** `ahmed.saleh@example.com` · `fatima.ali@example.com` · `khalid.mansour@example.com` — كلمة المرور `portal123`
-
-- **عزل بيانات صارم**: كل استعلام مقيّد على مستوى SQL بشركة جهة الاتصال؛ محاولة قراءة سجل شركة أخرى ترجع 404.
-- **المنتجات والطلب الذاتي**: كتالوج كامل **بسعر خاص لكل عميل حسب فئة ولائه**، سلة شراء، وإرسال الطلب الذي يتحول إلى عرض سعر لدى الفريق مع إشعار وبريد فوري. **العميل في القائمة السوداء يُمنع من الطلب.**
-- **طلباتي**: متابعة كل طلب وبنوده وحالته.
-- **كشف الحساب**: مدين/دائن برصيد تراكمي يجمع الفواتير والمدفوعات معاً.
-- **المستندات**: كل الفواتير وعروض الأسعار مع **عارض مستند قابل للطباعة**.
-- **الولاء**: فئته ونقاطه والمتاح منها وتفصيل كل قاعدة والفئة التالية والمسافة إليها.
-- **التذاكر**: عرض التذاكر، فتح تذكرة جديدة، ومحادثة ثنائية الاتجاه مع فريق الدعم (الرد يعيد فتح التذكرة تلقائياً).
-- **الفواتير**: الحالة، تاريخ الاستحقاق، المدفوع والمتبقي، وإجمالي المستحقات.
-- **عروض الأسعار**: عرض البنود بالتفصيل مع **قبول أو رفض العرض بنقرة** (يُسجَّل في سجل التدقيق ويُشعر المسؤول).
-- **الحساب**: بيانات جهة الاتصال وتغيير كلمة المرور.
-- **إشعارات فورية للموظفين** عند فتح تذكرة، رد عميل، أو اتخاذ قرار على عرض سعر.
-- نفس اللغة والثيم (عربي/إنجليزي، ليلي/نهاري) ومتجاوبة بالكامل.
-
-**الإدارة من جانب الموظفين:** شاشة "بوابة العملاء" في القائمة الجانبية (admin/manager) — منح صلاحية دخول لأي جهة اتصال، تعطيل/تفعيل، إعادة تعيين كلمة المرور، إلغاء الوصول. كما يظهر تبويب **محادثة البوابة** داخل تفاصيل أي تذكرة للرد على العميل مباشرة.
-
-## الوحدات (15 وحدة)
-**المبيعات:** العملاء المحتملون · الشركات · جهات الاتصال · **الفرص** · الصفقات · الأنشطة
-**التسويق:** الحملات
-**الدعم:** تذاكر الدعم
-**المخزون والمالية:** المنتجات · عروض الأسعار · الفواتير · الموردون
-**ذكاء السوق:** المنافسون · منتجات المنافسين · دراسات السوق
-
-## الميزات
-- **معماري ميتاداتا-درivn**: كل وحدة معرّفة في `schema.py` — أضف حقلاً أو وحدة كاملة وستظهر تلقائياً في الـAPI، القوائم، النماذج، البحث، الفلاتر، التقارير، والاستيراد/التصدير (مع ترحيل تلقائي لقاعدة البيانات).
-- **لوحة تحكم**: 9 مؤشرات KPI + 7 رسوم (خط المبيعات، ترتيب المندوبين، الإيراد الشهري، المصادر، حالات العملاء/التذاكر) + آخر النشاطات.
-- **كانبان بالسحب والإفلات** للصفقات والتذاكر مع تحديث فوري وإطلاق قواعد الأتمتة.
-- **تحويل العميل المحتمل** بنقرة → شركة + جهة اتصال + صفقة مرتبطة.
-- **بنود الفواتير/عروض الأسعار** مع كمية/سعر/خصم/ضريبة واحتساب الإجمالي تلقائياً.
-- **محرك أتمتة (Workflow)**: شرط على أي حقل → إشعار / إنشاء مهمة / تعديل حقل. 3 قواعد جاهزة.
-- **الصلاحيات (RBAC)**: admin / manager / agent (يرى سجلاته فقط) / readonly (ممنوع الكتابة على مستوى الـAPI).
-- **سجل تدقيق كامل** لكل إنشاء/تعديل/حذف مع ما تغيّر بالضبط + ملاحظات لكل سجل.
-- **بحث شامل** عبر كل الوحدات، فلاتر متقدمة متعددة الشروط، فرز، ترقيم صفحات، تحديد جماعي وحذف/تعديل جماعي.
-- **استيراد وتصدير CSV** لكل وحدة.
-- **منشئ تقارير** ديناميكي (تجميع حسب أي حقل × count/sum/avg).
-- حذف ناعم (soft delete)، إشعارات داخل التطبيق، وضع ليلي/نهاري، تصميم متجاوب.
-
-## 📚 حزمة التوثيق الكاملة
-| الوثيقة | المحتوى |
-|---|---|
-| **[`docs/01-SYSTEM.md`](docs/01-SYSTEM.md)** | وثيقة النظام: معمارية · بيانات · أمن · نشر |
-| **[`docs/02-USER-GUIDE.md`](docs/02-USER-GUIDE.md)** | دليل المستخدم مصوّر لكل شاشة |
-| **[`docs/03-DEVELOPER.md`](docs/03-DEVELOPER.md)** | دليل المطوّر: التوسعة · API · قواعد الأمن |
-| **[`docs/04-REPORTS.md`](docs/04-REPORTS.md)** | مرجع الـ17 تقريراً |
-| **[`docs/05-API.md`](docs/05-API.md)** | 188 نقطة نهاية مصنّفة |
-| **[`docs/06-SCREENS.md`](docs/06-SCREENS.md)** | كتالوج الشاشات بـ47 لقطة |
-
-**بوابة تفاعلية بملف واحد:** `NebrasCRM-التوثيق-الكامل.html`
-**5 مخططات معمارية** في `docs/diagrams/` بصيغتي SVG و PNG.
-
-## 📖 دليل الوظائف الكامل
-وصف تفصيلي لكل شاشة وكل عملية — إضافة وتعديل وحذف واستيراد وتصدير وطباعة وتقارير
-وصلاحيات: **[`DOCS.md`](DOCS.md)**
-
-## مركز التقارير والإعدادات
-- **17 تقريراً جاهزاً** في 7 مجموعات (مبيعات · مالية · عملاء · مخزون · دعم · شركاء · نظام)
-- كل تقرير: فلترة بالتاريخ · صف إجمالي · **طباعة A4** · تصدير CSV و Excel
-- أبرزها: **أعمار الذمم المدينة** · أداء المندوبين مقابل الأهداف · خط المبيعات المرجّح · ملخص الضرائب
-- **إعدادات نظام** في 5 مجموعات: عام · مالية · بريد · ذكاء اصطناعي · مبيعات
-
-## 🔨 بناء التطبيقات
-```bash
-./build-desktop.sh linux     # AppImage + deb   (أو win / mac / run)
-./build-mobile.sh release    # APK موقّع        (أو debug / sync / run)
-```
-المخرجات في `dist/`. التفاصيل والمتطلبات في **[`BUILD.md`](BUILD.md)**.
-
-> `node_modules/` و`dist/` غير محفوظة مع المشروع — شغّل السكربت لإعادة توليدها.
->
-> السكربتات قابلة للتنفيذ مباشرةً وتثبّت Pillow عند الحاجة لتوليد الأيقونات. تستخدم `npm ci` تلقائياً عند وجود ملف القفل لضمان بناء قابل للتكرار.
-
-## التطبيقات (سطح المكتب · الجوال · PWA)
-| المنصة | الملف | الحجم |
-|---|---|---|
-| Linux | `dist/NebrasCRM-1.0.0-x86_64.AppImage` · `.deb` | 104 / 72 MB |
-| Android | `dist/NebrasCRM-1.0.0.apk` (موقّع) | 3.9 MB |
-| Windows / macOS | `cd desktop && npm run dist:win` / `dist:mac` | — |
-| PWA | افتح `/app` واختر «تثبيت التطبيق» | — |
-
-التطبيقات غلاف أصلي حول نفس الخادم — ميزة واحدة تظهر في كل المنصات دون تفرّع الشيفرة.
-يعمل دون اتصال مع طابور يعيد إرسال التعديلات تلقائياً. التفاصيل في [`APPS.md`](APPS.md).
-
-## الهوية البصرية
-```
-brand/
-├── logo/        9 صيغ للشعار (SVG بنصوص محوَّلة لمسارات)
-├── favicon/     11 مقاس PNG + ICO + maskable لأندرويد + apple-touch
-├── social/      بطاقة 1200×630 + صورة رمزية 1024
-├── assets/      tokens.json · brand.css · site.webmanifest
-├── build_brand.py   مولّد الهوية كاملة
-└── README.md    دليل الاستخدام والقواعد
-```
-تُخدَّم على `/brand/...` و`/favicon.ico` و`/site.webmanifest`.
-
-## بنية المشروع
-```
-crm/
-├── schema.py     تعريف الوحدات والحقول (نقطة التوسعة الأساسية)
-├── db.py         SQLite + إنشاء/ترحيل الجداول + سجل التدقيق
-├── main.py       FastAPI: مصادقة، CRUD عام، تحليلات، أتمتة، إدارة
-├── seed.py       بيانات تجريبية واقعية (~300 سجل)
-└── static/       index.html · app.js · styles.css (SPA بدون build)
-```
-
-## توثيق الـAPI
-متاح تلقائياً على `/docs` (Swagger).
-
-## الاختبارات
-
-```bash
+```bat
 cd crm
+run.bat
+:: Optional custom port
+run.bat 9000
+```
+
+`run.bat` detects Python, installs missing requirements, initializes a missing SQLite database, and starts the server on port `8008` by default. Use `python3` for manual commands; Windows installations that only provide the Python launcher may use `py` instead.
+
+For a native local MariaDB service on Windows (not Docker), create the private batch configuration and use the dedicated launcher:
+
+```bat
+copy .env.mariadb.local.bat.example .env.mariadb.local.bat
+notepad .env.mariadb.local.bat
+run-mariadb-local.bat
+```
+
+In Command Prompt, environment assignments must use `set`, not Unix syntax such as `CRM_DB_ENGINE=mariadb ./run.sh`:
+
+```bat
+set "CRM_DB_ENGINE=mariadb"
+set "CRM_DB_HOST=127.0.0.1"
+set "CRM_DB_PORT=3306"
+set "CRM_DB_NAME=nebrascrm"
+set "CRM_DB_USER=nebrascrm"
+set "CRM_DB_PASSWORD=your-password"
+run.bat
+```
+
+On Linux, `./run.sh` creates and uses a local `.venv` automatically. This avoids PEP 668 errors on OS-managed Python installations; do **not** use `--break-system-packages` for NebrasCRM.
+
+## Docker Compose — MySQL 8.4 complete stack
+
+The included `docker-compose.yml` runs the complete NebrasCRM application with the official **MySQL 8.4 LTS** image. The database is private to the Compose network; only the application is published on port `8008`.
+
+On Linux, this one command creates a private `.env.docker` with random database passwords, CRM secrets, and a first-admin password; it then builds and starts the stack:
+
+```bash
+bash ./compose-up.sh
+```
+
+On Windows, `compose-up.bat` does the same when `python3` is available:
+
+```bat
+compose-up.bat
+```
+
+If Windows does not have `python3`, it creates `.env.docker` from the template instead. Replace every `replace-with-...` value before running it again:
+
+```bat
+notepad .env.docker
+compose-up.bat
+```
+
+A fresh MySQL volume has no predictable demo account. The application creates the initial administrator once from these private `.env.docker` values:
+
+```env
+CRM_BOOTSTRAP_ADMIN_EMAIL=admin@nebrascrm.local
+CRM_BOOTSTRAP_ADMIN_PASSWORD=...generated-or-your-strong-password...
+```
+
+The bootstrap password is used only while the `users` table is empty; changing it later does **not** reset an existing administrator password. Sign in with that email and password, then use **System Settings → Add demo data** if you want sample business records.
+
+For a manual start, always pass the same environment file. Docker Compose substitutes `${...}` before it reads a service `env_file`, so a bare `docker compose up` does not satisfy variables such as `MYSQL_PASSWORD`:
+
+```bash
+docker compose --env-file .env.docker -f docker-compose.yml up -d --build
+```
+
+Useful operations:
+
+```bash
+docker compose --env-file .env.docker -f docker-compose.yml ps
+docker compose --env-file .env.docker -f docker-compose.yml logs -f app
+docker compose --env-file .env.docker -f docker-compose.yml down
+```
+
+For disposable test data only, rebuild a completely fresh MySQL volume:
+
+```bash
+bash ./compose-up.sh --reset-data
+# Windows: compose-up.bat --reset-data
+```
+
+The reset deletes the Compose MySQL volume only; it does not delete source files or a host SQLite `crm.db` file.
+
+## Demo accounts
+
+| Role | Email | Password |
+|---|---|---|
+| System administrator | `admin@nebrascrm.io` | `admin123` |
+| Sales manager | `manager@nebrascrm.io` | `manager123` |
+| Sales representative | `sara@nebrascrm.io` | `sara123` |
+| Read-only user | `viewer@nebrascrm.io` | `viewer123` |
+
+The partner portal is available at `/agent`, and the customer portal at `/portal`.
+
+## Main areas
+
+The application includes the following business areas:
+
+- Leads, accounts, contacts, opportunities, deals, activities, and campaigns
+- Support tickets and customer portal conversations
+- Products, quotes, invoices, payments, vendors, a full point of sale, and CSV import/export
+- POS checkout with a product catalogue, cart, customer lookup, cash shifts, stock control, invoices, payment ledger entries, refunds, and 80 mm printable receipts
+- Printable invoices, quotations, and payment vouchers with customer details, item rows, quantities, unit prices, discounts, tax, totals, and balances
+- A print action for each CRM record, filtered module matrix, payment matrix, report, and the current system page
+- Partners, commissions, territories, consigned stock, and partner portal access
+- Customer segments, loyalty rules, stale inventory and inactive customer reports
+- Competitor tracking, market research, and comparison reports
+- Email templates, outbox, SMTP or Resend delivery settings, notifications, audit history, and workflows
+- Public API keys, inbound web hooks, saved dashboards, and custom fields
+
+The AI tools run locally against CRM data. They cover lead scoring, deal probability, sales forecasting, next actions, churn signals, email drafts, meeting summaries, and a daily work digest. An optional LLM key can be added for free-text generation only.
+
+## Point of sale
+
+Open **Point of Sale** from the staff navigation. A completed checkout creates a normal paid invoice and payment record, saves item rows, reduces stock, and offers an 80 mm receipt printout. Cashiers can open and close shifts; administrators can require an open shift or allow negative stock from **System Settings**.
+
+## Email delivery with Resend
+
+Open **Email → Delivery settings**, select **Resend**, and enter a Resend API key plus a verified From address. The key is masked in the UI and APIs after saving. Resend, SMTP, and sandbox delivery all use the same templates and outbox.
+
+For a production deployment, the Resend key can also be supplied outside the database:
+
+```bash
+CRM_RESEND_API_KEY='re_...'
+```
+
+When using Resend, verify the sending domain and From address in the Resend dashboard first.
+
+## Database options
+
+### SQLite
+
+SQLite is used when `CRM_DB_ENGINE` is not set or is set to `sqlite`.
+
+```bash
+CRM_DB_ENGINE=sqlite
+CRM_DB_PATH=/var/lib/nebrascrm/crm.db   # optional
+./run.sh
+```
+
+The bundled `crm.db` contains demonstration data. A new SQLite database is initialized automatically by `run.sh` when the selected file does not exist.
+
+### MariaDB
+
+For a server database, configure these environment variables:
+
+```bash
+CRM_DB_ENGINE=mariadb
+CRM_DB_HOST=127.0.0.1
+CRM_DB_PORT=3306
+CRM_DB_NAME=nebrascrm
+CRM_DB_USER=nebrascrm
+CRM_DB_PASSWORD='use-a-strong-password'
+CRM_DB_CHARSET=utf8mb4
+```
+
+The MariaDB schema is created on first application startup.
+
+If startup says it cannot connect to `127.0.0.1:3306/nebrascrm`, MariaDB is not running there or one of the `CRM_DB_*` values is incorrect. The launcher stops before starting the web server and prints the configured endpoint. To return to the local SQLite database:
+
+```bash
+unset CRM_DB_ENGINE CRM_DB_HOST CRM_DB_PORT CRM_DB_NAME CRM_DB_USER CRM_DB_PASSWORD
+CRM_DB_ENGINE=sqlite ./run.sh
+```
+
+#### Local MariaDB with Docker
+
+```bash
+cp .env.mariadb.example .env.mariadb
+# Edit .env.mariadb and set strong passwords.
+./setup-mariadb.sh
+```
+
+#### Native MariaDB service (no Docker)
+
+On Debian or Ubuntu, install and start the native service:
+
+```bash
+sudo apt update
+sudo apt install mariadb-server
+sudo systemctl enable --now mariadb
+```
+
+Create the database and a loopback-only application account. Replace the password before running this block:
+
+```bash
+sudo mariadb <<'SQL'
+CREATE DATABASE nebrascrm CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'nebrascrm'@'localhost' IDENTIFIED BY 'replace-with-a-strong-password';
+CREATE USER 'nebrascrm'@'127.0.0.1' IDENTIFIED BY 'replace-with-a-strong-password';
+GRANT ALL PRIVILEGES ON nebrascrm.* TO 'nebrascrm'@'localhost';
+GRANT ALL PRIVILEGES ON nebrascrm.* TO 'nebrascrm'@'127.0.0.1';
+FLUSH PRIVILEGES;
+SQL
+```
+
+Create the private local connection file once, then use the dedicated one-command launcher every day:
+
+```bash
+cp .env.mariadb.local.example .env.mariadb.local
+# Edit the password to match the SQL account, then protect the file.
+chmod 600 .env.mariadb.local
+
+# Starts the native MariaDB service when needed, verifies it, and starts NebrasCRM.
+./run-mariadb-local.sh
+```
+
+The launcher also creates `.env.mariadb.local` from its template when it is missing, then asks you to fill in the password once.
+
+To seed an empty MariaDB instance with the demo records:
+
+```bash
+SEED_DEMO=1 CRM_DB_ENGINE=mariadb ./run.sh
+```
+
+#### Migrating an existing SQLite installation to MariaDB
+
+Take a backup first. Then configure MariaDB and run:
+
+```bash
+CRM_DB_ENGINE=mariadb python3 migrate_mariadb.py --source crm.db --replace
+```
+
+The migration copies application data and configuration. Global geographic data is initialized from the bundled GeoNames files rather than copied from SQLite.
+
+### MySQL
+
+MySQL 8+ is supported through the same PyMySQL-compatible dialect used for MariaDB. Use the explicit engine value:
+
+```bash
+CRM_DB_ENGINE=mysql
+CRM_DB_HOST=127.0.0.1
+CRM_DB_PORT=3306
+CRM_DB_NAME=nebrascrm
+CRM_DB_USER=nebrascrm
+CRM_DB_PASSWORD='use-a-strong-password'
+CRM_DB_CHARSET=utf8mb4
+```
+
+For the everyday one-command local launcher, prepare the private file once and then run only the launcher:
+
+```bash
+cp .env.mysql.local.example .env.mysql.local
+# Edit CRM_DB_PASSWORD once to match the local MySQL account.
+chmod 600 .env.mysql.local
+./run-mysql.sh
+```
+
+`run-mysql.sh` loads the local configuration, attempts to start the common native `mysql` or `mariadb` service, verifies the connection, and starts NebrasCRM. A current `.env.mariadb.local` installation also works with this launcher.
+
+On Windows, copy `.env.mysql.local.bat.example` to `.env.mysql.local.bat`, set the password, then double-click or run:
+
+```bat
+run-mysql.bat
+```
+
+For first-time MySQL setup, create the database and local application user with an administrator account:
+
+```sql
+CREATE DATABASE nebrascrm CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'nebrascrm'@'localhost' IDENTIFIED BY 'replace-with-a-strong-password';
+CREATE USER 'nebrascrm'@'127.0.0.1' IDENTIFIED BY 'replace-with-a-strong-password';
+GRANT ALL PRIVILEGES ON nebrascrm.* TO 'nebrascrm'@'localhost';
+GRANT ALL PRIVILEGES ON nebrascrm.* TO 'nebrascrm'@'127.0.0.1';
+FLUSH PRIVILEGES;
+```
+
+To migrate an existing SQLite installation into MySQL, use the MySQL-compatible migration helper:
+
+```bash
+CRM_DB_ENGINE=mysql python3 migrate_mariadb.py --source crm.db --replace
+```
+
+### PostgreSQL
+
+Configure a PostgreSQL server with:
+
+```bash
+CRM_DB_ENGINE=postgresql
+CRM_DB_HOST=127.0.0.1
+CRM_DB_PORT=5432
+CRM_DB_NAME=nebrascrm
+CRM_DB_USER=nebrascrm
+CRM_DB_PASSWORD='use-a-strong-password'
+CRM_DB_SSLMODE=prefer
+```
+
+The schema is initialized on first startup. The `postgres` engine alias is also accepted, but `postgresql` is preferred in configuration and documentation.
+
+#### Native PostgreSQL service (no Docker)
+
+On Debian or Ubuntu, install and start PostgreSQL:
+
+```bash
+sudo apt update
+sudo apt install postgresql
+sudo systemctl enable --now postgresql
+```
+
+Create an application user and database. Replace the password before running:
+
+```bash
+sudo -u postgres psql <<'SQL'
+CREATE ROLE nebrascrm LOGIN PASSWORD 'replace-with-a-strong-password';
+CREATE DATABASE nebrascrm OWNER nebrascrm ENCODING 'UTF8';
+SQL
+```
+
+Create a private connection file and run the native launcher:
+
+```bash
+cp .env.postgresql.local.example .env.postgresql.local
+# Edit the password to match the PostgreSQL role, then protect the file.
+chmod 600 .env.postgresql.local
+./run-postgresql-local.sh
+```
+
+Windows users can copy `.env.postgresql.local.bat.example` to `.env.postgresql.local.bat` and run `run-postgresql-local.bat` after starting their native PostgreSQL service.
+
+#### Local PostgreSQL with Docker
+
+```bash
+cp .env.postgresql.example .env.postgresql
+# Edit .env.postgresql and set matching strong passwords.
+./setup-postgresql.sh
+```
+
+#### Migrating an existing SQLite installation to PostgreSQL
+
+```bash
+CRM_DB_ENGINE=postgresql python3 migrate_postgresql.py --source crm.db --replace
+```
+
+## Global geography
+
+The administrative map uses a bundled GeoNames dataset and does not require a geocoding service at runtime.
+
+| Data | Included coverage |
+|---|---:|
+| Countries and territories | 252 |
+| First-level regions / states | 3,865 |
+| Cities and localities | 235,000+ |
+| Neighborhoods and streets | Managed inside NebrasCRM |
+
+The city dataset is based on GeoNames `cities500`: cities with population of at least 500 and administrative seats. Source files and checksums are stored under `data/geonames/`. GeoNames data is available under CC BY 4.0.
+
+A previous Yemen-only location hierarchy is migrated automatically. Old location references are cleared because their IDs have a different meaning in the global dataset; customer, partner, and sales records remain intact.
+
+## Demonstration data
+
+At the bottom of **System Settings**, system administrators have two separate controls:
+
+- **Add demo data** adds a compact, idempotent sample pack with products, customers, leads, deals, quotes, invoices, payments, and a POS sale. It requires:
+
+  ```text
+  ADD DEMO DATA
+  ```
+
+  The sample pack does not overwrite existing business records or change users, settings, or global geography.
+
+- **Delete demo data** removes business records such as customers, deals, invoices, payments, activities, sample partners, POS activity, and related records. It requires:
+
+  ```text
+  DELETE DEMO DATA
+  ```
+
+  It keeps users, system settings, email templates, workflows, dashboards, custom fields, API keys, integrations, and global geography.
+
+Deletion is intentionally destructive. Do not use it on a production database containing real operating data.
+
+## Building desktop and mobile applications
+
+### Desktop
+
+```bash
+./build-desktop.sh linux
+./build-desktop.sh win
+./build-desktop.sh mac
+./build-desktop.sh run
+```
+
+The Windows build produces installer and portable artifacts under `dist/`. Build scripts require Node.js 18+ and Python with Pillow. On Windows, run the `.sh` scripts from Git Bash or WSL.
+
+The desktop shell connects to `http://localhost:8008` by default. Make sure the FastAPI server is running before opening it.
+
+### Android
+
+```bash
+./build-mobile.sh debug
+./build-mobile.sh release
+./build-mobile.sh sync
+./build-mobile.sh run
+```
+
+Android builds require Node.js 18+, JDK 17+, Android SDK API 34, and build tools 34. The release script creates a local test signing key when none exists. For a store release, provide your own key and set:
+
+```bash
+NEBRAS_STORE_PASS='...'
+NEBRAS_KEY_PASS='...'
+NEBRAS_KEY_ALIAS='mykey'
+```
+
+The local signing properties file is excluded from Git. Read `BUILD.md` before publishing to Google Play.
+
+## Security and deployment notes
+
+For a production installation, use a separate environment file and set the application secrets before starting the server:
+
+```bash
+CRM_ENV=production
+CRM_SECRET='at-least-32-characters'
+CRM_PORTAL_SECRET='different-secret'
+CRM_AGENT_PORTAL_SECRET='different-secret'
+CRM_WEBHOOK_SECRET='different-secret'
+CRM_CORS_ORIGINS='https://crm.example.com'
+# Optional: use this instead of storing a Resend key in the database
+CRM_RESEND_API_KEY='re_...'
+```
+
+New passwords use salted PBKDF2-SHA256 records. Older demo password records are upgraded when the user signs in successfully. Session tokens are signed and expire by default after eight hours.
+
+Before accepting real payments, replace the bundled mock payment flow with a provider-hosted checkout page and use HTTPS. Do not process real card data directly on this server.
+
+## Project layout
+
+```text
+crm/
+├── main.py                 FastAPI application and generic CRM API
+├── db.py                   SQLite / MariaDB / MySQL / PostgreSQL database layer
+├── schema.py               Module and field definitions
+├── geo.py                  Global country, region, and city data
+├── payments.py             Payment links, web hooks, and reconciliation
+├── portal.py               Customer portal
+├── agentportal.py          Partner portal
+├── static/                 Browser application
+├── desktop/                Electron desktop shell
+├── mobile/                 Capacitor Android project
+├── Dockerfile              Application image for Docker Compose
+├── docker-compose.yml      Complete NebrasCRM + MySQL stack
+├── compose-up.sh/.bat      One-command Docker Compose launchers
+├── data/geonames/          Bundled geographic source data
+├── migrate_mariadb.py      SQLite to MariaDB migration helper
+├── migrate_postgresql.py   SQLite to PostgreSQL migration helper
+├── run-*-local.sh/.bat     Native MariaDB / PostgreSQL launchers
+├── run-mysql.sh/.bat       One-command MySQL / MariaDB launchers
+└── tests/                  Regression and smoke tests
+```
+
+## Tests
+
+```bash
 python3 -m unittest discover -s tests -v
 ```
 
-تعمل الاختبارات على نسخة مؤقتة من قاعدة البيانات، وتغطي المصادقة والترحيل الآمن لكلمات المرور، عزل سجلات المندوبين، تصدير CSV الموثق، دورة الدفع/الاسترجاع المتكررة، والبوابتين.
+The test suite uses a temporary database copy. It covers authentication, row-level permissions, payments, demo-data cleanup, geography, and MySQL/MariaDB/PostgreSQL SQL translation.
 
-## ملاحظات إنتاجية
+## Further documentation
 
-### إعدادات إلزامية
-لا تعدّل أسرار التطبيق داخل الملفات. ابدأ بنسخ [`.env.example`](.env.example) إلى ملف آمن خارج المستودع، ثم اضبط متغيرات البيئة التالية (كل سر **32 حرفاً على الأقل**) قبل تشغيل الخادم:
-
-```bash
-export CRM_ENV=production
-export CRM_SECRET='...'
-export CRM_PORTAL_SECRET='...'
-export CRM_AGENT_PORTAL_SECRET='...'
-export CRM_WEBHOOK_SECRET='...'
-export CRM_CORS_ORIGINS='https://crm.example.com'
-# اختياري: ضع قاعدة البيانات في مسار تخزين دائم خارج شجرة المصدر
-export CRM_DB_PATH='/var/lib/nebrascrm/crm.db'
-```
-
-- يرفض التطبيق البدء في وضع `production` إذا غاب أحد أسرار عالم المصادقة أو كان قصيراً.
-- كلمات المرور الجديدة تستخدم **PBKDF2-SHA256 مملّحاً**؛ سجلات SHA-256 القديمة في نسخة العرض تُرقّى تلقائياً بعد أول دخول ناجح.
-- رموز الدخول موقّعة وتنتهي صلاحيتها تلقائياً (8 ساعات افتراضياً؛ غيّرها عبر `CRM_TOKEN_TTL_SECONDS`، مع متغيرات مماثلة للبوابتين).
-- الاستعلامات من نطاق مختلف مغلقة افتراضياً في الإنتاج؛ أضف النطاقات المسموح بها صراحة في `CRM_CORS_ORIGINS`.
-
-واستبدل مزوّد الدفع الوهمي بمزوّد حقيقي (لا تستقبل بيانات البطاقة على خادمك — استخدم صفحة المزوّد المستضافة لتفادي نطاق PCI)، فعّل HTTPS، وخطّط للانتقال إلى PostgreSQL عند التوسع أو تشغيل عدة عمال للخادم.
+- `DOCS.md` — day-to-day operations and permissions
+- `BUILD.md` — desktop and mobile builds
+- `APPS.md` — desktop, mobile, and PWA notes
+- `docs/01-SYSTEM.md` — architecture and deployment notes
+- `docs/02-USER-GUIDE.md` — user guide
+- `docs/03-DEVELOPER.md` — extension and API notes
+- `docs/04-REPORTS.md` — report reference
+- `docs/05-API.md` — API reference

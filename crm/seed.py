@@ -138,11 +138,11 @@ for nm in ["Tech Distributors Ltd","Global Hardware Co","CloudHost MENA","Office
         phone=f"+967-1-{random.randint(200000,999999)}", category=random.choice(["Hardware","Cloud","Office"]),
         website="www."+nm.split()[0].lower()+".com")
 
-con.execute("""INSERT INTO workflows(name,module,trigger,field,operator,value,action,action_value,active,created_at)
+con.execute("""INSERT INTO workflows(name,module,"trigger","field","operator","value",action,action_value,active,created_at)
     VALUES('Big Deal Alert','deals','save','amount','gt','100000','notify','A deal above 100K was saved',1,?)""",(D.now(),))
-con.execute("""INSERT INTO workflows(name,module,trigger,field,operator,value,action,action_value,active,created_at)
+con.execute("""INSERT INTO workflows(name,module,"trigger","field","operator","value",action,action_value,active,created_at)
     VALUES('Hot Lead Task','leads','save','rating','eq','Hot','create_task','Call hot lead within 24h',1,?)""",(D.now(),))
-con.execute("""INSERT INTO workflows(name,module,trigger,field,operator,value,action,action_value,active,created_at)
+con.execute("""INSERT INTO workflows(name,module,"trigger","field","operator","value",action,action_value,active,created_at)
     VALUES('Urgent Ticket Escalation','tickets','save','priority','eq','Urgent','notify','Urgent ticket requires attention',1,?)""",(D.now(),))
 con.commit()
 print("seeded ok")

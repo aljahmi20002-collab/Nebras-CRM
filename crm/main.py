@@ -1,4 +1,4 @@
-import os, io, csv, json, datetime, math, sqlite3
+import os, io, csv, json, datetime, math
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Depends, Header, Request, UploadFile, File
 from fastapi.responses import StreamingResponse, FileResponse, JSONResponse
@@ -19,10 +19,13 @@ import agentportal as AP
 import ai as AI
 import platform_ext as PF
 import reports as RPT
+import demo_data as DEMO
+import documents as DOC
+import pos as POS
 from schema import MODULES, GROUPS, ROLES
 from authz import SHARED_MODULES, record_or_404, scope_clause
 from security import (
-    client_ip, configured_secret, hash_password, make_token as sign_token,
+    client_ip, configured_secret, hash_password, is_production, make_token as sign_token,
     parse_token as parse_signed_token, password_error, verify_password,
 )
 
@@ -110,6 +113,8 @@ M.con = con
 M.init_tables(con)
 PAY.con = con
 PAY.init_tables(con)
+POS.con = con
+POS.init_tables(con)
 INTEL.con = con
 SEG.con = con
 GEO.con = con
@@ -124,6 +129,7 @@ AI.con = con
 PF.con = con
 PF.init_tables(con)
 RPT.con = con
+DOC.con = con
 
 # ---------------- auth ----------------
 def hash_pw(pw: str) -> str:
@@ -135,6 +141,66 @@ def verify_pw(pw: str, stored: str) -> tuple[bool, bool]:
     # Include the original demo secret so an existing bundled database can be
     # upgraded after its first successful login, even when CRM_SECRET changes.
     return verify_password(pw, stored, legacy_secrets=(SECRET, LEGACY_SECRET))
+
+
+def _bootstrap_admin_from_environment() -> bool:
+    """Create exactly one first administrator for a new deployed database.
+
+    A fresh MySQL Docker volume deliberately starts without the repository's
+    predictable demo credentials.  Compose supplies a random bootstrap password
+    in ``CRM_BOOTSTRAP_ADMIN_PASSWORD`` instead.  The values are consulted only
+    while ``users`` is empty, so changing the environment later never resets an
+    existing administrator's password.
+    """
+    if con.execute("SELECT 1 FROM users LIMIT 1").fetchone():
+        return False
+
+    email = os.environ.get("CRM_BOOTSTRAP_ADMIN_EMAIL", "").strip().lower()
+    name = os.environ.get("CRM_BOOTSTRAP_ADMIN_NAME", "NebrasCRM Administrator").strip()
+    password = os.environ.get("CRM_BOOTSTRAP_ADMIN_PASSWORD", "")
+    password_is_placeholder = password.strip().lower().startswith("replace-with-")
+
+    if not email and not password:
+        if is_production():
+            raise RuntimeError(
+                "A new production database needs CRM_BOOTSTRAP_ADMIN_EMAIL and "
+                "CRM_BOOTSTRAP_ADMIN_PASSWORD before it can be used."
+            )
+        # A development SQLite database may intentionally be populated by
+        # seed.py instead, so leave it empty when bootstrap values are absent.
+        return False
+    if not email or not password or password_is_placeholder:
+        raise RuntimeError(
+            "Set non-placeholder CRM_BOOTSTRAP_ADMIN_EMAIL and "
+            "CRM_BOOTSTRAP_ADMIN_PASSWORD for a new database."
+        )
+    if len(email) > 320 or "@" not in email or "\n" in email or "\r" in email:
+        raise RuntimeError("CRM_BOOTSTRAP_ADMIN_EMAIL must be a valid email address.")
+    if not name or len(name) > 200:
+        raise RuntimeError("CRM_BOOTSTRAP_ADMIN_NAME must contain between 1 and 200 characters.")
+    error = password_error(password)
+    if error:
+        raise RuntimeError(f"CRM_BOOTSTRAP_ADMIN_PASSWORD is invalid: {error}")
+
+    try:
+        cur = con.execute(
+            "INSERT INTO users(email,password,name,role,active,target,created_at) VALUES(?,?,?,?,?,?,?)",
+            (email, hash_pw(password), name, "admin", 1, 0, D.now()),
+        )
+        D.log(con, "users", cur.lastrowid, "bootstrap", {"source": "environment"}, cur.lastrowid)
+        con.commit()
+        return True
+    except Exception as exc:
+        con.rollback()
+        # Two application containers can briefly race during an unusual manual
+        # scale-up.  The email uniqueness constraint makes the other successful
+        # insert authoritative without leaking a startup error.
+        if D.is_integrity_error(exc):
+            return False
+        raise
+
+
+_bootstrap_admin_from_environment()
 
 
 def make_token(uid: int) -> str:
@@ -217,7 +283,7 @@ def meta():
         pass
     company = "NebrasCRM"
     try:
-        r = con.execute("SELECT value FROM settings WHERE key='company_name'").fetchone()
+        r = con.execute("SELECT \"value\" FROM settings WHERE \"key\"='company_name'").fetchone()
         if r and r["value"]: company = r["value"]
     except Exception:
         pass
@@ -460,7 +526,7 @@ def run_workflows(module, rid, data, uid):
             continue
         con.execute("UPDATE workflows SET runs=runs+1 WHERE id=?", (wf["id"],))
         if wf["action"] == "notify":
-            con.execute("INSERT INTO notifications(user_id,title,body,read,created_at) VALUES(?,?,?,0,?)",
+            con.execute("INSERT INTO notifications(user_id,title,body,\"read\",created_at) VALUES(?,?,?,0,?)",
                         (uid, wf["name"], wf["action_value"] or f"{module}#{rid}", D.now()))
         elif wf["action"] == "create_task":
             con.execute("""INSERT INTO activities(created_at,updated_at,created_by,owner_id,deleted,
@@ -914,6 +980,37 @@ async def import_csv(module: str, file: UploadFile = File(...), user=Depends(cur
     return {"imported": len(imported)}
 
 
+# ---------------- demonstration data cleanup ----------------
+class DemoCleanup(BaseModel):
+    confirmation: str = ""
+
+
+class DemoAdd(BaseModel):
+    confirmation: str = ""
+
+
+@app.get("/api/admin/demo-data/summary")
+def demo_data_summary(user=Depends(current_user)):
+    require(user, "admin")
+    return DEMO.summary(con)
+
+
+@app.post("/api/admin/demo-data/add")
+def add_demo_data(body: DemoAdd, user=Depends(current_user)):
+    require(user, "admin")
+    if body.confirmation.strip() != DEMO.ADD_CONFIRMATION:
+        raise HTTPException(400, f"Type {DEMO.ADD_CONFIRMATION} to confirm adding sample data")
+    return DEMO.add(con, user["id"])
+
+
+@app.post("/api/admin/demo-data/clear")
+def clear_demo_data(body: DemoCleanup, user=Depends(current_user)):
+    require(user, "admin")
+    if body.confirmation.strip() != "DELETE DEMO DATA":
+        raise HTTPException(400, "Type DELETE DEMO DATA to confirm this irreversible cleanup")
+    return DEMO.clear(con, user["id"])
+
+
 # ---------------- users ----------------
 def _valid_email(value):
     email = str(value or "").strip().lower()
@@ -955,8 +1052,10 @@ def create_user(body: dict, user=Depends(current_user)):
         D.log(con, "users", cur.lastrowid, "create", {"email": email, "role": role}, user["id"])
         con.commit()
         return {"id": cur.lastrowid}
-    except sqlite3.IntegrityError:
-        raise HTTPException(400, "Email already exists")
+    except Exception as exc:
+        if D.is_integrity_error(exc):
+            raise HTTPException(400, "Email already exists")
+        raise
 
 
 @app.put("/api/admin/users/{uid}")
@@ -1023,7 +1122,7 @@ def add_wf(body: dict, user=Depends(current_user)):
     name = str(body.get("name", "")).strip()
     if not name or len(name) > 200:
         raise HTTPException(400, "Workflow name is required")
-    con.execute("""INSERT INTO workflows(name,module,trigger,field,operator,value,action,action_value,active,created_at)
+    con.execute("""INSERT INTO workflows(name,module,"trigger","field","operator","value",action,action_value,active,created_at)
         VALUES(?,?,?,?,?,?,?,?,1,?)""",
         (name, module, body.get("trigger", "save"), field, operator, str(body.get("value", "")),
          action, str(body.get("action_value", "")), D.now()))
@@ -1047,7 +1146,7 @@ def notifs(user=Depends(current_user)):
 
 @app.post("/api/notifications/read")
 def read_notifs(user=Depends(current_user)):
-    con.execute("UPDATE notifications SET read=1 WHERE user_id=?", (user["id"],))
+    con.execute("UPDATE notifications SET \"read\"=1 WHERE user_id=?", (user["id"],))
     con.commit()
     return {"ok": True}
 
@@ -1102,6 +1201,17 @@ def index():
 @app.get("/app.js")
 def appjs():
     return FileResponse(os.path.join(HERE, "static", "app.js"), media_type="application/javascript")
+
+
+@app.get("/printing.js")
+def printingjs():
+    return FileResponse(os.path.join(HERE, "static", "printing.js"), media_type="application/javascript")
+
+
+@app.get("/pos.js")
+def posjs():
+    return FileResponse(os.path.join(HERE, "static", "pos.js"), media_type="application/javascript")
+
 
 @app.get("/brand/{sub}/{name}")
 def brandfile(sub: str, name: str):
@@ -1180,6 +1290,7 @@ def css():
 P.register_admin(app, current_user, require)
 M.register(app, current_user, require)
 PAY.register(app, current_user, require)
+POS.register(app, current_user, require)
 INTEL.register(app, current_user, require)
 SEG.register(app, current_user, require)
 GEO.register(app, current_user, require)
@@ -1188,6 +1299,7 @@ LOY.register(app, current_user, require)
 AI.register(app, current_user, require)
 PF.register(app, current_user, require)
 RPT.register(app, current_user, require)
+DOC.register(app, current_user)
 AP.register_admin(app, current_user, require)
 app.include_router(AP.aportal)
 PAY.register_portal(P.portal, P.portal_user)

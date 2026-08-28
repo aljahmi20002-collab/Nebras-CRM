@@ -22,7 +22,7 @@ const isMac = process.platform === "darwin";
 // ---------------------------------------------------------------- config
 const CONFIG_FILE = path.join(app.getPath("userData"), "config.json");
 const DEFAULTS = {
-  serverUrl: "http://localhost:8000",
+  serverUrl: "http://localhost:8008",
   lang: "ar",
   startMinimized: false,
   minimizeToTray: true,

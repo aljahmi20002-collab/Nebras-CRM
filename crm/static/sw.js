@@ -9,14 +9,14 @@
  * Writes made while offline are queued in IndexedDB and replayed on reconnect,
  * which is the difference between "works offline" and "pretends to work offline".
  */
-const VERSION   = "nebras-v1.0.0";
+const VERSION   = "nebras-v1.0.3";
 const SHELL     = `shell-${VERSION}`;
 const DATA      = `data-${VERSION}`;
 const FALLBACK  = "/offline";
 
 const SHELL_ASSETS = [
   "/app", "/portal", "/agent", "/offline",
-  "/styles.css", "/app.js", "/portal.js", "/agent.js",
+  "/styles.css", "/app.js", "/printing.js", "/pos.js", "/portal.js", "/agent.js",
   "/brand/favicon/favicon.svg",
   "/brand/favicon/icon-192.png",
   "/brand/favicon/icon-512.png",

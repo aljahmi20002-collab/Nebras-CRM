@@ -81,13 +81,13 @@ FIELD_TYPES = {
 
 def init_tables(c):
     c.execute("""CREATE TABLE IF NOT EXISTS interactions(
-        id INTEGER PRIMARY KEY AUTOINCREMENT, module TEXT, record_id INTEGER,
-        account_id INTEGER, contact_id INTEGER, channel TEXT, direction TEXT,
+        id INTEGER PRIMARY KEY AUTOINCREMENT, module VARCHAR(64), record_id INTEGER,
+        account_id INTEGER, contact_id INTEGER, channel VARCHAR(32), direction VARCHAR(16),
         subject TEXT, body TEXT, actor TEXT, external_id TEXT, meta TEXT,
         occurred_at TEXT, created_at TEXT)""")
     c.execute("""CREATE TABLE IF NOT EXISTS custom_fields(
-        id INTEGER PRIMARY KEY AUTOINCREMENT, module TEXT, name TEXT, label_ar TEXT,
-        label_en TEXT, type TEXT, options TEXT, required INTEGER DEFAULT 0,
+        id INTEGER PRIMARY KEY AUTOINCREMENT, module VARCHAR(64), name VARCHAR(128), label_ar TEXT,
+        label_en TEXT, type VARCHAR(32), options TEXT, required INTEGER DEFAULT 0,
         show_in_list INTEGER DEFAULT 0, position INTEGER DEFAULT 100,
         created_at TEXT, UNIQUE(module, name))""")
     c.execute("""CREATE TABLE IF NOT EXISTS dashboards(
@@ -98,7 +98,7 @@ def init_tables(c):
         scopes TEXT DEFAULT 'read', active INTEGER DEFAULT 1, last_used TEXT,
         calls INTEGER DEFAULT 0, created_by INTEGER, created_at TEXT)""")
     c.execute("""CREATE TABLE IF NOT EXISTS integrations(
-        code TEXT PRIMARY KEY, enabled INTEGER DEFAULT 0, config TEXT, updated_at TEXT)""")
+        code VARCHAR(100) PRIMARY KEY, enabled INTEGER DEFAULT 0, config TEXT, updated_at TEXT)""")
     c.execute("CREATE INDEX IF NOT EXISTS ix_int_acc ON interactions(account_id)")
     c.execute("CREATE INDEX IF NOT EXISTS ix_int_mod ON interactions(module,record_id)")
     c.commit()
@@ -279,7 +279,7 @@ def register(app, current_user, require):
         if b.type not in FIELD_TYPES: raise HTTPException(400, "Unknown type")
         name = "cf_" + "".join(ch if ch.isalnum() else "_" for ch in b.name.strip().lower())[:40]
         if not name.strip("cf_"): raise HTTPException(400, "Invalid field name")
-        existing = {r["name"] for r in con.execute(f'PRAGMA table_info("{b.module}")')}
+        existing = D.table_columns(con, b.module)
         if name in existing: raise HTTPException(400, "Field already exists")
         sqlt = "REAL" if b.type in ("number", "currency") else "TEXT"
         con.execute(f'ALTER TABLE "{b.module}" ADD COLUMN "{name}" {sqlt}')
@@ -539,7 +539,7 @@ def register(app, current_user, require):
         l = dict(con.execute("SELECT * FROM leads WHERE id=?", (rid,)).fetchone())
         s = AI.score_lead(l)
         for m in con.execute("SELECT id FROM users WHERE role IN ('admin','manager') AND active=1"):
-            con.execute("""INSERT INTO notifications(user_id,title,body,read,created_at)
+            con.execute("""INSERT INTO notifications(user_id,title,body,\"read\",created_at)
                 VALUES(?,?,?,0,?)""", (m["id"], "🌐 عميل محتمل جديد",
                 f'{l["name"]} — درجة {s["score"]} ({s["band_ar"]})', D.now()))
         con.commit()

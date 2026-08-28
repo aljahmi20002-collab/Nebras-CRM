@@ -1,0 +1,66 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nebrascrm:local
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    environment:
+      PYTHONUNBUFFERED: "1"
+      CRM_DB_ENGINE: mysql
+      CRM_DB_HOST: mysql
+      CRM_DB_PORT: "3306"
+      CRM_DB_NAME: ${MYSQL_DATABASE:-nebrascrm}
+      CRM_DB_USER: ${MYSQL_USER:-nebrascrm}
+      CRM_DB_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env.docker}
+      CRM_DB_CHARSET: utf8mb4
+      # Used once only when the MySQL volume has no users yet. This avoids
+      # shipping predictable demo credentials in a production container.
+      CRM_BOOTSTRAP_ADMIN_EMAIL: ${CRM_BOOTSTRAP_ADMIN_EMAIL:-admin@nebrascrm.local}
+      CRM_BOOTSTRAP_ADMIN_NAME: ${CRM_BOOTSTRAP_ADMIN_NAME:-NebrasCRM Administrator}
+      # Kept optional for an existing database; main.py requires it only when
+      # a production database has no user accounts yet.
+      CRM_BOOTSTRAP_ADMIN_PASSWORD: ${CRM_BOOTSTRAP_ADMIN_PASSWORD:-}
+    ports:
+      - "${NEBRAS_PORT:-8008}:8008"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python3
+        - -c
+        - "from urllib.request import urlopen; urlopen('http://127.0.0.1:8008/api/meta', timeout=3).read()"
+      interval: 20s
+      timeout: 5s
+      retries: 6
+      start_period: 35s
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+
+  mysql:
+    # MySQL 8.4 is the MySQL 8 long-term-support release line.
+    image: mysql:8.4
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --max-allowed-packet=64M
+    volumes:
+      - nebrascrm_mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 35s
+
+volumes:
+  nebrascrm_mysql:

@@ -1,0 +1,30 @@
+# Source-control and local development state
+.git
+.gitignore
+.venv
+__pycache__
+*.py[cod]
+*.db
+*.db-*
+
+# Local secrets and environment-specific settings
+.env
+.env.*
+*.local
+*.local.bat
+
+# Generated package/build output
+node_modules
+desktop/node_modules
+desktop/dist
+mobile/node_modules
+mobile/android/.gradle
+mobile/android/build
+mobile/android/app/build
+mobile/android/local.properties
+mobile/ios/App/Pods
+*.keystore
+
+# Documentation artifacts not needed by the application image
+docs/diagrams
+coverage

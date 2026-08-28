@@ -9,6 +9,8 @@ from typing import Optional
 from fastapi import Depends, HTTPException
 from pydantic import BaseModel
 
+import db as D
+
 con = None
 
 TYPES = {
@@ -80,14 +82,16 @@ def init_tables(c):
     ]:
         c.execute(sql)
     # link deals/accounts to the partner who owns them
+    # Check first instead of relying on a caught duplicate-ALTER error. PostgreSQL
+    # marks the transaction failed after any DDL error, even if Python catches it.
+    known_columns = {table: D.table_columns(c, table) for table in ("deals", "accounts")}
     for tbl, col in (("deals", "agent_id"), ("accounts", "agent_id"),
                      ("accounts", "gov_id"), ("accounts", "district_id"),
                      ("accounts", "village_id"), ("accounts", "quarter_id"),
                      ("accounts", "street_id")):
-        try:
+        if col not in known_columns[tbl]:
             c.execute(f"ALTER TABLE {tbl} ADD COLUMN {col} TEXT")
-        except Exception:
-            pass
+            known_columns[tbl].add(col)
     c.commit()
 
 

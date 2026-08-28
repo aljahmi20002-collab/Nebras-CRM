@@ -4,5 +4,14 @@ uvicorn>=0.27
 pydantic>=2.0
 python-multipart>=0.0.9
 
+# خيار MariaDB / MySQL للخادم عبر CRM_DB_ENGINE=mariadb أو mysql
+PyMySQL>=1.1.0
+
+# خيار PostgreSQL عبر CRM_DB_ENGINE=postgresql
+psycopg[binary]>=3.2.0
+
+# تستخدمه إصدارات Starlette الحديثة لتشغيل TestClient في اختبارات الدخان.
+httpx2>=2.12.0
+
 # اختيارية: لإعادة توليد الهوية البصرية والمخططات
 # pillow cairosvg fonttools brotli arabic-reshaper python-bidi

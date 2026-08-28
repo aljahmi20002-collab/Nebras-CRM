@@ -31,6 +31,8 @@ const TT = {
     total:"Total",staffLogin:"Staff login",demo:"Demo account (click to fill)",confirmQ:"Are you sure?",
     ticketMsg:"Our support team will be notified immediately",payNow:"Pay now",payments:"Payment history",ref:"Reference",method:"Method",paidOn:"Paid on",noBalance:"Fully paid",shop:"Products",orders:"My Orders",loyalty:"Loyalty",statement:"Statement",documents:"Documents",cart:"Cart",addCart:"Add to cart",yourPrice:"Your price",listPrice:"List",placeOrder:"Place order",qty:"Qty",total:"Total",emptyCart:"Cart is empty",orderSent:"Order submitted",tier:"Tier",points:"Points",available:"Available",breakdown:"Points breakdown",nextTier:"Next tier",perks:"Perks",rule:"Rule",basis:"Basis",discountL:"Your tier discount",inStock:"In stock",outStock:"Out of stock",debit:"Debit",credit:"Credit",running:"Balance",balanceL:"Outstanding",docType:"Type",view:"View",print:"Print",searchP:"Search products...",category:"Category",clearCart:"Clear",myDiscount:"Your discount"},
 };
+Object.assign(TT.ar, {paymentVoucher:"سند دفع", printVoucher:"طباعة سند الدفع"});
+Object.assign(TT.en, {paymentVoucher:"Payment voucher", printVoucher:"Print payment voucher"});
 const x = k => TT[P.lang][k] || k;
 
 /* Theme-aware colour: hex palettes coming from the API were chosen for the dark
@@ -169,12 +171,14 @@ function shell(){
       <div class="spacer" style="flex:1"></div>
       <div style="text-align:end;line-height:1.3"><div style="font-weight:700;font-size:13px">${es(P.me.name)}</div>
         <div class="mut" style="font-size:11px">${es(P.me.account||"")}</div></div>
+      <button class="btn sm" id="pagePrintPortal" title="${x("print")}">🖨</button>
       <button class="icbtn" id="th">${P.theme==="dark"?"☀️":"🌙"}</button>
       <button class="btn sm" id="lg">${P.lang==="ar"?"EN":"ع"}</button>
       <button class="btn sm" id="lo">${x("logout")}</button></div></div>
     <div class="pshell"><div class="ptabs">${tabs.map(([k,l])=>`<button data-t="${k}" class="${P.tab===k?"on":""}">${l}</button>`).join("")}</div>
     <div id="pc"><div class="empty">…</div></div></div>`;
   th.onclick=()=>{P.theme=P.theme==="dark"?"light":"dark";localStorage.setItem("theme",P.theme);draw();};
+  document.getElementById("pagePrintPortal").onclick=()=>printCurrentView();
   lg.onclick=()=>{P.lang=P.lang==="ar"?"en":"ar";localStorage.setItem("lang",P.lang);draw();};
   lo.onclick=plogout;
   document.querySelectorAll(".ptabs button").forEach(b=>b.onclick=()=>{P.tab=b.dataset.t;shell();});
@@ -267,7 +271,8 @@ async function tInvoices(){
         return `<tr><td><b>${es(i.subject)}</b></td><td>${bg(i.status)}</td>
         <td class="mut">${i.invoice_date||"—"}</td><td class="mut">${i.due_date||"—"}</td>
         <td><b>${money(i.amount)}</b></td><td style="color:${rem>0?"var(--danger)":"var(--ok)"};font-weight:700">${money(rem)}</td>
-        <td>${rem>0.01&&i.status!=="Cancelled"?`<button class="btn pri sm" data-p="${i.id}">💳 ${x("payNow")}</button>`
+        <td><button class="btn sm" data-ip="${i.id}" title="${x("print")}">🖨</button>
+          ${rem>0.01&&i.status!=="Cancelled"?`<button class="btn pri sm" data-p="${i.id}">💳 ${x("payNow")}</button>`
           :`<span class="mut" style="font-size:11.5px">✓ ${x("noBalance")}</span>`}</td></tr>`;}).join("")
         ||`<tr><td colspan="7"><div class="empty">${x("noData")}</div></td></tr>`}
       </tbody></table></div></div>
@@ -279,17 +284,22 @@ async function tInvoices(){
     b.disabled=true;
     const r=await pa(`/invoices/${b.dataset.p}/pay`,{method:"POST"});
     location.href=r.url;});
+  pc.querySelectorAll("[data-ip]").forEach(button=>button.onclick=event=>{
+    event.stopPropagation();printPortalDocumentById("invoice",+button.dataset.ip);});
   const ps=await pa("/payments");
-  if(ps.length){const pcl=v=>({paid:"var(--ok)",pending:"var(--warn)",failed:"var(--danger)",refunded:"var(--purple)"}[v]||"var(--mut)");
+  if(ps.length){const pcl=v=>({paid:"var(--ok)",pending:"var(--warn)",awaiting_settlement:"var(--info)",failed:"var(--danger)",refunded:"var(--purple)"}[v]||"var(--mut)");
     document.getElementById("ph").innerHTML=`<div class="card" style="padding:0">
       <div style="padding:12px 14px;border-bottom:1px solid var(--line)"><b>${x("payments")}</b></div>
       <div class="wrap-scroll"><table class="tbl"><thead><tr><th>${x("subject")}</th><th>${x("amount")}</th>
-      <th>${x("method")}</th><th>${x("status")}</th><th>${x("ref")}</th><th>${x("paidOn")}</th></tr></thead><tbody>
-      ${ps.map(p=>`<tr><td>${es(p.invoice_subject)}</td><td><b>${money(p.amount)}</b></td><td>${es(p.method||"—")}</td>
-        <td><span class="badge" style="color:${pcl(p.status)};background:${pcl(p.status)}22">${p.status}</span></td>
-        <td class="mut" style="font-size:11.5px">${es(p.provider_ref||"—")}</td>
-        <td class="mut">${(p.paid_at||"—").replace("T"," ")}</td></tr>`).join("")}
-      </tbody></table></div></div>`;}
+      <th>${x("method")}</th><th>${x("status")}</th><th>${x("ref")}</th><th>${x("paidOn")}</th><th></th></tr></thead><tbody>
+      ${ps.map(p=>`<tr><td data-l="${x("subject")}">${es(p.invoice_subject)}</td><td data-l="${x("amount")}"><b>${money(p.amount)}</b></td><td data-l="${x("method")}">${es(p.method||"—")}</td>
+        <td data-l="${x("status")}"><span class="badge" style="color:${pcl(p.status)};background:${pcl(p.status)}22">${p.status}</span></td>
+        <td class="mut" data-l="${x("ref")}" style="font-size:11.5px">${es(p.provider_ref||"—")}</td>
+        <td class="mut" data-l="${x("paidOn")}">${(p.paid_at||"—").replace("T"," ")}</td>
+        <td data-l="${x("paymentVoucher")}"><button class="btn sm" data-pr="${p.id}" title="${x("printVoucher")}">🖨</button></td></tr>`).join("")}
+      </tbody></table></div></div>`;
+    document.getElementById("ph").querySelectorAll("[data-pr]").forEach(button=>button.onclick=event=>{
+      event.stopPropagation();printPortalPaymentReceipt(+button.dataset.pr);});}
 }
 
 async function tQuotes(){
@@ -302,15 +312,18 @@ async function tQuotes(){
         <tbody>${q.items.map(i=>`<tr><td>${es(i.name)}</td><td>${i.qty}</td><td>${money(i.price)}</td></tr>`).join("")}</tbody></table>`:""}
       <div class="row" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line)">
         <b>${x("total")}</b><div class="spacer" style="flex:1"></div><b style="font-size:17px">${money(q.amount)}</b></div>
-      ${["Draft","Sent"].includes(q.status)?`<div class="row" style="margin-top:10px">
+      <div class="row" style="margin-top:10px"><button class="btn sm" data-qp="${q.id}">🖨 ${x("print")}</button>
+      ${["Draft","Sent"].includes(q.status)?`<div class="spacer" style="flex:1"></div>
         <button class="btn sm" style="flex:1;color:var(--ok);border-color:var(--ok)55" data-a="${q.id}">✓ ${x("accept")}</button>
-        <button class="btn sm dgr" style="flex:1" data-r="${q.id}">✕ ${x("reject")}</button></div>`:""}
+        <button class="btn sm dgr" style="flex:1" data-r="${q.id}">✕ ${x("reject")}</button>`:""}</div>
       ${q.terms?`<div class="mut" style="font-size:11.5px;margin-top:8px">${es(q.terms)}</div>`:""}</div>`).join("")
       ||`<div class="empty">${x("noData")}</div>`}</div>`;
   const decide=async(id,d)=>{if(!confirm(x("confirmQ")))return;
     await pa(`/quotes/${id}/decision`,{method:"POST",body:JSON.stringify({decision:d})});tst(x("decided"));tQuotes();};
   pc.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>decide(b.dataset.a,"Accepted"));
   pc.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>decide(b.dataset.r,"Rejected"));
+  pc.querySelectorAll("[data-qp]").forEach(button=>button.onclick=event=>{
+    event.stopPropagation();printPortalDocumentById("quote",+button.dataset.qp);});
 }
 
 function tProfile(){
@@ -451,31 +464,72 @@ async function tDocuments(){
         ||`<tr><td colspan="6"><div class="empty">${x("noData")}</div></td></tr>`}
       </tbody></table></div></div>`;
   pc.querySelectorAll("[data-d]").forEach(b=>b.onclick=async()=>{
-    const [k,i]=b.dataset.d.split(":");
-    const d=await pa(`/document/${k}/${i}`);
-    const tot=d.items.reduce((a,it)=>a+it.qty*it.price*(1-(it.discount||0)/100)*(1+(it.tax||0)/100),0);
-    md(es(d.subject),`<div style="background:#fff;color:#111;padding:22px;border-radius:10px" id="doc">
-      <div style="display:flex;justify-content:space-between;border-bottom:2px solid #111;padding-bottom:10px">
-        <div><b style="font-size:18px">${es(d.company)}</b><div style="font-size:12px">${es(d.type_ar||k)}</div></div>
-        <div style="text-align:end;font-size:12px"><div><b>${es(d.subject)}</b></div>
-          <div>${es(d.invoice_date||d.valid_until||"")}</div></div></div>
-      <div style="margin:12px 0;font-size:12.5px"><b>${es(d.account_name||"")}</b><br>${es(d.contact_name||"")}</div>
-      <table style="width:100%;border-collapse:collapse;font-size:12.5px">
-        <thead><tr style="background:#f1f5f9"><th style="text-align:start;padding:7px">${x("subject")}</th>
-        <th style="padding:7px">${x("qty")}</th><th style="padding:7px">${x("price")||"Price"}</th>
-        <th style="padding:7px">${x("total")}</th></tr></thead><tbody>
-        ${d.items.map(it=>`<tr><td style="padding:7px;border-bottom:1px solid #e2e8f0">${es(it.name)}</td>
-          <td style="padding:7px;border-bottom:1px solid #e2e8f0;text-align:center">${it.qty}</td>
-          <td style="padding:7px;border-bottom:1px solid #e2e8f0;text-align:center">${money(it.price)}</td>
-          <td style="padding:7px;border-bottom:1px solid #e2e8f0;text-align:center">
-            ${money(it.qty*it.price*(1-(it.discount||0)/100)*(1+(it.tax||0)/100))}</td></tr>`).join("")
-          ||`<tr><td colspan="4" style="padding:14px;text-align:center;color:#64748b">—</td></tr>`}
-        </tbody></table>
-      <div style="text-align:end;margin-top:12px;font-size:16px"><b>${x("total")}: ${money(d.amount||tot)}</b></div>
-      ${d.terms?`<div style="margin-top:12px;font-size:11.5px;color:#475569">${es(d.terms)}</div>`:""}
-      </div>`,[[x("print"),()=>{const w=window.open("","_blank");
-        w.document.write(`<html dir="${P.lang==="ar"?"rtl":"ltr"}"><body>${document.getElementById("doc").outerHTML}</body></html>`);
-        w.document.close();w.print();},"pri"]]);});
+    const [kind,id]=b.dataset.d.split(":");
+    const d=await pa(`/document/${kind}/${id}`);
+    const c=d.company_info||{name:d.company,currency:"USD"};
+    const dm=v=>{try{return new Intl.NumberFormat(P.lang==="ar"?"ar-EG":"en-US",{style:"currency",currency:c.currency||"USD",maximumFractionDigits:2}).format(v||0);}catch{return money(v);}};
+    const labels=P.lang==="ar"?{item:"الصنف",disc:"الخصم",tax:"الضريبة",line:"الإجمالي",sub:"قبل الخصم",total:"الإجمالي النهائي"}:{item:"Item",disc:"Discount",tax:"Tax",line:"Line total",sub:"Subtotal",total:"Grand total"};
+    md(es(d.subject),`<div style="background:#fff;color:#172033;padding:22px;border-radius:12px" id="portalDoc">
+      <div style="display:flex;justify-content:space-between;gap:12px;border-bottom:3px solid #314fcb;padding-bottom:12px">
+        <div><b style="font-size:19px">${es(c.name||"NebrasCRM")}</b><div style="font-size:11px;color:#667085">${es(c.phone||"")}</div></div>
+        <div style="text-align:end"><span style="font-size:11px;background:#eef2ff;color:#314fcb;padding:4px 10px;border-radius:99px">${es(d.type_ar||kind)}</span>
+          <div style="font-weight:800;margin-top:7px">${es(d.subject)}</div><div style="font-size:11px;color:#667085">${d.invoice_date||d.valid_until||""}</div></div></div>
+      <div style="margin:14px 0;font-size:12.5px"><b>${es(d.account_name||"")}</b><br>${es(d.contact_name||"")} ${d.contact_phone?"· "+es(d.contact_phone):""}</div>
+      <table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:#314fcb;color:#fff">
+        <th style="text-align:start;padding:8px">${labels.item}</th><th style="padding:8px">${x("qty")}</th><th style="padding:8px">${x("price")}</th>
+        <th style="padding:8px">${labels.disc}</th><th style="padding:8px">${labels.tax}</th><th style="padding:8px">${labels.line}</th></tr></thead><tbody>
+        ${d.items.map(it=>`<tr><td style="padding:8px;border-bottom:1px solid #e2e8f0"><b>${es(it.name)}</b>${it.product_code?`<small style="display:block;color:#667085">${es(it.product_code)}</small>`:""}</td>
+          <td style="padding:8px;border-bottom:1px solid #e2e8f0;text-align:center">${it.qty}</td><td style="padding:8px;border-bottom:1px solid #e2e8f0;text-align:center">${dm(it.price)}</td>
+          <td style="padding:8px;border-bottom:1px solid #e2e8f0;text-align:center">${it.discount?it.discount+"%":"—"}</td><td style="padding:8px;border-bottom:1px solid #e2e8f0;text-align:center">${it.tax?it.tax+"%":"—"}</td>
+          <td style="padding:8px;border-bottom:1px solid #e2e8f0;text-align:center;font-weight:700">${dm(it.line_total)}</td></tr>`).join("")
+          ||`<tr><td colspan="6" style="padding:14px;text-align:center;color:#64748b">—</td></tr>`}</tbody></table>
+      <div style="margin-top:14px;margin-inline-start:auto;width:260px;border:1px solid #dbe2ee;border-radius:10px;padding:10px 12px;font-size:12px">
+        <div style="display:flex;justify-content:space-between;padding:4px 0"><span>${labels.sub}</span><b>${dm(d.totals.subtotal)}</b></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0"><span>${labels.disc}</span><b>− ${dm(d.totals.discount_total)}</b></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0"><span>${labels.tax}</span><b>+ ${dm(d.totals.tax_total)}</b></div>
+        <div style="display:flex;justify-content:space-between;padding-top:9px;margin-top:5px;border-top:1px solid #cbd5e1;font-size:15px"><b>${labels.total}</b><b>${dm(d.totals.total)}</b></div></div>
+      ${d.terms?`<div style="margin-top:14px;font-size:11px;color:#475569">${es(d.terms)}</div>`:""}</div>`,
+      [[x("print"),()=>printPortalDocument(kind,d),"pri"]]);});
+}
+function printPortalDocumentById(kind,id){
+  const win=window.open("","_blank");
+  if(!win){tst(P.lang==="ar"?"اسمح بالنوافذ المنبثقة للطباعة":"Allow pop-ups to print");return;}
+  win.document.write(`<title>${es(x("print"))}</title><body style="font-family:system-ui;padding:32px">Loading…</body>`);
+  pa(`/document/${kind}/${id}`).then(documentData=>printPortalDocument(kind,documentData,win)).catch(()=>win.close());
+}
+function printPortalDocument(kind,d,existingWindow=null){
+  const win=existingWindow||window.open("","_blank");if(!win){tst(P.lang==="ar"?"اسمح بالنوافذ المنبثقة للطباعة":"Allow pop-ups to print");return;}
+  const c=d.company_info||{name:d.company,currency:"USD"};
+  const dm=v=>{try{return new Intl.NumberFormat(P.lang==="ar"?"ar-EG":"en-US",{style:"currency",currency:c.currency||"USD",maximumFractionDigits:2}).format(v||0);}catch{return money(v);}};
+  const ar=P.lang==="ar", L=ar?{item:"الصنف",qty:"الكمية",price:"سعر الوحدة",disc:"الخصم",tax:"الضريبة",line:"الإجمالي",sub:"قبل الخصم",total:"الإجمالي النهائي",bill:"بيانات العميل",terms:"الشروط والملاحظات",thanks:"شكرًا لتعاملكم معنا"}:{item:"Item",qty:"Qty",price:"Unit price",disc:"Discount",tax:"Tax",line:"Line total",sub:"Subtotal",total:"Grand total",bill:"Bill to",terms:"Terms and notes",thanks:"Thank you for your business"};
+  const rows=d.items.map(it=>`<tr><td><b>${es(it.name)}</b>${it.product_code?`<small>${es(it.product_code)}</small>`:""}</td><td>${it.qty}</td><td>${dm(it.price)}</td><td>${it.discount?it.discount+"%":"—"}</td><td>${it.tax?it.tax+"%":"—"}</td><td><b>${dm(it.line_total)}</b></td></tr>`).join("")||`<tr><td colspan="6">—</td></tr>`;
+  const html=`<!doctype html><html lang="${P.lang}" dir="${ar?"rtl":"ltr"}"><head><meta charset="utf-8"><title>${es(d.subject)}</title><style>@page{size:A4;margin:12mm}body{margin:0;color:#172033;font:13px/1.6 "Segoe UI",Tahoma,Arial,sans-serif}.doc{max-width:186mm;margin:auto}.head{display:flex;justify-content:space-between;gap:18px;border-bottom:3px solid #314fcb;padding-bottom:16px}.brand{display:flex;gap:11px}.mark{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(135deg,#314fcb,#7353e8);color:#fff;font-size:23px;font-weight:800}.head h1{font-size:21px;margin:0}.mut{color:#667085;font-size:11px}.kind{display:inline-block;padding:4px 10px;border-radius:99px;background:#eef2ff;color:#314fcb;font-size:11px}.client{margin:18px 0;padding:12px 14px;background:#fbfcff;border:1px solid #dbe2ee;border-radius:10px}.client h3{margin:0 0 5px;font-size:11px;color:#667085}.items{width:100%;border-collapse:collapse}.items th{padding:8px;background:#314fcb;color:#fff;font-size:10px}.items td{padding:9px 7px;border-bottom:1px solid #e4e9f1;text-align:center;font-size:11px}.items td:first-child{text-align:start}.items tr:nth-child(even){background:#fafbfe}.items small{display:block;color:#718096;font-size:9px}.total{width:72mm;margin-top:16px;margin-inline-start:auto;border:1px solid #dbe2ee;border-radius:10px;padding:10px 13px}.r{display:flex;justify-content:space-between;padding:4px 0}.grand{margin-top:5px;padding-top:9px;border-top:1px solid #cbd5e1;font-size:15px;font-weight:800}.terms{margin-top:18px;border-inline-start:3px solid #b6c4ff;padding-inline-start:10px;color:#475569;font-size:11px}.foot{display:flex;justify-content:space-between;margin-top:28px;padding-top:10px;border-top:1px solid #e4e9f1;color:#7a8799;font-size:10px}@media print{.client{background:#fbfcff!important}.items th{background:#314fcb!important;color:#fff!important}.items tr:nth-child(even){background:#fafbfe!important}.items tr{break-inside:avoid}}</style></head><body><main class="doc"><header class="head"><div class="brand"><div class="mark">${ar?"ن":"N"}</div><div><h1>${es(c.name||"NebrasCRM")}</h1><div class="mut">${es([c.address,c.phone,c.tax_number].filter(Boolean).join(" · "))}</div></div></div><div style="text-align:end"><span class="kind">${es(d.type_ar||kind)}</span><h2>${es(d.subject)}</h2><div class="mut">${es(d.invoice_date||d.valid_until||"")}</div></div></header><section class="client"><h3>${L.bill}</h3><b>${es(d.account_name||"")}</b><div>${es(d.contact_name||"")} ${d.contact_phone?"· "+es(d.contact_phone):""}</div></section><table class="items"><thead><tr><th>${L.item}</th><th>${L.qty}</th><th>${L.price}</th><th>${L.disc}</th><th>${L.tax}</th><th>${L.line}</th></tr></thead><tbody>${rows}</tbody></table><div class="total"><div class="r"><span>${L.sub}</span><b>${dm(d.totals.subtotal)}</b></div><div class="r"><span>${L.disc}</span><b>− ${dm(d.totals.discount_total)}</b></div><div class="r"><span>${L.tax}</span><b>+ ${dm(d.totals.tax_total)}</b></div><div class="r grand"><span>${L.total}</span><span>${dm(d.totals.total)}</span></div></div>${d.terms?`<section class="terms"><b>${L.terms}</b><br>${es(d.terms).replace(/\n/g,"<br>")}</section>`:""}<footer class="foot"><span>${new Date().toLocaleDateString()}</span><b>${L.thanks}</b></footer></main></body></html>`;
+  win.document.open();win.document.write(html);win.document.close();win.onload=()=>setTimeout(()=>{win.focus();win.print();},150);
+}
+
+function printPortalPaymentReceipt(paymentId){
+  const win=window.open("","_blank");
+  if(!win){tst(P.lang==="ar"?"اسمح بالنوافذ المنبثقة للطباعة":"Allow pop-ups to print");return;}
+  win.document.write(`<title>${es(x("paymentVoucher"))}</title><body style="font-family:system-ui;padding:32px">Loading…</body>`);
+  const ar=P.lang==="ar";
+  const L=ar?{
+    title:"سند دفع",amount:"المبلغ المسدد",customer:"بيانات العميل",contact:"جهة الاتصال",payment:"تفاصيل السداد",method:"الطريقة",status:"الحالة",date:"التاريخ",ref:"المرجع",payer:"مرجع الدافع",invoice:"الفاتورة المرتبطة",invoiceTotal:"إجمالي الفاتورة",paid:"المدفوع",balance:"المتبقي",note:"ملاحظات",thanks:"شكرًا لتعاملكم معنا",
+  }:{
+    title:"Payment Voucher",amount:"Amount paid",customer:"Customer information",contact:"Contact",payment:"Payment details",method:"Method",status:"Status",date:"Date",ref:"Reference",payer:"Payer reference",invoice:"Linked invoice",invoiceTotal:"Invoice total",paid:"Paid to date",balance:"Balance due",note:"Notes",thanks:"Thank you for your business",
+  };
+  pa(`/payments/${paymentId}/receipt`).then(d=>{
+    const c=d.company||{},p=d.payment||{},i=d.invoice||{},a=d.account||{},ct=d.contact||{};
+    const currency=p.currency||c.currency||"USD";
+    const dm=value=>{try{return new Intl.NumberFormat(ar?"ar-EG":"en-US",{style:"currency",currency,maximumFractionDigits:2}).format(value||0);}catch{return money(value);}};
+    const date=value=>value?String(value).replace("T"," "):"—";
+    const field=(label,value)=>`<div class="field"><span>${es(label)}</span><b>${es(value||"—")}</b></div>`;
+    const contact=[ct.name,ct.title].filter(Boolean).join(" · ");
+    const contactData=[ct.phone,ct.email].filter(Boolean).join(" · ")||a.phone||"—";
+    const note=p.note?`<section class="note"><b>${es(L.note)}</b><br>${es(p.note).replace(/\n/g,"<br>")}</section>`:"";
+    const html=`<!doctype html><html lang="${P.lang}" dir="${ar?"rtl":"ltr"}"><head><meta charset="utf-8"><title>${es(d.reference||L.title)}</title><style>
+      @page{size:A4;margin:12mm}*{box-sizing:border-box}body{margin:0;color:#172033;font:13px/1.6 "Segoe UI",Tahoma,Arial,sans-serif}.doc{max-width:186mm;margin:auto}.head{display:flex;justify-content:space-between;gap:16px;border-bottom:3px solid #087443;padding-bottom:16px}.brand{display:flex;gap:11px}.mark{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(135deg,#087443,#15a66b);color:#fff;font-size:23px;font-weight:800}.head h1{font-size:21px;margin:0}.mut{color:#667085;font-size:11px}.kind{display:inline-block;padding:4px 10px;border-radius:99px;background:#edf9f1;color:#087443;font-size:11px;font-weight:700}.amount{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:10px;margin:18px 0}.amount>div{border:1px solid #dbe2ee;border-radius:11px;padding:12px;background:#fbfcff}.amount .paid{background:linear-gradient(135deg,#087443,#15a66b);border-color:#087443;color:#fff}.amount span{display:block;color:#667085;font-size:10.5px}.amount .paid span{color:#d9f8e8}.amount b{display:block;font-size:15px;margin-top:4px}.amount .paid b{font-size:20px}.section{margin-top:18px}.section h2{font-size:12px;margin:0 0 8px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}.field{border:1px solid #dbe2ee;border-radius:9px;padding:8px 10px;background:#fbfcff;min-height:56px}.field span{display:block;color:#667085;font-size:10px}.field b{display:block;margin-top:3px;font-size:12px;overflow-wrap:anywhere}.balance{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.balance div{border:1px solid #dbe2ee;border-radius:8px;padding:8px 10px;background:#fbfcff}.balance span{display:block;color:#667085;font-size:10px}.balance b{font-size:12px}.note{margin-top:18px;border-inline-start:3px solid #087443;background:#f8fafc;padding:10px 12px;color:#475569;font-size:11px}.foot{display:flex;justify-content:space-between;margin-top:27px;padding-top:10px;border-top:1px solid #e4e9f1;color:#7a8799;font-size:10px}@media print{.amount .paid{background:#087443!important;color:#fff!important}.field,.amount>div,.balance div{background:#fbfcff!important}.section,.amount{break-inside:avoid}}</style></head><body><main class="doc"><header class="head"><div class="brand"><div class="mark">${ar?"ن":"N"}</div><div><h1>${es(c.name||"NebrasCRM")}</h1><div class="mut">${es([c.address,c.phone,c.tax_number].filter(Boolean).join(" · "))}</div></div></div><div style="text-align:end"><span class="kind">${es(L.title)}</span><h2 style="margin:8px 0 1px">${es(d.reference||`PAY-${p.id||""}`)}</h2><div class="mut">${es(date(p.paid_on||p.created_on))}</div></div></header><section class="amount"><div class="paid"><span>${es(L.amount)}</span><b>${es(dm(p.amount))}</b></div><div><span>${es(L.status)}</span><b>${es(p.status||"—")}</b></div><div><span>${es(L.ref)}</span><b>${es(p.provider_ref||d.reference||"—")}</b></div></section><section class="section"><h2>${es(L.customer)}</h2><div class="grid">${field(L.customer,a.name||"—")}${field(L.contact,contact||"—")}${field(x("phone"),contactData)}${field(ar?"العنوان":"Address",a.address||"—")}</div></section><section class="section"><h2>${es(L.payment)}</h2><div class="grid">${field(L.method,[p.method,p.channel].filter(Boolean).join(" · ")||"—")}${field(L.date,date(p.paid_on||p.created_on))}${field(L.ref,p.provider_ref||d.reference||"—")}${field(L.payer,p.payer_ref||"—")}</div></section><section class="section"><h2>${es(L.invoice)}</h2><div class="grid">${field(L.invoice,i.subject||`#${i.id||"—"}`)}${field(ar?"تاريخ الفاتورة":"Invoice date",date(i.issued_on))}${field(L.invoiceTotal,dm(i.total))}${field(L.paid,dm(i.paid))}${field(L.balance,dm(i.remaining))}</div><div class="balance"><div><span>${es(L.invoiceTotal)}</span><b>${es(dm(i.total))}</b></div><div><span>${es(L.paid)}</span><b>${es(dm(i.paid))}</b></div><div><span>${es(L.balance)}</span><b>${es(dm(i.remaining))}</b></div></div></section>${note}<footer class="foot"><span>${es(new Date().toLocaleDateString())}</span><b>${es(L.thanks)}</b></footer></main></body></html>`;
+    win.document.open();win.document.write(html);win.document.close();win.onload=()=>setTimeout(()=>{win.focus();win.print();},160);
+  }).catch(()=>{win.close();});
 }
 async function tLoyalty(){
   const l=await pa("/loyalty");
