@@ -394,7 +394,7 @@ def register(app, current_user, require):
         by_country = [dict(r) for r in con.execute("""
             SELECT COALESCE(g.name_ar,'—') k, COUNT(a.id) n FROM agents a
             LEFT JOIN geo_governorates g ON g.id=a.gov_id
-            WHERE a.deleted=0 GROUP BY 1 ORDER BY n DESC""")]
+            WHERE a.deleted=0 GROUP BY COALESCE(g.name_ar,'—') ORDER BY n DESC""")]
         return {
             "kpi": {
                 "partners": int(g("SELECT COUNT(*) FROM agents WHERE deleted=0")),

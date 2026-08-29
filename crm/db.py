@@ -12,7 +12,8 @@ import json
 import os
 import re
 import sqlite3
-from typing import Iterable
+import threading
+from typing import Callable, Iterable
 
 from schema import MODULES
 
@@ -27,7 +28,12 @@ def normalize_engine(value: str | None) -> str:
     return engine
 
 
-DB_ENGINE = normalize_engine(os.environ.get("CRM_DB_ENGINE", "sqlite"))
+REQUESTED_DB_ENGINE = (os.environ.get("CRM_DB_ENGINE", "sqlite") or "sqlite").strip().lower()
+DB_ENGINE = normalize_engine(REQUESTED_DB_ENGINE)
+# MySQL 8.0.19+ supports row aliases for UPSERT and deprecates VALUES(col).
+# The optimistic requested-engine value is replaced with server detection in
+# connect(), so CRM_DB_ENGINE=mysql still works against a MariaDB server.
+MYSQL8_MODE = REQUESTED_DB_ENGINE == "mysql"
 
 # SQLite setting (the default)
 DB_PATH = os.path.abspath(os.path.expanduser(
@@ -72,6 +78,11 @@ def is_mariadb() -> bool:
     return DB_ENGINE == "mariadb"
 
 
+def is_mysql8() -> bool:
+    """Whether the active compatible dialect is explicitly MySQL 8+."""
+    return is_mariadb() and MYSQL8_MODE
+
+
 def is_postgresql() -> bool:
     return DB_ENGINE == "postgresql"
 
@@ -86,6 +97,26 @@ def _load_pymysql():
     return pymysql
 
 
+def _server_is_mysql8(raw, default: bool = False) -> bool:
+    """Detect whether a live compatible server supports MySQL 8 row aliases.
+
+    MariaDB identifies itself explicitly in VERSION()/get_server_info(). This
+    runtime check avoids treating a MariaDB server as MySQL 8 merely because a
+    user selected the convenient ``CRM_DB_ENGINE=mysql`` alias.
+    """
+    try:
+        info = str(raw.get_server_info())
+    except Exception:
+        info = str(getattr(raw, "server_version", ""))
+    lowered = info.lower()
+    if "mariadb" in lowered:
+        return False
+    match = re.search(r"(?:^|[^0-9])(\d+)\.(\d+)", info)
+    if match:
+        return int(match.group(1)) >= 8
+    return default
+
+
 def _load_psycopg():
     try:
         import psycopg
@@ -95,6 +126,40 @@ def _load_psycopg():
             "PostgreSQL support requires Psycopg. Run: python3 -m pip install 'psycopg[binary]'"
         ) from exc
     return psycopg, dict_row
+
+
+_MYSQL8_UPSERT = re.compile(
+    r"(?is)(?P<insert>\bINSERT\s+INTO\s+(?:`[^`]+`|[A-Za-z_][A-Za-z0-9_]*)"
+    r"(?:\s*\([^;]*?\))?\s+VALUES\s*\([^;]*?\))"
+    r"\s+ON\s+CONFLICT\s*\([^)]*\)\s+DO\s+UPDATE\s+SET"
+)
+
+
+def _translate_mysql8_upsert(sql: str) -> tuple[str, bool]:
+    """Use MySQL 8 row aliases instead of deprecated VALUES(column).
+
+    NebrasCRM's UPSERTs use a single ``VALUES(...)`` row. MySQL 8.0.19 and
+    later support an alias immediately after that row; MariaDB intentionally
+    remains on the older but supported VALUES(column) form.
+    """
+    translated, count = _MYSQL8_UPSERT.subn(
+        lambda match: f"{match.group('insert')} AS new_row ON DUPLICATE KEY UPDATE",
+        sql,
+    )
+    if not count:
+        return sql, False
+
+    def replacement(match: re.Match) -> str:
+        column = match.group(1) or match.group(2)
+        return f"new_row.`{column}`"
+
+    translated = re.sub(
+        r"\bexcluded\.(?:`([A-Za-z_][A-Za-z0-9_]*)`|([A-Za-z_][A-Za-z0-9_]*))",
+        replacement,
+        translated,
+        flags=re.IGNORECASE,
+    )
+    return translated, True
 
 
 def _translate_sql(sql: str) -> str:
@@ -147,13 +212,29 @@ def _translate_sql(sql: str) -> str:
         r"CAST\(([^)]+)\s+AS\s+INTEGER\)", r"CAST(\1 AS SIGNED)", translated, flags=re.IGNORECASE
     )
     translated = re.sub(r"\bINSERT\s+OR\s+REPLACE\b", "REPLACE", translated, flags=re.IGNORECASE)
-    translated = re.sub(
-        r"ON\s+CONFLICT\s*\([^)]*\)\s*DO\s+UPDATE\s+SET",
-        "ON DUPLICATE KEY UPDATE",
-        translated,
-        flags=re.IGNORECASE,
-    )
-    translated = re.sub(r"\bexcluded\.([A-Za-z_][A-Za-z0-9_]*)", r"VALUES(\1)", translated)
+    translated = re.sub(r"\bINSERT\s+OR\s+IGNORE\b", "INSERT IGNORE", translated, flags=re.IGNORECASE)
+    # SQLite's NOCASE collation does not exist on MySQL. Current application
+    # queries use LOWER(...) for portable ordering; retain a defensive rewrite
+    # for custom/legacy SQL routed through this layer.
+    translated = re.sub(r"\bCOLLATE\s+NOCASE\b", "COLLATE utf8mb4_unicode_ci", translated,
+                        flags=re.IGNORECASE)
+    if is_mysql8():
+        translated, has_mysql8_upsert = _translate_mysql8_upsert(translated)
+    else:
+        has_mysql8_upsert = False
+    if not has_mysql8_upsert:
+        translated = re.sub(
+            r"ON\s+CONFLICT\s*\([^)]*\)\s*DO\s+UPDATE\s+SET",
+            "ON DUPLICATE KEY UPDATE",
+            translated,
+            flags=re.IGNORECASE,
+        )
+        translated = re.sub(
+            r"\bexcluded\.(?:`([A-Za-z_][A-Za-z0-9_]*)`|([A-Za-z_][A-Za-z0-9_]*))",
+            lambda match: f"VALUES(`{match.group(1) or match.group(2)}`)",
+            translated,
+            flags=re.IGNORECASE,
+        )
     translated = re.sub(r"CREATE\s+INDEX\s+IF\s+NOT\s+EXISTS", "CREATE INDEX", translated,
                         flags=re.IGNORECASE)
     translated = re.sub(r"CREATE\s+UNIQUE\s+INDEX\s+IF\s+NOT\s+EXISTS", "CREATE UNIQUE INDEX", translated,
@@ -164,17 +245,32 @@ def _translate_sql(sql: str) -> str:
 
 
 class MariaRow(dict):
-    """Dict row with SQLite Row-compatible numeric indexing."""
+    """Dict row with SQLite-compatible indexing and MySQL metadata casing.
+
+    MySQL may expose INFORMATION_SCHEMA column labels in uppercase even when the
+    SQL spells them lowercase. Application table fields retain their original
+    names, while this fallback makes metadata helpers safe across MySQL 8 builds.
+    """
     def __getitem__(self, key):
         if isinstance(key, int):
             return list(self.values())[key]
-        return super().__getitem__(key)
+        try:
+            return super().__getitem__(key)
+        except KeyError:
+            if isinstance(key, str):
+                folded = key.casefold()
+                for actual, value in self.items():
+                    if isinstance(actual, str) and actual.casefold() == folded:
+                        return value
+            raise
 
 
 class MariaCursor:
     def __init__(self, connection, raw=None):
         self._connection = connection
-        self._raw = raw or connection._raw.cursor()
+        # FastAPI executes synchronous endpoints in a thread pool. A PyMySQL
+        # socket/cursor must never be shared between those worker threads.
+        self._raw = raw or connection._raw_for_thread().cursor()
 
     def execute(self, sql: str, params=None):
         translated = _translate_sql(sql)
@@ -190,6 +286,15 @@ class MariaCursor:
             # Duplicate index errors are harmless during idempotent startup.
             args = getattr(exc, "args", ())
             code = args[0] if args else None
+            # PyMySQL's InterfaceError(0, '') is raised before it writes a
+            # command when the socket was closed. Reconnect and replay this
+            # one safe, unsent statement exactly once.
+            if isinstance(code, int) and code == 0:
+                replacement = self._connection._reconnect_thread()
+                if replacement is not None:
+                    self._raw = replacement.cursor()
+                    self._raw.execute(translated, params or ())
+                    return self
             if (isinstance(code, int) and code in {1061, 1831}) and re.match(
                 r"^CREATE\s+(UNIQUE\s+)?INDEX", translated, re.IGNORECASE
             ):
@@ -225,8 +330,70 @@ class MariaCursor:
 
 
 class MariaConnection:
-    def __init__(self, raw):
-        self._raw = raw
+    """Thread-local, self-healing facade around PyMySQL connections.
+
+    FastAPI runs normal ``def`` routes in a worker pool. Sharing one PyMySQL
+    socket across those threads can corrupt the protocol state or leave the
+    application holding a socket that MySQL has already closed. The facade keeps
+    the familiar SQLite-style ``con.execute(...); con.commit()`` API while each
+    worker receives its own connection and transaction.
+    """
+    def __init__(self, raw, connector: Callable[[], object] | None = None):
+        self._raw = raw  # retained for compatibility with the initial startup thread
+        self._connector = connector
+        self._local = threading.local()
+        self._connections: dict[int, object] = {}
+        self._connections_lock = threading.Lock()
+        self._set_thread_raw(raw)
+
+    def _remember(self, raw) -> None:
+        with self._connections_lock:
+            self._connections[id(raw)] = raw
+
+    def _set_thread_raw(self, raw) -> None:
+        self._local.raw = raw
+        self._remember(raw)
+
+    def _reconnect_thread(self):
+        """Replace the current worker's dead MySQL socket when possible."""
+        if not self._connector:
+            return None
+        old = getattr(self._local, "raw", None)
+        try:
+            if old is not None:
+                old.close()
+        except Exception:
+            pass
+        raw = self._connector()
+        self._set_thread_raw(raw)
+        return raw
+
+    def _raw_for_thread(self):
+        raw = getattr(self._local, "raw", None)
+        if raw is None:
+            # A connector is always supplied for production MySQL/MariaDB
+            # connections. Keeping the fallback makes small fake connections
+            # used by unit tests retain the old public constructor contract.
+            raw = self._connector() if self._connector else self._raw
+            self._set_thread_raw(raw)
+
+        # Detect sockets dropped after an idle timeout or a database-container
+        # restart before a query is sent. Reconnect ourselves instead of using
+        # PyMySQL's deprecated ``ping(reconnect=True)`` behavior.
+        ping = getattr(raw, "ping", None)
+        if callable(ping):
+            try:
+                try:
+                    ping(reconnect=False)
+                except TypeError:
+                    # Keeps simple test doubles and older compatible drivers
+                    # working when they expose ping() without a keyword.
+                    ping()
+            except Exception:
+                raw = self._reconnect_thread()
+                if raw is None:
+                    raise
+        return raw
 
     def cursor(self):
         return MariaCursor(self)
@@ -238,13 +405,21 @@ class MariaConnection:
         return MariaCursor(self).executemany(sql, params)
 
     def commit(self):
-        self._raw.commit()
+        self._raw_for_thread().commit()
 
     def rollback(self):
-        self._raw.rollback()
+        self._raw_for_thread().rollback()
 
     def close(self):
-        self._raw.close()
+        with self._connections_lock:
+            connections = list(self._connections.values())
+            self._connections.clear()
+        self._local.raw = None
+        for raw in connections:
+            try:
+                raw.close()
+            except Exception:
+                pass
 
 
 class PostgresRow(dict):
@@ -344,7 +519,7 @@ def connect():
         con.execute("PRAGMA foreign_keys=ON")
         return con
 
-    global IntegrityError
+    global IntegrityError, MYSQL8_MODE
     if is_postgresql():
         psycopg, dict_row = _load_psycopg()
         IntegrityError = psycopg.IntegrityError
@@ -369,8 +544,9 @@ def connect():
 
     pymysql = _load_pymysql()
     IntegrityError = pymysql.err.IntegrityError
-    try:
-        raw = pymysql.connect(
+
+    def open_mariadb_connection():
+        return pymysql.connect(
             host=MARIADB_HOST,
             port=MARIADB_PORT,
             user=MARIADB_USER,
@@ -383,12 +559,16 @@ def connect():
             read_timeout=30,
             write_timeout=30,
         )
+
+    try:
+        raw = open_mariadb_connection()
     except Exception as exc:
         raise RuntimeError(
             f"Could not connect to MySQL/MariaDB at {MARIADB_HOST}:{MARIADB_PORT}/{MARIADB_NAME} "
             f"as {MARIADB_USER}. Check CRM_DB_* environment variables."
         ) from exc
-    return MariaConnection(raw)
+    MYSQL8_MODE = _server_is_mysql8(raw, default=MYSQL8_MODE)
+    return MariaConnection(raw, connector=open_mariadb_connection)
 
 
 def table_exists(con, table: str) -> bool:

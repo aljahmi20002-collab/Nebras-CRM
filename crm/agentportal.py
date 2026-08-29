@@ -142,7 +142,7 @@ def asummary(u=Depends(agent_user)):
     monthly = [dict(r) for r in con.execute("""
         SELECT substr(closing_date,1,7) k, SUM(amount) v, COUNT(*) n FROM deals
         WHERE deleted=0 AND stage='Closed Won' AND CAST(agent_id AS INTEGER)=?
-        AND closing_date IS NOT NULL GROUP BY k ORDER BY k DESC LIMIT 12""", (aid,))]
+        AND closing_date IS NOT NULL GROUP BY substr(closing_date,1,7) ORDER BY k DESC LIMIT 12""", (aid,))]
     monthly.reverse()
     import loyalty as LOY
     _r, pts = LOY.compute("partner", aid)

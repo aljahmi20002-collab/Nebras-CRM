@@ -127,13 +127,13 @@ def register(app, current_user, require):
         for d in data:
             dist[d["suggested"]] = dist.get(d["suggested"], 0) + 1
         lists = [dict(r) for r in con.execute("""
-            SELECT COALESCE(list_tag,'—') k, COUNT(*) n,
-                   (SELECT COALESCE(SUM(d.amount),0) FROM deals d WHERE d.deleted=0
-                     AND d.stage='Closed Won'
-                     AND CAST(d.account_id AS INTEGER) IN
-                       (SELECT id FROM accounts a2 WHERE a2.deleted=0
-                         AND COALESCE(a2.list_tag,'—')=COALESCE(accounts.list_tag,'—'))) v
-            FROM accounts WHERE deleted=0 GROUP BY 1""")]
+            SELECT COALESCE(a.list_tag,'—') k, COUNT(DISTINCT a.id) n,
+                   COALESCE(SUM(CASE WHEN d.stage='Closed Won' THEN d.amount ELSE 0 END),0) v
+            FROM accounts a
+            LEFT JOIN deals d ON d.deleted=0 AND d.stage='Closed Won'
+              AND CAST(d.account_id AS INTEGER)=a.id
+            WHERE a.deleted=0
+            GROUP BY COALESCE(a.list_tag,'—')""")]
         return {"accounts": data, "distribution": dist, "lists": lists,
                 "meta": {"segments": SEGMENTS, "lists": LISTS}}
 
@@ -273,32 +273,35 @@ def register(app, current_user, require):
         require(user, "admin", "manager")
         g = lambda s: con.execute(s).fetchone()[0] or 0
         by_stage = [dict(r) for r in con.execute("""
-            SELECT stage k, COUNT(*) n, SUM(value) v FROM opportunities
+            SELECT stage k, COUNT(*) n, SUM("value") v FROM opportunities
             WHERE deleted=0 GROUP BY stage""")]
         by_outcome = [dict(r) for r in con.execute("""
-            SELECT COALESCE(outcome,'Potential') k, COUNT(*) n, SUM(value) v
-            FROM opportunities WHERE deleted=0 GROUP BY 1""")]
+            SELECT COALESCE(outcome,'Potential') k, COUNT(*) n, SUM("value") v
+            FROM opportunities WHERE deleted=0 GROUP BY COALESCE(outcome,'Potential')""")]
         win_reasons = [dict(r) for r in con.execute("""
-            SELECT COALESCE(win_reason,'—') k, COUNT(*) n, SUM(value) v FROM opportunities
-            WHERE deleted=0 AND outcome='Won' GROUP BY 1 ORDER BY n DESC""")]
+            SELECT COALESCE(win_reason,'—') k, COUNT(*) n, SUM("value") v FROM opportunities
+            WHERE deleted=0 AND outcome='Won' GROUP BY COALESCE(win_reason,'—') ORDER BY n DESC""")]
         loss_reasons = [dict(r) for r in con.execute("""
-            SELECT COALESCE(loss_reason,'—') k, COUNT(*) n, SUM(value) v FROM opportunities
-            WHERE deleted=0 AND outcome='Lost' GROUP BY 1 ORDER BY v DESC""")]
+            SELECT COALESCE(loss_reason,'—') k, COUNT(*) n, SUM("value") v FROM opportunities
+            WHERE deleted=0 AND outcome='Lost' GROUP BY COALESCE(loss_reason,'—') ORDER BY v DESC""")]
         sources = [dict(r) for r in con.execute("""
-            SELECT COALESCE(source,'—') k, COUNT(*) n, SUM(value) v,
+            SELECT COALESCE(source,'—') k, COUNT(*) n, SUM("value") v,
                    SUM(CASE WHEN outcome='Won' THEN 1 ELSE 0 END) won
-            FROM opportunities WHERE deleted=0 GROUP BY 1 ORDER BY v DESC""")]
+            FROM opportunities WHERE deleted=0 GROUP BY COALESCE(source,'—') ORDER BY v DESC""")]
         won = g("SELECT COUNT(*) FROM opportunities WHERE deleted=0 AND outcome='Won'")
         lost = g("SELECT COUNT(*) FROM opportunities WHERE deleted=0 AND outcome='Lost'")
         return {
             "kpi": {
                 "potential": g("SELECT COUNT(*) FROM opportunities WHERE deleted=0 AND outcome='Potential'"),
-                "potential_value": g("SELECT SUM(value) FROM opportunities WHERE deleted=0 AND outcome='Potential'"),
-                "weighted": g("""SELECT SUM(value*COALESCE(probability,0)/100.0)
+                "potential_value": g("""SELECT SUM("value") FROM opportunities
+                                        WHERE deleted=0 AND outcome='Potential'"""),
+                "weighted": g("""SELECT SUM("value"*COALESCE(probability,0)/100.0)
                                  FROM opportunities WHERE deleted=0 AND outcome='Potential'"""),
                 "won": won, "lost": lost,
-                "won_value": g("SELECT SUM(value) FROM opportunities WHERE deleted=0 AND outcome='Won'"),
-                "lost_value": g("SELECT SUM(value) FROM opportunities WHERE deleted=0 AND outcome='Lost'"),
+                "won_value": g("""SELECT SUM("value") FROM opportunities
+                                    WHERE deleted=0 AND outcome='Won'"""),
+                "lost_value": g("""SELECT SUM("value") FROM opportunities
+                                     WHERE deleted=0 AND outcome='Lost'"""),
                 "win_rate": round(won / (won + lost) * 100, 1) if (won + lost) else 0,
             },
             "by_stage": by_stage, "by_outcome": by_outcome,

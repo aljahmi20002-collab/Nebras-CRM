@@ -33,7 +33,7 @@ def register(app, current_user, require):
                    SUM(CASE WHEN d.stage='Closed Won'  THEN d.amount ELSE 0 END) won_value
             FROM competitors c
             LEFT JOIN deals d ON CAST(d.competitor_id AS INTEGER)=c.id AND d.deleted=0
-            WHERE c.deleted=0 GROUP BY c.id ORDER BY lost_value DESC""").fetchall()
+            WHERE c.deleted=0 GROUP BY c.id,c.name,c.tier,c.threat_score ORDER BY lost_value DESC""").fetchall()
         winloss = []
         for r in rows:
             d = dict(r)
@@ -44,7 +44,7 @@ def register(app, current_user, require):
         # ---- why we lose ----
         loss_reasons = [dict(r) for r in con.execute("""
             SELECT COALESCE(loss_reason,'Unspecified') k, COUNT(*) n, SUM(amount) v
-            FROM deals WHERE deleted=0 AND stage='Closed Lost' GROUP BY 1 ORDER BY v DESC""")]
+            FROM deals WHERE deleted=0 AND stage='Closed Lost' GROUP BY COALESCE(loss_reason,'Unspecified') ORDER BY v DESC""")]
 
         # ---- price positioning ----
         price_gap = []
@@ -62,11 +62,11 @@ def register(app, current_user, require):
 
         positioning = [dict(r) for r in con.execute("""
             SELECT COALESCE(positioning,'Unknown') k, COUNT(*) n FROM competitor_products
-            WHERE deleted=0 GROUP BY 1""")]
+            WHERE deleted=0 GROUP BY COALESCE(positioning,'Unknown')""")]
 
         tiers = [dict(r) for r in con.execute("""
             SELECT COALESCE(tier,'—') k, COUNT(*) n, AVG(threat_score) avg_threat,
-                   SUM(market_share) share FROM competitors WHERE deleted=0 GROUP BY 1""")]
+                   SUM(market_share) share FROM competitors WHERE deleted=0 GROUP BY COALESCE(tier,'—')""")]
 
         share = [dict(r) for r in con.execute("""
             SELECT name k, COALESCE(market_share,0) v FROM competitors
@@ -77,11 +77,11 @@ def register(app, current_user, require):
 
         studies = [dict(r) for r in con.execute("""
             SELECT COALESCE(status,'—') k, COUNT(*) n FROM market_research
-            WHERE deleted=0 GROUP BY 1""")]
+            WHERE deleted=0 GROUP BY COALESCE(status,'—')""")]
 
         tam = [dict(r) for r in con.execute("""
             SELECT COALESCE(segment,'—') k, SUM(market_size) v, AVG(growth_rate) g
-            FROM market_research WHERE deleted=0 AND market_size IS NOT NULL GROUP BY 1 ORDER BY v DESC""")]
+            FROM market_research WHERE deleted=0 AND market_size IS NOT NULL GROUP BY COALESCE(segment,'—') ORDER BY v DESC""")]
 
         return {
             "kpi": {
@@ -137,7 +137,7 @@ def register(app, current_user, require):
         reasons = [dict(r) for r in con.execute("""
             SELECT COALESCE(loss_reason,'Unspecified') k, COUNT(*) n FROM deals
             WHERE deleted=0 AND stage='Closed Lost' AND CAST(competitor_id AS INTEGER)=?
-            GROUP BY 1 ORDER BY n DESC""", (cid,))]
+            GROUP BY COALESCE(loss_reason,'Unspecified') ORDER BY n DESC""", (cid,))]
 
         studies = [dict(r) for r in con.execute("""
             SELECT id,title,type,status,findings FROM market_research

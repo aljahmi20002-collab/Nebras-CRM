@@ -99,6 +99,143 @@ class NebrasApiTests(unittest.TestCase):
                 else:
                     os.environ[key] = value
 
+    def test_mariadb_connection_is_thread_local_and_recovers_a_closed_socket(self):
+        """A MySQL request must not inherit another worker's dead socket."""
+        import threading
+
+        class Raw:
+            def __init__(self, name, fail_ping=False):
+                self.name = name
+                self.fail_ping = fail_ping
+                self.pings = 0
+                self.closed = False
+
+            def ping(self, reconnect=True):
+                self.pings += 1
+                if self.fail_ping:
+                    raise OSError("closed socket")
+
+            def close(self):
+                self.closed = True
+
+        created = []
+
+        def connector():
+            raw = Raw(f"replacement-{len(created) + 1}")
+            created.append(raw)
+            return raw
+
+        primary = Raw("initial", fail_ping=True)
+        connection = self.main.D.MariaConnection(primary, connector=connector)
+        try:
+            recovered = connection._raw_for_thread()
+            self.assertIs(recovered, created[0])
+            self.assertTrue(primary.closed)
+
+            worker_raw = []
+            worker = threading.Thread(target=lambda: worker_raw.append(connection._raw_for_thread()))
+            worker.start()
+            worker.join(timeout=5)
+            self.assertFalse(worker.is_alive())
+            self.assertEqual(len(worker_raw), 1)
+            self.assertIsNot(worker_raw[0], recovered)
+            self.assertEqual(len(created), 2)
+            self.assertGreaterEqual(primary.pings, 1)
+            self.assertGreaterEqual(worker_raw[0].pings, 1)
+        finally:
+            connection.close()
+
+    def test_mariadb_cursor_retries_an_unsent_closed_socket_query_once(self):
+        """PyMySQL InterfaceError(0, '') occurs before the SQL command is sent."""
+        class ClosedSocketError(Exception):
+            pass
+
+        class Cursor:
+            def __init__(self, raw):
+                self.raw = raw
+
+            def execute(self, sql, params=()):
+                if self.raw.fail_once:
+                    self.raw.fail_once = False
+                    raise ClosedSocketError(0, "")
+                self.raw.executed.append((sql, params))
+
+            def fetchone(self):
+                return {"ok": 1}
+
+            def fetchall(self):
+                return []
+
+            def close(self):
+                pass
+
+            lastrowid = 0
+            rowcount = 1
+
+        class Raw:
+            def __init__(self, fail_once=False):
+                self.fail_once = fail_once
+                self.closed = False
+                self.executed = []
+
+            def ping(self, reconnect=False):
+                pass
+
+            def cursor(self):
+                return Cursor(self)
+
+            def close(self):
+                self.closed = True
+
+        primary = Raw(fail_once=True)
+        replacement = Raw()
+        connection = self.main.D.MariaConnection(primary, connector=lambda: replacement)
+        try:
+            result = connection.execute("SELECT 1").fetchone()
+            self.assertEqual(result["ok"], 1)
+            self.assertTrue(primary.closed)
+            self.assertEqual(replacement.executed, [("SELECT 1", ())])
+        finally:
+            connection.close()
+
+    def test_health_endpoint_checks_the_database(self):
+        response = self.client.get("/api/health")
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(response.json(), {"ok": True})
+
+    def test_dashboard_endpoint_returns_all_expected_analytics(self):
+        response = self.client.get("/api/analytics/dashboard", headers=self.admin_headers)
+        self.assertEqual(response.status_code, 200, response.text)
+        payload = response.json()
+        self.assertEqual(
+            set(payload),
+            {"kpi", "pipeline", "leads_status", "sources", "leaderboard", "monthly", "tickets"},
+        )
+        self.assertIn("revenue_won", payload["kpi"])
+        self.assertIsInstance(payload["pipeline"], list)
+        self.assertIsInstance(payload["leaderboard"], list)
+
+    def test_analytics_and_report_queries_execute(self):
+        """Exercise all reporting SQL after the MySQL 8 portability rewrite."""
+        endpoints = [
+            "/api/analytics/dashboard",
+            "/api/intel/dashboard",
+            "/api/partners/analytics/summary",
+            "/api/payments/summary",
+            "/api/payments/by-channel",
+            "/api/interactions/stats",
+            "/api/segments/scores",
+            "/api/opportunities/analytics",
+            "/api/loyalty/summary",
+            "/api/ai/forecast?months=1",
+            "/api/ai/digest",
+            "/api/geo/stats",
+        ]
+        endpoints.extend(f"/api/reports/run/{code}" for code in self.main.RPT.REPORTS)
+        for endpoint in endpoints:
+            response = self.client.get(endpoint, headers=self.admin_headers)
+            self.assertEqual(response.status_code, 200, f"{endpoint}: {response.text}")
+
     def test_agent_cannot_read_or_mutate_another_agents_record(self):
         foreign = self.main.con.execute(
             "SELECT id FROM deals WHERE deleted=0 AND owner_id NOT IN (?, 0) AND owner_id IS NOT NULL LIMIT 1",
@@ -411,25 +548,95 @@ class NebrasApiTests(unittest.TestCase):
         self.assertEqual(self.main.D.normalize_engine("MARIADB"), "mariadb")
         self.assertEqual(self.main.D.normalize_engine("postgres"), "postgresql")
 
+    def test_mysql8_setup_script_validates_and_provisions_the_app_account(self):
+        import setup_mysql8 as setup
+
+        values = {
+            "CRM_SECRET": "a" * 48,
+            "CRM_PORTAL_SECRET": "b" * 48,
+            "CRM_AGENT_PORTAL_SECRET": "c" * 48,
+            "CRM_WEBHOOK_SECRET": "d" * 48,
+            "CRM_BOOTSTRAP_ADMIN_EMAIL": "admin@example.test",
+            "CRM_BOOTSTRAP_ADMIN_NAME": "System Administrator",
+            "CRM_BOOTSTRAP_ADMIN_PASSWORD": "first-admin-password",
+            "MYSQL_DATABASE": "nebrascrm",
+            "MYSQL_USER": "nebrascrm",
+            "MYSQL_PASSWORD": "db-secret'with\\backslash",
+            "MYSQL_ROOT_PASSWORD": "root-password",
+        }
+        setup.validate_environment(values)
+        sql = setup.mysql_provision_sql(values)
+        self.assertIn("CREATE DATABASE IF NOT EXISTS `nebrascrm`", sql)
+        self.assertIn("CREATE USER IF NOT EXISTS 'nebrascrm'@'%'", sql)
+        self.assertIn("ALTER USER 'nebrascrm'@'%'", sql)
+        self.assertIn("GRANT ALL PRIVILEGES ON `nebrascrm`.*", sql)
+        self.assertIn("db-secret\\'with\\\\backslash", sql)
+
+        values["MYSQL_DATABASE"] = "nebrascrm`; DROP DATABASE mysql; --"
+        with self.assertRaises(setup.SetupError):
+            setup.validate_environment(values)
+
+    def test_mariadb_row_accepts_mysql_metadata_key_casing(self):
+        row = self.main.D.MariaRow({"DATA_TYPE": "text"})
+        self.assertEqual(row["data_type"], "text")
+        self.assertEqual(row[0], "text")
+
+    def test_server_detection_keeps_mysql_alias_compatible_with_mariadb(self):
+        class Server:
+            def __init__(self, version):
+                self.version = version
+
+            def get_server_info(self):
+                return self.version
+
+        db = self.main.D
+        self.assertTrue(db._server_is_mysql8(Server("8.4.6")))
+        self.assertTrue(db._server_is_mysql8(Server("8.0.36-Percona")))
+        self.assertFalse(db._server_is_mysql8(Server("5.5.5-10.11.11-MariaDB"), default=True))
+        self.assertFalse(db._server_is_mysql8(Server("5.7.44"), default=True))
+
     def test_mariadb_dialect_translation_for_core_sql(self):
         db = self.main.D
-        original_engine = db.DB_ENGINE
+        original_engine, original_mysql8_mode = db.DB_ENGINE, db.MYSQL8_MODE
         try:
             db.DB_ENGINE = "mariadb"
+            db.MYSQL8_MODE = False
             upsert = db._translate_sql(
                 'INSERT INTO "settings"(key,value) VALUES(?,?) '
                 'ON CONFLICT(key) DO UPDATE SET value=excluded.value'
             )
             self.assertIn('`settings`', upsert)
             self.assertIn('ON DUPLICATE KEY UPDATE', upsert)
-            self.assertIn('VALUES(value)', upsert)
+            self.assertIn('VALUES(`value`)', upsert)
+            self.assertNotIn('AS new_row', upsert)
             self.assertEqual(upsert.count('%s'), 2)
             ddl = db._translate_sql('CREATE TABLE t(id INTEGER PRIMARY KEY AUTOINCREMENT, value REAL)')
             self.assertIn('BIGINT AUTO_INCREMENT PRIMARY KEY', ddl)
             self.assertIn('DOUBLE', ddl)
             self.assertIn('CURRENT_DATE', db._translate_sql("SELECT date('now')"))
         finally:
-            db.DB_ENGINE = original_engine
+            db.DB_ENGINE, db.MYSQL8_MODE = original_engine, original_mysql8_mode
+
+    def test_mysql8_dialect_uses_row_aliases_and_portable_rewrites(self):
+        db = self.main.D
+        original_engine, original_mysql8_mode = db.DB_ENGINE, db.MYSQL8_MODE
+        try:
+            db.DB_ENGINE = "mariadb"
+            db.MYSQL8_MODE = True
+            upsert = db._translate_sql(
+                'INSERT INTO "settings"("key","value") VALUES(?,?) '
+                'ON CONFLICT("key") DO UPDATE SET "value"=excluded."value"'
+            )
+            self.assertIn('AS new_row ON DUPLICATE KEY UPDATE', upsert)
+            self.assertIn('new_row.`value`', upsert)
+            self.assertNotIn('VALUES(`value`)', upsert)
+            self.assertNotIn('ON CONFLICT', upsert)
+            self.assertEqual(upsert.count('%s'), 2)
+            self.assertIn('COLLATE utf8mb4_unicode_ci', db._translate_sql('SELECT name COLLATE NOCASE FROM t'))
+            self.assertIn('CAST(account_id AS SIGNED)', db._translate_sql('SELECT CAST(account_id AS INTEGER) FROM t'))
+            self.assertIn('CURRENT_DATE', db._translate_sql("SELECT date('now')"))
+        finally:
+            db.DB_ENGINE, db.MYSQL8_MODE = original_engine, original_mysql8_mode
 
     def test_mariadb_pos_schema_uses_an_indexable_timestamp_and_upgrades_legacy_text(self):
         """MySQL 8 forbids a normal index on a TEXT created_at column."""

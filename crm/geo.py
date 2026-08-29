@@ -65,7 +65,7 @@ def _setting(c, key: str, default: str = "") -> str:
 
 def _set_setting(c, key: str, value: str):
     c.execute(
-        "INSERT INTO settings(\"key\",\"value\") VALUES(?,?) ON CONFLICT(\"key\") DO UPDATE SET value=excluded.value",
+        "INSERT INTO settings(\"key\",\"value\") VALUES(?,?) ON CONFLICT(\"key\") DO UPDATE SET \"value\"=excluded.\"value\"",
         (key, value),
     )
 
@@ -378,7 +378,7 @@ def _country_rows(q: str = "", limit: int = 300):
                (SELECT COUNT(*) FROM geo_villages ci WHERE ci.country_id=c.id) cities,
                (SELECT COUNT(*) FROM accounts a WHERE a.deleted=0 AND CAST(a.gov_id AS INTEGER)=c.id) accounts
         FROM geo_governorates c {clause}
-        ORDER BY c.name_en COLLATE NOCASE LIMIT ?""", params + [_limit(limit, 300, 300)])]
+        ORDER BY LOWER(c.name_en) LIMIT ?""", params + [_limit(limit, 300, 300)])]
 
 
 def _region_rows(country_id: int = 0, q: str = "", limit: int = 200):
@@ -394,7 +394,7 @@ def _region_rows(country_id: int = 0, q: str = "", limit: int = 200):
         SELECT r.*, c.name_ar country_ar, c.name_en country_en,
                (SELECT COUNT(*) FROM geo_villages ci WHERE ci.region_id=r.id) cities
         FROM geo_districts r JOIN geo_governorates c ON c.id=r.gov_id
-        {clause} ORDER BY r.name_en COLLATE NOCASE LIMIT ?""", params + [_limit(limit)])]
+        {clause} ORDER BY LOWER(r.name_en) LIMIT ?""", params + [_limit(limit)])]
 
 
 def _city_rows(country_id: int = 0, region_id: int = 0, q: str = "", limit: int = 100):
@@ -418,7 +418,7 @@ def _city_rows(country_id: int = 0, region_id: int = 0, q: str = "", limit: int 
         LEFT JOIN geo_districts r ON r.id=ci.region_id
         JOIN geo_governorates c ON c.id=ci.country_id
         WHERE {' AND '.join(where)}
-        ORDER BY ci.population DESC, ci.name_en COLLATE NOCASE LIMIT ?""", params + [_limit(limit)])]
+        ORDER BY ci.population DESC, LOWER(ci.name_en) LIMIT ?""", params + [_limit(limit)])]
 
 
 def _search(q: str, limit: int = 30):
@@ -538,7 +538,7 @@ def register(app, current_user, require):
             where.append("village_id=?")
             params.append(city_id)
         sql = "SELECT * FROM geo_quarters" + (" WHERE " + " AND ".join(where) if where else "")
-        return [dict(row) for row in con.execute(sql + " ORDER BY name_en COLLATE NOCASE, name_ar", params)]
+        return [dict(row) for row in con.execute(sql + " ORDER BY LOWER(name_en), name_ar", params)]
 
     @app.get("/api/geo/quarters")
     def quarters(district_id: int = 0, village_id: int = 0, user=Depends(current_user)):
@@ -557,7 +557,7 @@ def register(app, current_user, require):
             where.append("district_id=?")
             params.append(selected_region)
         sql = "SELECT * FROM geo_streets" + (" WHERE " + " AND ".join(where) if where else "")
-        return [dict(row) for row in con.execute(sql + " ORDER BY name_en COLLATE NOCASE, name_ar", params)]
+        return [dict(row) for row in con.execute(sql + " ORDER BY LOWER(name_en), name_ar", params)]
 
     class Place(BaseModel):
         name: str = ""
@@ -639,7 +639,7 @@ def register(app, current_user, require):
                      WHERE d.deleted=0 AND d.stage='Closed Won'
                      AND CAST(a2.gov_id AS INTEGER)=c.id) revenue,
                    (SELECT COUNT(*) FROM territories t WHERE t.gov_id=c.id) partners
-            FROM geo_governorates c ORDER BY revenue DESC, c.name_en COLLATE NOCASE""")]
+            FROM geo_governorates c ORDER BY revenue DESC, LOWER(c.name_en)""")]
         counts = status_data["counts"]
         # Legacy aliases ease a non-breaking migration for clients using old keys.
         counts.update({

@@ -312,7 +312,7 @@ def register(app, current_user, require):
             if len(value) > 2000:
                 raise HTTPException(400, "Setting value is too long")
             con.execute("INSERT INTO settings(\"key\",\"value\") VALUES(?,?) "
-                        "ON CONFLICT(\"key\") DO UPDATE SET value=excluded.value", (k, value))
+                        "ON CONFLICT(\"key\") DO UPDATE SET \"value\"=excluded.\"value\"", (k, value))
         con.commit()
         current = {row["key"]: row["value"] for row in con.execute("SELECT * FROM settings")}
         return {"ok": True, "mode": delivery_mode(current)}

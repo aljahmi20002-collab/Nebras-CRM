@@ -402,7 +402,7 @@ def register(app, current_user, require):
             "by_method": [dict(r) for r in con.execute(
                 f"""SELECT COALESCE(p.method,'—') k, SUM(p.amount) v, COUNT(*) n FROM payments p
                     JOIN invoices i ON i.id=p.invoice_id WHERE {paid_where} AND p.status='paid'
-                    GROUP BY p.method""", invoice_params)],
+                    GROUP BY COALESCE(p.method,'—')""", invoice_params)],
         }
 
     class LinkBody(BaseModel):
@@ -487,7 +487,7 @@ def register(app, current_user, require):
                    SUM(p.fee) fees, SUM(p.net) net
             FROM payments p JOIN invoices i ON i.id=p.invoice_id
             WHERE i.deleted=0 AND {invoice_scope} AND p.status='paid'
-            GROUP BY 1 ORDER BY v DESC""", params)]
+            GROUP BY COALESCE(p.channel,'other') ORDER BY v DESC""", params)]
         for r in rows:
             c = G.BY_CODE.get(r["k"])
             r["name_en"] = c["name_en"] if c else r["k"]

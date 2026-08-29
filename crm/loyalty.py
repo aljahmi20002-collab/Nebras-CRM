@@ -93,7 +93,7 @@ def init_tables(c):
         UNIQUE(member_type, member_id))""")
     c.execute("""CREATE TABLE IF NOT EXISTS loyalty_redemptions(
         id INTEGER PRIMARY KEY AUTOINCREMENT, member_type VARCHAR(32), member_id INTEGER,
-        points REAL, reward TEXT, value REAL, status TEXT DEFAULT 'approved',
+        points REAL, reward TEXT, "value" REAL, status TEXT DEFAULT 'approved',
         note TEXT, created_by INTEGER, created_at TEXT)""")
     c.execute("CREATE INDEX IF NOT EXISTS ix_lp_member ON loyalty_points(member_type,member_id)")
     c.commit()
@@ -386,7 +386,7 @@ def register(app, current_user, require):
             raise HTTPException(400, f"Not enough points (available {avail:.0f})")
         import db as D
         rid = con.execute("""INSERT INTO loyalty_redemptions(member_type,member_id,points,reward,
-            value,status,note,created_by,created_at) VALUES(?,?,?,?,?,'approved',?,?,?)""",
+            "value",status,note,created_by,created_at) VALUES(?,?,?,?,?,'approved',?,?,?)""",
             (b.member_type, b.member_id, b.points, b.reward, b.value, b.note,
              user["id"], D.now())).lastrowid
         con.commit()

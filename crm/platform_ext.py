@@ -142,7 +142,7 @@ def register(app, current_user, require):
                 """SELECT id,name,amount,stage,probability,closing_date FROM deals
                    WHERE deleted=0 AND CAST(account_id AS INTEGER)=? ORDER BY id DESC LIMIT 20""", (aid,))]
             out["opportunities"] = [dict(r) for r in con.execute(
-                """SELECT id,name,value,stage,outcome FROM opportunities
+                """SELECT id,name,"value",stage,outcome FROM opportunities
                    WHERE deleted=0 AND CAST(account_id AS INTEGER)=? ORDER BY id DESC LIMIT 10""", (aid,))]
             out["invoices"] = [dict(r) for r in con.execute(
                 """SELECT id,subject,amount,paid_amount,status,due_date FROM invoices
@@ -350,7 +350,7 @@ def register(app, current_user, require):
         if group_by:
             if group_by not in cols: raise HTTPException(400, "Bad group_by")
             rows = con.execute(f'''SELECT COALESCE("{group_by}",'—') k, {agg} v FROM "{module}"
-                WHERE {" AND ".join(w)} GROUP BY 1 ORDER BY 2 DESC LIMIT 30''', p).fetchall()
+                WHERE {" AND ".join(w)} GROUP BY COALESCE("{group_by}",'—') ORDER BY v DESC LIMIT 30''', p).fetchall()
             return {"rows": [{"k": r["k"], "v": _f(r["v"])} for r in rows]}
         v = con.execute(f'SELECT {agg} v FROM "{module}" WHERE {" AND ".join(w)}', p).fetchone()["v"]
         return {"value": _f(v)}

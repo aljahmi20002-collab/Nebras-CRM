@@ -95,6 +95,37 @@ CRM_BOOTSTRAP_ADMIN_PASSWORD=...generated-or-your-strong-password...
 
 The bootstrap password is used only while the `users` table is empty; changing it later does **not** reset an existing administrator password. Sign in with that email and password, then use **System Settings → Add demo data** if you want sample business records.
 
+### Complete MySQL 8 setup and verification
+
+Use the dedicated idempotent provisioner when you need to prepare or repair the Docker database account, CRM schema, and first administrator. It starts MySQL, waits for its health check, synchronizes `MYSQL_DATABASE` and `MYSQL_USER` permissions with `.env.docker`, starts the app, and prints the CRM user list without passwords:
+
+```bash
+python3 setup_mysql8.py
+# or: bash ./setup-mysql8.sh
+```
+
+On Windows:
+
+```bat
+setup-mysql8.bat
+```
+
+To intentionally delete only the Docker MySQL volume and build a clean test instance, add `--reset-data`:
+
+```bash
+python3 setup_mysql8.py --reset-data
+```
+
+### MySQL 8 SQL compatibility
+
+All application queries pass through `db.py` when `CRM_DB_ENGINE=mysql`. The MySQL 8 dialect converts qmark parameters, SQLite DDL, `date('now')`, `CAST(... AS INTEGER)`, index creation, and SQLite UPSERTs. MySQL 8 UPSERTs use row aliases (`AS new_row`) instead of deprecated `VALUES(column)` syntax; MariaDB retains its compatible legacy form. Queries no longer use SQLite-only `COLLATE NOCASE` or ordinal/alias `GROUP BY` expressions that can be fragile with `ONLY_FULL_GROUP_BY`.
+
+For a source-level schema audit without a database server:
+
+```bash
+python3 mysql8_schema_audit.py
+```
+
 For a manual start, always pass the same environment file. Docker Compose substitutes `${...}` before it reads a service `env_file`, so a bare `docker compose up` does not satisfy variables such as `MYSQL_PASSWORD`:
 
 ```bash
@@ -475,6 +506,9 @@ crm/
 ├── Dockerfile              Application image for Docker Compose
 ├── docker-compose.yml      Complete NebrasCRM + MySQL stack
 ├── compose-up.sh/.bat      One-command Docker Compose launchers
+├── setup_mysql8.py         MySQL 8 database/account/schema provisioner
+├── setup-mysql8.sh/.bat    Cross-platform launchers for the provisioner
+├── mysql8_schema_audit.py  Offline MySQL 8 schema SQL audit
 ├── data/geonames/          Bundled geographic source data
 ├── migrate_mariadb.py      SQLite to MariaDB migration helper
 ├── migrate_postgresql.py   SQLite to PostgreSQL migration helper

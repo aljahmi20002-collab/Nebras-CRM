@@ -45,7 +45,7 @@ REPORTS = {
                     COALESCE(SUM(CASE WHEN d.stage='Closed Won' THEN d.amount END),0) v,
                     COUNT(CASE WHEN d.stage='Closed Lost' THEN 1 END) lost
                   FROM users u LEFT JOIN deals d ON d.owner_id=u.id AND d.deleted=0 {date}
-                  WHERE u.active=1 GROUP BY u.id ORDER BY v DESC""",
+                  WHERE u.active=1 GROUP BY u.id,u.name,u.target ORDER BY v DESC""",
         "date_col": "d.closing_date",
         "cols": [("k", "المندوب", "Rep", "text"), ("n", "صفقات مكسوبة", "Won", "int"),
                  ("lost", "مخسورة", "Lost", "int"), ("v", "الإيراد", "Revenue", "money"),
@@ -61,7 +61,7 @@ REPORTS = {
                     COALESCE(SUM(CASE WHEN stage='Closed Lost' THEN amount END),0) lost_v,
                     COALESCE(SUM(CASE WHEN stage='Closed Won' THEN amount END),0) won_v
                   FROM deals WHERE deleted=0 AND stage IN ('Closed Won','Closed Lost') {date}
-                  GROUP BY 1 ORDER BY lost DESC""",
+                  GROUP BY COALESCE(loss_reason,'غير محدد') ORDER BY lost DESC""",
         "date_col": "closing_date",
         "cols": [("k", "السبب", "Reason", "text"), ("won", "فوز", "Won", "int"),
                  ("lost", "خسارة", "Lost", "int"), ("won_v", "قيمة الفوز", "Won value", "money"),
@@ -74,7 +74,7 @@ REPORTS = {
                     COALESCE(SUM(amount),0) v,
                     COALESCE(SUM(amount*COALESCE(probability,0)/100.0),0) weighted
                   FROM deals WHERE deleted=0 AND stage NOT IN ('Closed Won','Closed Lost')
-                    AND closing_date IS NOT NULL {date} GROUP BY 1 ORDER BY 1""",
+                    AND closing_date IS NOT NULL {date} GROUP BY substr(closing_date,1,7) ORDER BY k""",
         "date_col": "closing_date",
         "cols": [("k", "الشهر", "Month", "text"), ("n", "الصفقات", "Deals", "int"),
                  ("v", "القيمة الكاملة", "Full value", "money"),
@@ -86,7 +86,7 @@ REPORTS = {
         "sql": """SELECT COALESCE(source,'غير محدد') k, COUNT(*) n,
                     COUNT(CASE WHEN status='Converted' THEN 1 END) conv,
                     COUNT(CASE WHEN status='Qualified' THEN 1 END) qual
-                  FROM leads WHERE deleted=0 {date} GROUP BY 1 ORDER BY n DESC""",
+                  FROM leads WHERE deleted=0 {date} GROUP BY COALESCE(source,'غير محدد') ORDER BY n DESC""",
         "date_col": "created_at",
         "cols": [("k", "المصدر", "Source", "text"), ("n", "العدد", "Leads", "int"),
                  ("qual", "مؤهل", "Qualified", "int"), ("conv", "محوّل", "Converted", "int"),
@@ -112,7 +112,7 @@ REPORTS = {
                     COALESCE(SUM(paid_amount),0) collected,
                     COALESCE(SUM(amount)-SUM(paid_amount),0) outstanding
                   FROM invoices WHERE deleted=0 AND status!='Cancelled'
-                    AND invoice_date IS NOT NULL {date} GROUP BY 1 ORDER BY 1 DESC""",
+                    AND invoice_date IS NOT NULL {date} GROUP BY substr(invoice_date,1,7) ORDER BY k DESC""",
         "date_col": "invoice_date",
         "cols": [("k", "الشهر", "Month", "text"), ("n", "الفواتير", "Invoices", "int"),
                  ("billed", "المفوتر", "Billed", "money"),
@@ -125,7 +125,7 @@ REPORTS = {
         "sql": """SELECT COALESCE(method,channel,'غير محدد') k, COUNT(*) n,
                     COALESCE(SUM(amount),0) v, COALESCE(SUM(fee),0) fees,
                     COALESCE(SUM(net),0) net
-                  FROM payments WHERE status='paid' {date} GROUP BY 1 ORDER BY v DESC""",
+                  FROM payments WHERE status='paid' {date} GROUP BY COALESCE(method,channel,'غير محدد') ORDER BY v DESC""",
         "date_col": "paid_at",
         "cols": [("k", "القناة", "Channel", "text"), ("n", "العمليات", "Count", "int"),
                  ("v", "الإجمالي", "Gross", "money"), ("fees", "الرسوم", "Fees", "money"),
@@ -139,7 +139,7 @@ REPORTS = {
                     COALESCE(SUM(li.qty*li.price*(1-li.discount/100.0)*li.tax/100.0),0) tax
                   FROM invoices i JOIN line_items li ON li.module='invoices' AND li.record_id=i.id
                   WHERE i.deleted=0 AND i.status!='Cancelled' AND i.invoice_date IS NOT NULL {date}
-                  GROUP BY 1 ORDER BY 1 DESC""",
+                  GROUP BY substr(i.invoice_date,1,7) ORDER BY k DESC""",
         "date_col": "i.invoice_date",
         "cols": [("k", "الشهر", "Month", "text"), ("n", "الفواتير", "Invoices", "int"),
                  ("base", "الوعاء", "Taxable base", "money"), ("tax", "الضريبة", "Tax", "money")],
@@ -163,22 +163,26 @@ REPORTS = {
     "customer_segments": {
         "ar": "توزيع شرائح العملاء", "en": "Customer Segments", "group": "customers", "icon": "🏅",
         "desc_ar": "عدد العملاء وإيرادهم لكل شريحة نشاط",
-        "sql": """SELECT COALESCE(a.segment,'غير مصنّف') k, COUNT(*) n,
-                    COALESCE(SUM((SELECT SUM(d.amount) FROM deals d WHERE d.deleted=0
-                      AND d.stage='Closed Won' AND CAST(d.account_id AS INTEGER)=a.id)),0) v
-                  FROM accounts a WHERE a.deleted=0 GROUP BY 1 ORDER BY v DESC""",
+        "sql": """SELECT COALESCE(a.segment,'غير مصنّف') k, COUNT(DISTINCT a.id) n,
+                    COALESCE(SUM(CASE WHEN d.stage='Closed Won' THEN d.amount ELSE 0 END),0) v
+                  FROM accounts a
+                  LEFT JOIN deals d ON d.deleted=0 AND d.stage='Closed Won'
+                    AND CAST(d.account_id AS INTEGER)=a.id
+                  WHERE a.deleted=0
+                  GROUP BY COALESCE(a.segment,'غير مصنّف') ORDER BY v DESC""",
         "cols": [("k", "الشريحة", "Segment", "text"), ("n", "العملاء", "Customers", "int"),
                  ("v", "الإيراد", "Revenue", "money")],
     },
     "geo_performance": {
         "ar": "الأداء حسب الدولة", "en": "Performance by Country", "group": "customers", "icon": "🗺️",
         "desc_ar": "العملاء والإيراد موزّعون حسب الدولة",
-        "sql": """SELECT g.name_ar k, COUNT(a.id) n,
-                    COALESCE(SUM((SELECT SUM(d.amount) FROM deals d WHERE d.deleted=0
-                      AND d.stage='Closed Won' AND CAST(d.account_id AS INTEGER)=a.id)),0) v
+        "sql": """SELECT g.name_ar k, COUNT(DISTINCT a.id) n,
+                    COALESCE(SUM(CASE WHEN d.stage='Closed Won' THEN d.amount ELSE 0 END),0) v
                   FROM geo_governorates g
                   LEFT JOIN accounts a ON CAST(a.gov_id AS INTEGER)=g.id AND a.deleted=0
-                  GROUP BY g.id HAVING n>0 ORDER BY v DESC""",
+                  LEFT JOIN deals d ON d.deleted=0 AND d.stage='Closed Won'
+                    AND CAST(d.account_id AS INTEGER)=a.id
+                  GROUP BY g.id,g.name_ar HAVING COUNT(a.id)>0 ORDER BY v DESC""",
         "cols": [("k", "الدولة", "Country", "text"), ("n", "العملاء", "Customers", "int"),
                  ("v", "الإيراد", "Revenue", "money")],
     },
@@ -188,13 +192,14 @@ REPORTS = {
         "ar": "أداء المنتجات", "en": "Product Performance", "group": "inventory", "icon": "📦",
         "desc_ar": "الكميات المباعة والإيراد لكل منتج",
         "sql": """SELECT p.name k, p.category cat, p.qty_in_stock stock,
-                    COALESCE(SUM(li.qty),0) sold,
-                    COALESCE(SUM(li.qty*li.price),0) v
+                    COALESCE(SUM(CASE WHEN i.id IS NOT NULL THEN li.qty ELSE 0 END),0) sold,
+                    COALESCE(SUM(CASE WHEN i.id IS NOT NULL THEN li.qty*li.price ELSE 0 END),0) v
                   FROM products p
                   LEFT JOIN line_items li ON li.product_id=p.id AND li.module='invoices'
                   LEFT JOIN invoices i ON i.id=li.record_id AND i.deleted=0
                      AND i.status NOT IN ('Draft','Cancelled')
-                  WHERE p.deleted=0 GROUP BY p.id ORDER BY v DESC""",
+                  WHERE p.deleted=0
+                  GROUP BY p.id,p.name,p.category,p.qty_in_stock ORDER BY v DESC""",
         "cols": [("k", "المنتج", "Product", "text"), ("cat", "الفئة", "Category", "text"),
                  ("sold", "المباع", "Sold", "int"), ("stock", "المخزون", "Stock", "int"),
                  ("v", "الإيراد", "Revenue", "money")],
@@ -234,7 +239,7 @@ REPORTS = {
                     COALESCE(SUM(CASE WHEN t.kind IN ('payout','deduction','advance','penalty')
                       THEN t.amount END),0) paid
                   FROM agents a LEFT JOIN agent_txn t ON t.agent_id=a.id
-                  WHERE a.deleted=0 GROUP BY a.id ORDER BY earned DESC""",
+                  WHERE a.deleted=0 GROUP BY a.id,a.name,a.type ORDER BY earned DESC""",
         "cols": [("k", "الشريك", "Partner", "text"), ("typ", "النوع", "Type", "text"),
                  ("earned", "المستحق", "Earned", "money"), ("paid", "المصروف", "Paid", "money"),
                  ("bal", "الرصيد", "Balance", "money")],
@@ -248,7 +253,7 @@ REPORTS = {
                     COUNT(CASE WHEN a.action='update' THEN 1 END) updated,
                     COUNT(CASE WHEN a.action='delete' THEN 1 END) deleted
                   FROM audit a LEFT JOIN users u ON u.id=a.user_id
-                  WHERE 1=1 {date} GROUP BY a.user_id ORDER BY n DESC""",
+                  WHERE 1=1 {date} GROUP BY a.user_id,u.name ORDER BY n DESC""",
         "date_col": "a.created_at",
         "cols": [("k", "المستخدم", "User", "text"), ("n", "الإجمالي", "Total", "int"),
                  ("created", "إضافة", "Created", "int"), ("updated", "تعديل", "Updated", "int"),
@@ -495,7 +500,7 @@ def register(app, current_user, require):
             if v == "••••":          # untouched password field
                 continue
             con.execute("""INSERT INTO settings(\"key\",\"value\") VALUES(?,?)
-                ON CONFLICT(\"key\") DO UPDATE SET value=excluded.value""", (k, str(v)))
+                ON CONFLICT(\"key\") DO UPDATE SET \"value\"=excluded.\"value\"""", (k, str(v)))
             n += 1
         D.log(con, "settings", 0, "update", {"keys": list(body.keys())}, user["id"])
         con.commit()

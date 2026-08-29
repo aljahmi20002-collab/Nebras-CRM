@@ -331,7 +331,7 @@ def forecast(months=3, user=None):
     hist = [dict(r) for r in con.execute(f"""
         SELECT substr(closing_date,1,7) k, SUM(amount) v, COUNT(*) n FROM deals
         WHERE deleted=0 AND {deal_scope} AND stage='Closed Won' AND closing_date IS NOT NULL
-        AND closing_date <= date('now') GROUP BY k ORDER BY k""", deal_params)]
+        AND closing_date <= date('now') GROUP BY substr(closing_date,1,7) ORDER BY k""", deal_params)]
     vals = [_f(h["v"]) for h in hist][-12:]
     trend = None
     if len(vals) >= 3:

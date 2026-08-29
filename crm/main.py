@@ -262,6 +262,14 @@ def me(user=Depends(current_user)):
     user.pop("password", None)
     return user
 
+
+@app.get("/api/health", include_in_schema=False)
+def health():
+    """Health check that verifies both FastAPI and the active database socket."""
+    con.execute("SELECT 1").fetchone()
+    return {"ok": True}
+
+
 # ---------------- metadata ----------------
 @app.get("/api/meta")
 def meta():
@@ -816,7 +824,7 @@ def dashboard(user=Depends(current_user)):
         f"SELECT status k, COUNT(*) n FROM leads WHERE deleted=0 AND {lead_scope} GROUP BY status", lead_params)]
     sources = [dict(r) for r in con.execute(
         f"SELECT COALESCE(source,'Other') k, COUNT(*) n, SUM(amount) v FROM deals "
-        f"WHERE {deals_where} GROUP BY source", deal_params)]
+        f"WHERE {deals_where} GROUP BY COALESCE(source,'Other')", deal_params)]
     if user["role"] == "agent":
         leaderboard = [{
             "k": user["name"], "target": user.get("target") or 0,
@@ -826,10 +834,11 @@ def dashboard(user=Depends(current_user)):
         leaderboard = [dict(r) for r in con.execute("""
             SELECT u.name k, u.target target, COALESCE(SUM(CASE WHEN d.stage='Closed Won' THEN d.amount END),0) v,
                    COUNT(d.id) n FROM users u LEFT JOIN deals d ON d.owner_id=u.id AND d.deleted=0
-            WHERE u.active=1 GROUP BY u.id ORDER BY v DESC""")]
+            WHERE u.active=1 GROUP BY u.id,u.name,u.target ORDER BY v DESC""")]
     monthly = [dict(r) for r in con.execute(
         f"SELECT substr(closing_date,1,7) k, SUM(amount) v, COUNT(*) n FROM deals "
-        f"WHERE {deals_where} AND stage='Closed Won' AND closing_date IS NOT NULL GROUP BY k ORDER BY k",
+        f"WHERE {deals_where} AND stage='Closed Won' AND closing_date IS NOT NULL "
+        f"GROUP BY substr(closing_date,1,7) ORDER BY k", 
         deal_params,
     )]
     tickets = [dict(r) for r in con.execute(
@@ -883,7 +892,7 @@ def report(module: str, group_by: str, metric: str = "count", field: str = "", u
     scoped, params = scope_clause(user, module)
     rows = con.execute(
         f'SELECT COALESCE("{group_by}",\'—\') k, {sel} v FROM "{module}" '
-        f'WHERE deleted=0 AND {scoped} GROUP BY 1 ORDER BY 2 DESC',
+        f'WHERE deleted=0 AND {scoped} GROUP BY COALESCE("{group_by}",\'—\') ORDER BY v DESC',
         params,
     ).fetchall()
     return {"rows": [{"k": r["k"], "v": r["v"] or 0} for r in rows]}
